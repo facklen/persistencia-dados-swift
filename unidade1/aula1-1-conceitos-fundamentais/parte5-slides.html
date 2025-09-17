@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slides - Parte 5: As Soluções</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .slide {
+            display: none;
+            height: 100vh;
+            width: 100vw;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+            position: relative;
+        }
+        
+        .slide.active {
+            display: flex;
+        }
+        
+        .slide-number {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.2em;
+        }
+        
+        .timing {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.2em;
+        }
+        
+        h1 {
+            font-size: 4em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            line-height: 1.2;
+        }
+        
+        h2 {
+            font-size: 3em;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .big-text {
+            font-size: 2.5em;
+            line-height: 1.4;
+            max-width: 90%;
+        }
+        
+        .medium-text {
+            font-size: 2em;
+            line-height: 1.5;
+            max-width: 90%;
+        }
+        
+        .highlight-box {
+            background: rgba(255,255,255,0.15);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .solution-slide {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+        
+        .userdefaults-slide {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+        
+        .coredata-slide {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+        
+        .firebase-slide {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+        
+        .keychain-slide {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        }
+        
+        .comparison-slide {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+        }
+        
+        .transformation-slide {
+            background: linear-gradient(135deg, #16a085 0%, #27ae60 100%);
+        }
+        
+        .checklist {
+            text-align: left;
+            font-size: 1.8em;
+            line-height: 1.8;
+            max-width: 80%;
+        }
+        
+        .checklist li {
+            margin: 15px 0;
+            list-style: none;
+        }
+        
+        .code-preview {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 30px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.5em;
+            text-align: left;
+            margin: 20px 0;
+            max-width: 90%;
+        }
+        
+        .solutions-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            max-width: 90%;
+            margin: 20px 0;
+        }
+        
+        .solution-card {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+            text-align: center;
+        }
+        
+        .solution-card h3 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+        
+        .solution-card p {
+            font-size: 1.3em;
+            line-height: 1.4;
+        }
+        
+        .comparison-table {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            max-width: 90%;
+            margin: 20px 0;
+        }
+        
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .comparison-table th {
+            background: rgba(255,255,255,0.2);
+            font-weight: bold;
+        }
+        
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            background: rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.05);
+        }
+        
+        .dramatic-text {
+            animation: pulse 2s infinite;
+        }
+        
+        .before-after {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            max-width: 90%;
+            margin: 30px 0;
+        }
+        
+        .before-after div {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 15px;
+        }
+        
+        .before-after .before {
+            border: 3px solid #e74c3c;
+        }
+        
+        .before-after .after {
+            border: 3px solid #2ecc71;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @media (max-width: 768px) {
+            .solutions-grid,
+            .before-after {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 { font-size: 2.5em; }
+            h2 { font-size: 2em; }
+            .big-text { font-size: 1.8em; }
+            .medium-text { font-size: 1.5em; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1 -->
+<div class="slide active" id="slide1">
+    <div class="slide-number">1/14</div>
+    <div class="timing">0:00</div>
+    <h1 class="dramatic-text">🛠️ Arsenal de Soluções</h1>
+    <div class="subtitle">Parte 5: A Luz no Fim do Túnel</div>
+    <div class="highlight-box">
+        <div class="big-text">🎯 De "App que Perde Dados" para "App Profissional"</div>
+    </div>
+</div>
+
+<!-- Slide 2 -->
+<div class="slide solution-slide" id="slide2">
+    <div class="slide-number">2/14</div>
+    <div class="timing">0:30</div>
+    <h1>🚀 Chegou a Hora da REDENÇÃO!</h1>
+    <div class="big-text">
+        ✅ Problema identificado<br>
+        ✅ Causa técnica descoberta<br>
+        ✅ Impacto compreendido
+    </div>
+    <div class="highlight-box">
+        <h2 class="dramatic-text">AGORA: AS SOLUÇÕES!</h2>
+    </div>
+</div>
+
+<!-- Slide 3 -->
+<div class="slide" id="slide3">
+    <div class="slide-number">3/14</div>
+    <div class="timing">1:00</div>
+    <h2>🎯 O que você vai dominar em 7 minutos:</h2>
+    <ul class="checklist">
+        <li>🛠️ <strong>4 soluções poderosas</strong> para persistência</li>
+        <li>⚡ <strong>Códigos práticos</strong> que funcionam hoje</li>
+        <li>🤔 <strong>Estratégia de decisão</strong> - quando usar cada uma</li>
+        <li>🚀 <strong>Transformação completa</strong> do app problemático</li>
+    </ul>
+    <div class="highlight-box">
+        <div class="medium-text">💎 Nunca mais vai perder dados!</div>
+    </div>
+</div>
+
+<!-- Slide 4 -->
+<div class="slide" id="slide4">
+    <div class="slide-number">4/14</div>
+    <div class="timing">1:30</div>
+    <h2>⚔️ Conheça Seu Arsenal Completo</h2>
+    <div class="solutions-grid">
+        <div class="solution-card">
+            <h3>⚙️ UserDefaults</h3>
+            <p>O básico essencial para configurações simples</p>
+        </div>
+        <div class="solution-card">
+            <h3>🗂️ Core Data</h3>
+            <p>Banco local robusto para dados complexos</p>
+        </div>
+        <div class="solution-card">
+            <h3>☁️ Firebase</h3>
+            <p>Nuvem inteligente para sincronização</p>
+        </div>
+        <div class="solution-card">
+            <h3>🔒 Keychain</h3>
+            <p>Segurança máxima para dados sensíveis</p>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 5 -->
+<div class="slide userdefaults-slide" id="slide5">
+    <div class="slide-number">5/14</div>
+    <div class="timing">2:00</div>
+    <h1>⚙️ UserDefaults - Simples e Eficaz</h1>
+    <div class="medium-text">
+        Para configurações, preferências e dados pequenos
+    </div>
+    <div class="code-preview">
+// ❌ PROBLEMA: Dados na memória<br>
+@State private var isDarkMode = false<br>
+<br>
+// ✅ SOLUÇÃO: Dados persistentes!<br>
+UserDefaults.standard.set(isDarkMode, forKey: "darkMode")<br>
+let savedTheme = UserDefaults.standard.bool(forKey: "darkMode")<br>
+<br>
+// 🔍 OBSERVAR: Sobrevive a QUALQUER restart!
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">🎯 Ideal para: Temas, idiomas, configurações</div>
+    </div>
+</div>
+
+<!-- Slide 6 -->
+<div class="slide coredata-slide" id="slide6">
+    <div class="slide-number">6/14</div>
+    <div class="timing">2:45</div>
+    <h1>🗂️ Core Data - O Powerhouse Local</h1>
+    <div class="medium-text">
+        Para apps offline com muitos dados relacionais
+    </div>
+    <div class="code-preview">
+// ❌ PROBLEMA: Array simples na memória<br>
+@State private var tasks: [Task] = []<br>
+<br>
+// ✅ SOLUÇÃO: Banco de dados local!<br>
+@FetchRequest(sortDescriptors: [SortDescriptor(\.title)])<br>
+var tasks: FetchedResults&lt;Task&gt;<br>
+<br>
+// 🔍 OBSERVAR: Milhões de registros, queries SQL!
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">🎯 Ideal para: Apps offline, CRM, bibliotecas</div>
+    </div>
+</div>
+
+<!-- Slide 7 -->
+<div class="slide firebase-slide" id="slide7">
+    <div class="slide-number">7/14</div>
+    <div class="timing">3:30</div>
+    <h1>☁️ Firebase - A Nuvem Inteligente</h1>
+    <div class="medium-text">
+        Para sincronização multi-dispositivo em tempo real
+    </div>
+    <div class="code-preview">
+// ❌ PROBLEMA: Dados só no dispositivo<br>
+var localTasks = [Task]()<br>
+<br>
+// ✅ SOLUÇÃO: Dados na nuvem sincronizados!<br>
+firestore.collection("tasks").addDocument(data: [<br>
+&nbsp;&nbsp;"title": task.title,<br>
+&nbsp;&nbsp;"userId": currentUser.id<br>
+])<br>
+// 🔍 OBSERVAR: Sync automático iPhone ↔ iPad!
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">🎯 Ideal para: Chat, colaboração, backup</div>
+    </div>
+</div>
+
+<!-- Slide 8 -->
+<div class="slide keychain-slide" id="slide8">
+    <div class="slide-number">8/14</div>
+    <div class="timing">4:15</div>
+    <h1>🔒 Keychain - Segurança Máxima</h1>
+    <div class="medium-text">
+        Para senhas, tokens e dados ultra-sensíveis
+    </div>
+    <div class="code-preview">
+// ❌ PROBLEMA: Senha em texto simples<br>
+@State private var password = "123456"<br>
+<br>
+// ✅ SOLUÇÃO: Armazenamento criptografado!<br>
+Keychain.save(password: userPassword,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;service: "MyApp",<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;account: userEmail)<br>
+// 🔍 OBSERVAR: Criptografia de nível militar!
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">🎯 Ideal para: Senhas, tokens, dados bancários</div>
+    </div>
+</div>
+
+<!-- Slide 9 -->
+<div class="slide comparison-slide" id="slide9">
+    <div class="slide-number">9/14</div>
+    <div class="timing">5:00</div>
+    <h2>📊 Comparação Rápida</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Solução</th>
+                    <th>Complexidade</th>
+                    <th>Use Quando</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>UserDefaults</strong></td>
+                    <td>⭐ Muito Fácil</td>
+                    <td>Configurações simples</td>
+                </tr>
+                <tr>
+                    <td><strong>Core Data</strong></td>
+                    <td>⭐⭐⭐⭐ Complexo</td>
+                    <td>Muitos dados offline</td>
+                </tr>
+                <tr>
+                    <td><strong>Firebase</strong></td>
+                    <td>⭐⭐⭐ Médio</td>
+                    <td>Multi-dispositivo</td>
+                </tr>
+                <tr>
+                    <td><strong>Keychain</strong></td>
+                    <td>⭐⭐ Fácil</td>
+                    <td>Dados sensíveis</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Slide 10 -->
+<div class="slide transformation-slide" id="slide10">
+    <div class="slide-number">10/14</div>
+    <div class="timing">5:30</div>
+    <h1>🎭 A Grande Transformação</h1>
+    <div class="before-after">
+        <div class="before">
+            <h3>❌ ANTES</h3>
+            <p>• App perde dados<br>
+            • Usuário frustrado<br>
+            • 1 estrela na App Store<br>
+            • App deletado</p>
+        </div>
+        <div class="after">
+            <h3>✅ DEPOIS</h3>
+            <p>• Dados sempre salvos<br>
+            • Usuário satisfeito<br>
+            • 5 estrelas na App Store<br>
+            • App recomendado</p>
+        </div>
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">🎯 Mesmo código, experiência TOTALMENTE diferente!</div>
+    </div>
+</div>
+
+<!-- Slide 11 -->
+<div class="slide" id="slide11">
+    <div class="slide-number">11/14</div>
+    <div class="timing">6:00</div>
+    <h2>🤔 Como Decidir Qual Usar?</h2>
+    <div class="big-text">
+        Faça essas perguntas:
+    </div>
+    <ul class="checklist">
+        <li>📱 <strong>São configurações simples?</strong> → UserDefaults</li>
+        <li>💾 <strong>Precisa funcionar offline?</strong> → Core Data</li>
+        <li>☁️ <strong>Quer sincronizar dispositivos?</strong> → Firebase</li>
+        <li>🔐 <strong>Dados são sensíveis?</strong> → Keychain</li>
+        <li>🚀 <strong>App profissional completo?</strong> → Combine todas!</li>
+    </ul>
+</div>
+
+<!-- Slide 12 -->
+<div class="slide solution-slide" id="slide12">
+    <div class="slide-number">12/14</div>
+    <div class="timing">6:30</div>
+    <h1>⚡ Implementação Imediata</h1>
+    <div class="medium-text">
+        Você pode começar AGORA MESMO:
+    </div>
+    <ul class="checklist">
+        <li>🟢 <strong>UserDefaults:</strong> 2 linhas de código</li>
+        <li>🟡 <strong>Keychain:</strong> Adicione uma biblioteca</li>
+        <li>🟠 <strong>Firebase:</strong> Setup inicial hoje</li>
+        <li>🔴 <strong>Core Data:</strong> Módulo especializado depois</li>
+    </ul>
+    <div class="highlight-box">
+        <div class="medium-text">💡 Comece pelo UserDefaults, expanda gradualmente!</div>
+    </div>
+</div>
+
+<!-- Slide 13 -->
+<div class="slide" id="slide13">
+    <div class="slide-number">13/14</div>
+    <div class="timing">6:50</div>
+    <h2>🗺️ Próximos Módulos Especializados</h2>
+    <div class="solutions-grid">
+        <div class="solution-card">
+            <h3>📚 UserDefaults</h3>
+            <p>3 aulas práticas<br>Property Wrappers<br>Boas práticas</p>
+        </div>
+        <div class="solution-card">
+            <h3>📚 Core Data</h3>
+            <p>5 aulas completas<br>CRUD, Relationships<br>Performance</p>
+        </div>
+        <div class="solution-card">
+            <h3>📚 Firebase</h3>
+            <p>4 aulas detalhadas<br>Real-time sync<br>Authentication</p>
+        </div>
+        <div class="solution-card">
+            <h3>🔥 Projetos Reais</h3>
+            <p>Apps completos<br>Combinando soluções<br>Casos avançados</p>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 14 -->
+<div class="slide solution-slide" id="slide14">
+    <div class="slide-number">14/14</div>
+    <div class="timing">7:00</div>
+    <h1>🏆 Parabéns! Você É Agora Um</h1>
+    <div class="big-text dramatic-text">
+        "DATA PERSISTENCE ARCHITECT"
+    </div>
+    <div class="highlight-box">
+        <h2>💎 Dados perdidos = Usuários perdidos</h2>
+        <h2>💎 Dados seguros = Usuários felizes!</h2>
+    </div>
+    <div class="subtitle">
+        Nunca mais vai criar apps que frustram usuários! 🎯
+    </div>
+</div>
+
+<div class="navigation">
+    <button class="nav-btn" onclick="goToSlide(currentSlide - 1)">← Anterior</button>
+    <button class="nav-btn" onclick="goToSlide(1)">🏠 Início</button>
+    <button class="nav-btn" style="background: rgba(255,255,255,0.4);">
+        <span id="slideCounter">1 / 14</span>
+    </button>
+    <button class="nav-btn" onclick="goToSlide(14)">🏁 Fim</button>
+    <button class="nav-btn" onclick="goToSlide(currentSlide + 1)">Próximo →</button>
+</div>
+
+<script>
+let currentSlide = 1;
+const totalSlides = 14;
+
+function goToSlide(slideNumber) {
+    // Validar número do slide
+    if (slideNumber < 1) slideNumber = 1;
+    if (slideNumber > totalSlides) slideNumber = totalSlides;
+    
+    console.log('Indo para slide:', slideNumber);
+    
+    // Esconder slide atual
+    const currentSlideElement = document.getElementById(`slide${currentSlide}`);
+    if (currentSlideElement) {
+        currentSlideElement.classList.remove('active');
+    }
+    
+    // Mostrar novo slide
+    const newSlideElement = document.getElementById(`slide${slideNumber}`);
+    if (newSlideElement) {
+        newSlideElement.classList.add('active');
+    }
+    
+    // Atualizar variável
+    currentSlide = slideNumber;
+    
+    // Atualizar contador
+    const counter = document.getElementById('slideCounter');
+    if (counter) {
+        counter.textContent = `${currentSlide} / ${totalSlides}`;
+    }
+    
+    console.log('Slide atual agora:', currentSlide);
+}
+
+// Navegação por teclado
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToSlide(currentSlide - 1);
+    } else if (e.key === 'Home') {
+        e.preventDefault();
+        goToSlide(1);
+    } else if (e.key === 'End') {
+        e.preventDefault();
+        goToSlide(totalSlides);
+    }
+});
+
+// Clique na tela para navegar
+document.addEventListener('click', function(e) {
+    // Se clique foi em botão, ignorar
+    if (e.target.classList.contains('nav-btn') || e.target.closest('.nav-btn')) {
+        return;
+    }
+    
+    // Se clique no lado direito, avançar
+    if (e.clientX > window.innerWidth / 2) {
+        goToSlide(currentSlide + 1);
+    } else {
+        // Se clique no lado esquerdo, voltar
+        goToSlide(currentSlide - 1);
+    }
+});
+
+// Inicializar quando página carrega
+window.addEventListener('load', function() {
+    console.log('Página carregada, inicializando...');
+    goToSlide(1);
+});
+
+// Backup com DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM carregado, inicializando...');
+    goToSlide(1);
+});
+</script>
+
+</body>
+</html>
