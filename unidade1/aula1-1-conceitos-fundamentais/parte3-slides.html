@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slides - Parte 3: Investigação Técnica</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .slide {
+            display: none;
+            height: 100vh;
+            width: 100vw;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+            position: relative;
+        }
+        
+        .slide.active {
+            display: flex;
+        }
+        
+        .slide-number {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.2em;
+        }
+        
+        .timing {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.2em;
+        }
+        
+        h1 {
+            font-size: 4em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            line-height: 1.2;
+        }
+        
+        h2 {
+            font-size: 3em;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .big-text {
+            font-size: 2.5em;
+            line-height: 1.4;
+            max-width: 90%;
+        }
+        
+        .medium-text {
+            font-size: 2em;
+            line-height: 1.5;
+            max-width: 90%;
+        }
+        
+        .highlight-box {
+            background: rgba(255,255,255,0.15);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .detective-slide {
+            background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+        }
+        
+        .technical-slide {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+        
+        .investigation-slide {
+            background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+        }
+        
+        .memory-slide {
+            background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+        }
+        
+        .tools-slide {
+            background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+        }
+        
+        .discovery-slide {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        }
+        
+        .checklist {
+            text-align: left;
+            font-size: 1.8em;
+            line-height: 1.8;
+            max-width: 80%;
+        }
+        
+        .checklist li {
+            margin: 15px 0;
+            list-style: none;
+        }
+        
+        .code-preview {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 30px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.5em;
+            text-align: left;
+            margin: 20px 0;
+            max-width: 90%;
+        }
+        
+        .investigation-steps {
+            text-align: left;
+            font-size: 1.6em;
+            line-height: 1.6;
+            max-width: 85%;
+        }
+        
+        .investigation-steps li {
+            margin: 20px 0;
+            list-style: none;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .memory-diagram {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            max-width: 90%;
+            margin: 30px 0;
+        }
+        
+        .memory-block {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 0 10px;
+            min-width: 200px;
+            border: 2px solid rgba(255,255,255,0.4);
+        }
+        
+        .memory-block h4 {
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+        
+        .memory-block.volatile {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            animation: pulse 2s infinite;
+        }
+        
+        .memory-block.persistent {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+        
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            background: rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.05);
+        }
+        
+        .dramatic-text {
+            animation: pulse 2s infinite;
+        }
+        
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            max-width: 90%;
+            margin: 30px 0;
+        }
+        
+        .tool-card {
+            background: rgba(255,255,255,0.15);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .tool-card h4 {
+            margin-bottom: 15px;
+            font-size: 1.8em;
+            color: #f39c12;
+        }
+        
+        .breakpoint-demo {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 25px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.3em;
+            text-align: left;
+            margin: 20px 0;
+            max-width: 90%;
+            position: relative;
+        }
+        
+        .breakpoint-dot {
+            position: absolute;
+            left: 10px;
+            top: 50px;
+            width: 15px;
+            height: 15px;
+            background: #e74c3c;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5em; }
+            h2 { font-size: 2em; }
+            .big-text { font-size: 1.8em; }
+            .medium-text { font-size: 1.5em; }
+            .tool-grid { grid-template-columns: 1fr; }
+            .memory-diagram { flex-direction: column; }
+            .memory-block { margin: 10px 0; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1 -->
+<div class="slide active" id="slide1">
+    <div class="slide-number">1/14</div>
+    <div class="timing">0:00</div>
+    <h1 class="dramatic-text">🔬 CSI da Programação</h1>
+    <div class="subtitle">Investigação Técnica Profunda</div>
+    <div class="highlight-box">
+        <div class="big-text">🕵️ Descobrir ONDE, QUANDO e POR QUE<br>os dados desapareceram</div>
+    </div>
+</div>
+
+<!-- Slide 2 -->
+<div class="slide detective-slide" id="slide2">
+    <div class="slide-number">2/14</div>
+    <div class="timing">0:15</div>
+    <h1>🕵️ Você é o Detetive!</h1>
+    <div class="big-text">
+        O caso: <strong>Dados Desaparecidos</strong><br>
+        O suspeito: <strong>Seu Código</strong><br>
+        A evidência: <strong>App que "esquece" tudo</strong>
+    </div>
+    <div class="highlight-box">
+        <h2 class="dramatic-text">VAMOS INVESTIGAR!</h2>
+        <div class="medium-text">Usando ferramentas profissionais de CSI tecnológico</div>
+    </div>
+</div>
+
+<!-- Slide 3 -->
+<div class="slide" id="slide3">
+    <div class="slide-number">3/14</div>
+    <div class="timing">0:30</div>
+    <h2>🎯 Arsenal de Investigação</h2>
+    <div class="tool-grid">
+        <div class="tool-card">
+            <h4>🔴 Breakpoints</h4>
+            <p>Pausar o tempo e examinar evidências</p>
+        </div>
+        <div class="tool-card">
+            <h4>📊 Variables Debugger</h4>
+            <p>Rastrear dados em tempo real</p>
+        </div>
+        <div class="tool-card">
+            <h4>🧠 Memory Inspector</h4>
+            <p>Mapear onde dados vivem</p>
+        </div>
+        <div class="tool-card">
+            <h4>🗃️ View Hierarchy</h4>
+            <p>Visualizar estrutura 3D do app</p>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 4 -->
+<div class="slide technical-slide" id="slide4">
+    <div class="slide-number">4/14</div>
+    <div class="timing">1:00</div>
+    <h2>🔴 Ferramenta 1: Breakpoints Estratégicos</h2>
+    <div class="medium-text">
+        Como "pausar o tempo" para investigar<br>
+        exatamente o que acontece na memória
+    </div>
+    <div class="breakpoint-demo">
+        <div class="breakpoint-dot"></div>
+        // Clique aqui para adicionar breakpoint<br>
+        tasks.append(newTask) // ← 🔴 PAUSAR AQUI<br>
+        <br>
+        // Quando pausar, investigar:<br>
+        // - Valor atual de 'tasks'<br>
+        // - Endereço de memória<br>
+        // - Estado do objeto
+    </div>
+</div>
+
+<!-- Slide 5 -->
+<div class="slide investigation-slide" id="slide5">
+    <div class="slide-number">5/14</div>
+    <div class="timing">1:30</div>
+    <h2>📊 Ferramenta 2: Variables Debugger</h2>
+    <div class="medium-text">O "raio-X" dos seus dados</div>
+    <div class="code-preview">
+🔍 Variables View (ao vivo):<br>
+▼ self     TaskManager<br>
+  ▼ tasks  Array&lt;Task&gt; (5 items)<br>
+    ▼ [0]  Task<br>
+      title: "Comprar presente"<br>
+      isCompleted: false<br>
+    ▼ [1]  Task<br>
+      title: "Ligar para médico"<br>
+<br>
+📍 Localização: HEAP (RAM volátil!)
+    </div>
+</div>
+
+<!-- Slide 6 -->
+<div class="slide memory-slide" id="slide6">
+    <div class="slide-number">6/14</div>
+    <div class="timing">2:15</div>
+    <h2>🧠 Ferramenta 3: Memory Analysis</h2>
+    <div class="memory-diagram">
+        <div class="memory-block">
+            <h4>🥞 STACK</h4>
+            <p>Variáveis locais<br>Rápido, mas temporário</p>
+        </div>
+        <div class="memory-block volatile">
+            <h4>🗂️ HEAP</h4>
+            <p>Nossos dados estão AQUI!<br>Flexível, mas volátil</p>
+        </div>
+        <div class="memory-block persistent">
+            <h4>💾 STORAGE</h4>
+            <p>Onde DEVERIA estar<br>Lento, mas permanente</p>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 7 -->
+<div class="slide tools-slide" id="slide7">
+    <div class="slide-number">7/14</div>
+    <div class="timing">3:00</div>
+    <h2>🗃️ Ferramenta 4: View Hierarchy Debugger</h2>
+    <div class="big-text">
+        📱 Debug → View Debugging<br>
+        → Capture View Hierarchy
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">
+            🎯 Resultado: Vista 3D do app<br>
+            🔍 Busca: Componentes de persistência<br>
+            😱 Descoberta: <strong>NENHUM!</strong>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 8 -->
+<div class="slide detective-slide" id="slide8">
+    <div class="slide-number">8/14</div>
+    <div class="timing">3:30</div>
+    <h2>🔍 Roteiro da Investigação</h2>
+    <ul class="investigation-steps">
+        <li>🎬 <strong>Fase 1:</strong> Configurando a cena do crime (2min)</li>
+        <li>🔴 <strong>Fase 2:</strong> Colocando suspeito sob investigação (3min)</li>
+        <li>⚰️ <strong>Fase 3:</strong> Autópsia da memória (3min)</li>
+        <li>🏗️ <strong>Fase 4:</strong> Reconstituindo o crime (2min)</li>
+    </ul>
+    <div class="highlight-box">
+        <div class="medium-text">⏱️ Total: 10 minutos de investigação intensiva</div>
+    </div>
+</div>
+
+<!-- Slide 9 -->
+<div class="slide investigation-slide" id="slide9">
+    <div class="slide-number">9/14</div>
+    <div class="timing">4:00</div>
+    <h2>🎬 Fase 1: Preparando a Investigação</h2>
+    <ul class="checklist">
+        <li>🖥️ Abrir console para logs em tempo real</li>
+        <li>🔧 Configurar layout ideal de debugging</li>
+        <li>📊 Preparar inspector de variáveis</li>
+        <li>🎯 Identificar linha suspeita</li>
+    </ul>
+    <div class="highlight-box">
+        <div class="medium-text">🕵️ "Um bom detetive prepara suas ferramentas"</div>
+    </div>
+</div>
+
+<!-- Slide 10 -->
+<div class="slide tools-slide" id="slide10">
+    <div class="slide-number">10/14</div>
+    <div class="timing">4:45</div>
+    <h2>🔴 Fase 2: O Momento da Verdade</h2>
+    <div class="breakpoint-demo">
+        <div class="breakpoint-dot"></div>
+        func addTask(_ task: Task) {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;tasks.append(task) // ← 🔴 BREAKPOINT AQUI<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;print("Task adicionada: \(task.title)")<br>
+        }
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">
+            ▶️ Rodar app → Adicionar tarefa → PAUSA!<br>
+            🔍 Investigar estado exato da memória
+        </div>
+    </div>
+</div>
+
+<!-- Slide 11 -->
+<div class="slide memory-slide" id="slide11">
+    <div class="slide-number">11/14</div>
+    <div class="timing">5:30</div>
+    <h2>⚰️ Fase 3: Autópsia da Memória</h2>
+    <div class="big-text">
+        🔍 <strong>Descoberta Chocante:</strong><br>
+        Todos os dados estão no HEAP!
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">
+            📍 Endereço: 0x7fff5fbff710<br>
+            🏷️ Tipo: Array&lt;Task&gt; na memória volátil<br>
+            ⚠️ Status: TEMPORÁRIO = será perdido!
+        </div>
+    </div>
+</div>
+
+<!-- Slide 12 -->
+<div class="slide discovery-slide" id="slide12">
+    <div class="slide-number">12/14</div>
+    <div class="timing">6:15</div>
+    <h2>🏗️ Fase 4: Reconstituição do Crime</h2>
+    <div class="medium-text">
+        🗃️ View Hierarchy Debugger revela:<br><br>
+        ✅ Interface perfeita<br>
+        ✅ Navegação funcional<br>
+        ✅ Views organizadas<br>
+        ❌ <strong>ZERO persistência!</strong>
+    </div>
+    <div class="highlight-box">
+        <div class="big-text">💡 O app "finge" que funciona!</div>
+    </div>
+</div>
+
+<!-- Slide 13 -->
+<div class="slide tools-slide" id="slide13">
+    <div class="slide-number">13/14</div>
+    <div class="timing">7:00</div>
+    <h2>🚨 Evidência Final: O Vilão Identificado</h2>
+    <div class="code-preview">
+// 🚨 LINHA CRÍTICA DO CRIME:<br>
+@Published var tasks: [Task] = []<br>
+<br>
+// ❌ PROBLEMA: Array apenas na memória RAM<br>
+// ❌ LOCALIZAÇÃO: Heap (volátil)<br>
+// ❌ DESTINO: Perdido quando app fecha<br>
+// ❌ SOLUÇÃO: NENHUMA implementada!
+    </div>
+    <div class="highlight-box dramatic-text">
+        <h2>CASO RESOLVIDO! 🎯</h2>
+    </div>
+</div>
+
+<!-- Slide 14 -->
+<div class="slide discovery-slide" id="slide14">
+    <div class="slide-number">14/14</div>
+    <div class="timing">8:00</div>
+    <h1>🏆 Missão Cumprida!</h1>
+    <div class="big-text">
+        ✅ Problema <strong>IDENTIFICADO</strong><br>
+        ✅ Localização <strong>MAPEADA</strong><br>
+        ✅ Causa raiz <strong>DESCOBERTA</strong><br>
+        ✅ Ferramentas <strong>DOMINADAS</strong>
+    </div>
+    <div class="highlight-box">
+        <h2>🔮 Próxima Missão:</h2>
+        <div class="medium-text">
+            Parte 4: Monitoramento do Ciclo de Vida<br>
+            <em>QUANDO exatamente os dados morrem?</em>
+        </div>
+    </div>
+    <div class="subtitle">Você agora é um detetive de dados! 🕵️‍♂️</div>
+</div>
+
+<div class="navigation">
+    <button class="nav-btn" onclick="goToSlide(currentSlide - 1)">← Anterior</button>
+    <button class="nav-btn" onclick="goToSlide(1)">🏠 Início</button>
+    <button class="nav-btn" style="background: rgba(255,255,255,0.4);">
+        <span id="slideCounter">1 / 14</span>
+    </button>
+    <button class="nav-btn" onclick="goToSlide(14)">🎯 Fim</button>
+    <button class="nav-btn" onclick="goToSlide(currentSlide + 1)">Próximo →</button>
+</div>
+
+<script>
+let currentSlide = 1;
+const totalSlides = 14;
+
+function goToSlide(slideNumber) {
+    // Validar número do slide
+    if (slideNumber < 1) slideNumber = 1;
+    if (slideNumber > totalSlides) slideNumber = totalSlides;
+    
+    console.log('Indo para slide:', slideNumber);
+    
+    // Esconder slide atual
+    const currentSlideElement = document.getElementById(`slide${currentSlide}`);
+    if (currentSlideElement) {
+        currentSlideElement.classList.remove('active');
+    }
+    
+    // Mostrar novo slide
+    const newSlideElement = document.getElementById(`slide${slideNumber}`);
+    if (newSlideElement) {
+        newSlideElement.classList.add('active');
+    }
+    
+    // Atualizar variável
+    currentSlide = slideNumber;
+    
+    // Atualizar contador
+    const counter = document.getElementById('slideCounter');
+    if (counter) {
+        counter.textContent = `${currentSlide} / ${totalSlides}`;
+    }
+    
+    console.log('Slide atual agora:', currentSlide);
+}
+
+// Navegação por teclado
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToSlide(currentSlide - 1);
+    } else if (e.key === 'Home') {
+        e.preventDefault();
+        goToSlide(1);
+    } else if (e.key === 'End') {
+        e.preventDefault();
+        goToSlide(totalSlides);
+    }
+});
+
+// Clique na tela para navegar
+document.addEventListener('click', function(e) {
+    // Se clique foi em botão, ignorar
+    if (e.target.classList.contains('nav-btn') || e.target.closest('.nav-btn')) {
+        return;
+    }
+    
+    // Se clique no lado direito, avançar
+    if (e.clientX > window.innerWidth / 2) {
+        goToSlide(currentSlide + 1);
+    } else {
+        // Se clique no lado esquerdo, voltar
+        goToSlide(currentSlide - 1);
+    }
+});
+
+// Inicializar quando página carrega
+window.addEventListener('load', function() {
+    console.log('Página carregada, inicializando...');
+    goToSlide(1);
+});
+
+// Backup com DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM carregado, inicializando...');
+    goToSlide(1);
+});
+</script>
+
+</body>
+</html>
