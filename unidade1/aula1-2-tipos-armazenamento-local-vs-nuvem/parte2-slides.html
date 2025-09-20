@@ -261,10 +261,13 @@
             border-radius: 15px;
             font-family: 'Courier New', monospace;
             text-align: left;
-            max-width: 80%;
+            max-width: 90%;
             margin: 20px 0;
-            line-height: 1.5;
+            line-height: 1.6;
             font-size: 1.1em;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            border: 2px solid rgba(255,255,255,0.1);
         }
         
         .code-comment {
@@ -277,6 +280,10 @@
         
         .code-error {
             color: #e74c3c;
+        }
+        
+        .code-observe {
+            color: #f39c12;
         }
         
         /* Responsive Design */
@@ -482,19 +489,35 @@
     <div class="slide-number">11/15</div>
     <div class="timing">5:00</div>
     <h1>💻 UserDefaults em Ação</h1>
-    <div class="code-snippet">
-<span class="code-comment">// 💾 Salvamento instantâneo</span>
-let preferences = UserDefaults.standard
+    <div class="code-snippet" style="text-align: left; white-space: pre; font-size: 1.0em; line-height: 1.5; max-width: 95%;">
+<span class="code-comment">// 💾 Demonstração: Por que apps locais são transformadores</span>
 
-<span class="code-success">// ✅ 1-5ms de velocidade</span>
-preferences.set("darkMode", forKey: "theme")
-preferences.set(18, forKey: "fontSize")
-
-<span class="code-success">// ✅ Disponível instantaneamente</span>
-let theme = preferences.string(forKey: "theme")
-
-<span class="code-error">// ❌ Perdido se device quebrar</span>
-<span class="code-error">// ❌ Não sincroniza outros devices</span>
+class LocalStorageDemo {
+    private let userDefaults = UserDefaults.standard
+    
+    func saveUserPreference() {
+        let startTime = Date()
+        
+        <span class="code-success">// ✅ VANTAGEM: Salvamento instantâneo (1-5ms)</span>
+        userDefaults.set("darkMode", forKey: "theme")
+        userDefaults.set(18, forKey: "fontSize")
+        userDefaults.set(true, forKey: "notifications")
+        
+        let endTime = Date()
+        let timeElapsed = endTime.timeIntervalSince(startTime) * 1000
+        
+        print("💨 Dados salvos em \(timeElapsed)ms")
+        
+        <span class="code-success">// ✅ VANTAGEM: Funciona sem internet</span>
+        <span class="code-success">// ✅ VANTAGEM: Privacidade total</span>
+        <span class="code-success">// ✅ VANTAGEM: Custo zero</span>
+        
+        <span class="code-error">// ❌ RISCO: Perdido se device quebrar</span>
+        <span class="code-error">// ❌ RISCO: Não sincroniza com outros devices</span>
+        
+        <span class="code-observe">// 🔍 OBSERVE: Perfeito para configurações pessoais!</span>
+    }
+}
     </div>
 </div>
 
