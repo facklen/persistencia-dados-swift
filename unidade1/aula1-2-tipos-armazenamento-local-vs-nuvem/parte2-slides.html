@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slides - Parte 2: Armazenamento Local Detalhado</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .slide {
+            display: none;
+            height: 100vh;
+            width: 100vw;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+            position: relative;
+        }
+        
+        .slide.active {
+            display: flex;
+        }
+        
+        .slide-number {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            backdrop-filter: blur(10px);
+        }
+        
+        .timing {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            font-size: 4em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            line-height: 1.2;
+        }
+        
+        h2 {
+            font-size: 3em;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .big-text {
+            font-size: 2.5em;
+            line-height: 1.4;
+            margin-bottom: 40px;
+        }
+        
+        .medium-text {
+            font-size: 2em;
+            line-height: 1.4;
+            margin-bottom: 30px;
+        }
+        
+        .highlight-box {
+            background: rgba(255,255,255,0.15);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255,255,255,0.2);
+            margin: 30px 0;
+            max-width: 90%;
+        }
+        
+        .analogy-slide {
+            background: linear-gradient(135deg, #e17055 0%, #d63031 100%);
+        }
+        
+        .problem-slide {
+            background: linear-gradient(135deg, #e84393 0%, #d63031 100%);
+        }
+        
+        .solution-slide {
+            background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+        }
+        
+        .tech-slide {
+            background: linear-gradient(135deg, #6c5ce7 0%, #5f3dc4 100%);
+        }
+        
+        .comparison-slide {
+            background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
+        }
+        
+        .dramatic-text {
+            font-size: 3.5em;
+            color: #ff6b6b;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .checklist {
+            text-align: left;
+            font-size: 1.8em;
+            line-height: 2;
+            list-style: none;
+            max-width: 80%;
+        }
+        
+        .checklist li {
+            margin-bottom: 20px;
+            padding-left: 20px;
+        }
+        
+        .pros-cons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            width: 100%;
+            max-width: 1000px;
+        }
+        
+        .pros, .cons {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .pros {
+            border-left: 5px solid #00b894;
+        }
+        
+        .cons {
+            border-left: 5px solid #e17055;
+        }
+        
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            width: 100%;
+            max-width: 1000px;
+        }
+        
+        .tech-card {
+            background: rgba(255,255,255,0.15);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .tech-card:hover {
+            transform: scale(1.05);
+        }
+        
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        
+        .performance-chart {
+            display: flex;
+            justify-content: space-around;
+            align-items: end;
+            height: 300px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            max-width: 800px;
+        }
+        
+        .chart-bar {
+            background: linear-gradient(to top, #00b894, #00a085);
+            border-radius: 10px 10px 0 0;
+            position: relative;
+            min-width: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: end;
+            align-items: center;
+        }
+        
+        .chart-label {
+            position: absolute;
+            bottom: -40px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        
+        .chart-value {
+            position: absolute;
+            top: -30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #fff;
+        }
+        
+        .code-snippet {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 25px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            text-align: left;
+            max-width: 80%;
+            margin: 20px 0;
+            line-height: 1.5;
+            font-size: 1.1em;
+        }
+        
+        .code-comment {
+            color: #7fb3d3;
+        }
+        
+        .code-success {
+            color: #2ecc71;
+        }
+        
+        .code-error {
+            color: #e74c3c;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5em; }
+            h2 { font-size: 2em; }
+            .big-text { font-size: 1.8em; }
+            .medium-text { font-size: 1.5em; }
+            .checklist { font-size: 1.4em; }
+            .pros-cons { grid-template-columns: 1fr; }
+            .tech-grid { grid-template-columns: 1fr; }
+            .slide { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Título -->
+<div class="slide active" id="slide1">
+    <div class="slide-number">1/15</div>
+    <div class="timing">0:00</div>
+    <h1>🏠 Armazenamento Local</h1>
+    <div class="subtitle">A Casa dos Seus Dados</div>
+    <div class="big-text">
+        Velocidade máxima,<br>
+        Privacidade total,<br>
+        <strong>Mas com riscos reais...</strong>
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">💡 Será que vale a pena?</div>
+    </div>
+</div>
+
+<!-- Slide 2: Analogia da Casa -->
+<div class="slide analogy-slide" id="slide2">
+    <div class="slide-number">2/15</div>
+    <div class="timing">0:30</div>
+    <h1>🏠 A Analogia da Casa</h1>
+    <div class="big-text">
+        Imagine que você tem uma <strong>biblioteca pessoal</strong> em casa...<br><br>
+        📚 Livros sempre disponíveis<br>
+        ⚡ Acesso instantâneo<br>
+        🔒 Privacidade total
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">Mas e se a casa pegar fogo? 🔥</div>
+    </div>
+</div>
+
+<!-- Slide 3: O Grande Problema -->
+<div class="slide problem-slide" id="slide3">
+    <div class="slide-number">3/15</div>
+    <div class="timing">1:00</div>
+    <h2>😱 O Pesadelo do Desenvolvedor:</h2>
+    <div class="big-text">
+        "Meu app era <strong>perfeito</strong>...<br>
+        Rápido como um raio...<br>
+        Funcionava offline..."
+    </div>
+    <div class="highlight-box">
+        <h2 class="dramatic-text">MAS O USUÁRIO PERDEU O CELULAR!</h2>
+        <h1>💔 3 ANOS DE DADOS PERDIDOS!</h1>
+    </div>
+</div>
+
+<!-- Slide 4: Performance Insana -->
+<div class="slide" id="slide4">
+    <div class="slide-number">4/15</div>
+    <div class="timing">1:30</div>
+    <h1>⚡ VANTAGEM #1: Velocidade Insana</h1>
+    <div class="performance-chart">
+        <div class="chart-bar" style="height: 20px;">
+            <div class="chart-value">1-5ms</div>
+            <div class="chart-label">📱 Local</div>
+        </div>
+        <div class="chart-bar" style="height: 200px;">
+            <div class="chart-value">100-500ms</div>
+            <div class="chart-label">☁️ Nuvem</div>
+        </div>
+    </div>
+    <div class="big-text">
+        <strong>1000x mais rápido!</strong><br>
+        Resposta instantânea!
+    </div>
+</div>
+
+<!-- Slide 5: Privacidade Total -->
+<div class="slide" id="slide5">
+    <div class="slide-number">5/15</div>
+    <div class="timing">2:00</div>
+    <h1>🔒 VANTAGEM #2: Privacidade Absoluta</h1>
+    <div class="big-text">
+        ✅ Dados <strong>nunca</strong> saem do device<br>
+        ✅ Zero risco de vazamento<br>
+        ✅ Conformidade total com LGPD<br>
+        ✅ Usuário tem controle 100%
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">💎 Ideal para dados médicos e financeiros!</div>
+    </div>
+</div>
+
+<!-- Slide 6: Funciona Offline -->
+<div class="slide" id="slide6">
+    <div class="slide-number">6/15</div>
+    <div class="timing">2:30</div>
+    <h1>📶 VANTAGEM #3: Funciona em Qualquer Lugar</h1>
+    <div class="big-text">
+        🏔️ No meio da montanha<br>
+        ✈️ Em voo internacional<br>
+        🚇 No metrô sem sinal<br>
+        🏥 Em emergências médicas
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">🎯 37% dos brasileiros ficam sem internet diariamente!</div>
+    </div>
+</div>
+
+<!-- Slide 7: Custo Zero -->
+<div class="slide" id="slide7">
+    <div class="slide-number">7/15</div>
+    <div class="timing">3:00</div>
+    <h1>💰 VANTAGEM #4: Custo Zero</h1>
+    <div class="pros-cons">
+        <div class="pros">
+            <h2>📱 Armazenamento Local</h2>
+            <div class="medium-text">
+                💸 R$ 0/mês<br>
+                💸 R$ 0/ano<br>
+                💸 R$ 0 para sempre
+            </div>
+        </div>
+        <div class="cons">
+            <h2>☁️ Armazenamento Nuvem</h2>
+            <div class="medium-text">
+                💸 R$ 300/mês (1k usuários)<br>
+                💸 R$ 3.000/mês (10k usuários)<br>
+                💸 R$ 77.000/mês (100k usuários)
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 8: Momento da Verdade -->
+<div class="slide problem-slide" id="slide8">
+    <div class="slide-number">8/15</div>
+    <div class="timing">3:30</div>
+    <h1>⚠️ DESVANTAGEM #1: Perda Catastrófica</h1>
+    <div class="big-text">
+        📊 <strong>35% dos usuários</strong> perdem dados anualmente<br><br>
+        📱 Celular quebra, rouba, perde<br>
+        🔥 Dados evaporam instantaneamente<br>
+        😭 Usuário abandona o app
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">💔 R$ 517.500/ano de perda para app com 10k usuários</div>
+    </div>
+</div>
+
+<!-- Slide 9: Limitação de Device -->
+<div class="slide problem-slide" id="slide9">
+    <div class="slide-number">9/15</div>
+    <div class="timing">4:00</div>
+    <h1>📱 DESVANTAGEM #2: Prisão do Device</h1>
+    <div class="big-text">
+        🔒 Dados presos em <strong>UM</strong> dispositivo<br>
+        ❌ Não funciona no iPad<br>
+        ❌ Não sincroniza com laptop<br>
+        ❌ Não compartilha com família
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">🎯 68% dos usuários têm múltiplos devices!</div>
+    </div>
+</div>
+
+<!-- Slide 10: Tecnologias Disponíveis -->
+<div class="slide tech-slide" id="slide10">
+    <div class="slide-number">10/15</div>
+    <div class="timing">4:30</div>
+    <h1>🛠️ Arsenal de Tecnologias Locais</h1>
+    <div class="tech-grid">
+        <div class="tech-card">
+            <h2>💾 UserDefaults</h2>
+            <div class="medium-text">Perfeito para configurações pequenas</div>
+        </div>
+        <div class="tech-card">
+            <h2>🗄️ Core Data</h2>
+            <div class="medium-text">Banco completo com relacionamentos</div>
+        </div>
+        <div class="tech-card">
+            <h2>⚡ SQLite</h2>
+            <div class="medium-text">Performance máxima para consultas</div>
+        </div>
+        <div class="tech-card">
+            <h2>📁 File System</h2>
+            <div class="medium-text">Arquivos grandes e documentos</div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 11: Código em Ação -->
+<div class="slide" id="slide11">
+    <div class="slide-number">11/15</div>
+    <div class="timing">5:00</div>
+    <h1>💻 UserDefaults em Ação</h1>
+    <div class="code-snippet">
+<span class="code-comment">// 💾 Salvamento instantâneo</span>
+let preferences = UserDefaults.standard
+
+<span class="code-success">// ✅ 1-5ms de velocidade</span>
+preferences.set("darkMode", forKey: "theme")
+preferences.set(18, forKey: "fontSize")
+
+<span class="code-success">// ✅ Disponível instantaneamente</span>
+let theme = preferences.string(forKey: "theme")
+
+<span class="code-error">// ❌ Perdido se device quebrar</span>
+<span class="code-error">// ❌ Não sincroniza outros devices</span>
+    </div>
+</div>
+
+<!-- Slide 12: Casos de Uso Ideais -->
+<div class="slide solution-slide" id="slide12">
+    <div class="slide-number">12/15</div>
+    <div class="timing">5:30</div>
+    <h1>💼 Quando Usar Storage Local?</h1>
+    <div class="checklist">
+        <li>🏥 <strong>Apps médicos de emergência</strong> - precisam funcionar offline</li>
+        <li>🎬 <strong>Editores de vídeo</strong> - arquivos gigantes localmente</li>
+        <li>💳 <strong>Carteiras digitais</strong> - máxima privacidade</li>
+        <li>⚙️ <strong>Configurações do usuário</strong> - personalizações</li>
+        <li>📱 <strong>Apps industriais</strong> - ambientes sem internet</li>
+    </div>
+</div>
+
+<!-- Slide 13: Matriz de Decisão -->
+<div class="slide comparison-slide" id="slide13">
+    <div class="slide-number">13/15</div>
+    <div class="timing">6:00</div>
+    <h1>⚖️ Matriz de Decisão</h1>
+    <div class="big-text">
+        <strong>Use Storage Local quando:</strong><br><br>
+        ✅ Velocidade > Backup<br>
+        ✅ Privacidade > Sincronização<br>
+        ✅ Offline > Multi-device<br>
+        ✅ Custo $0 > Escalabilidade
+    </div>
+</div>
+
+<!-- Slide 14: Estratégias de Minimização de Risco -->
+<div class="slide solution-slide" id="slide14">
+    <div class="slide-number">14/15</div>
+    <div class="timing">6:30</div>
+    <h1>🛡️ Como Minimizar os Riscos?</h1>
+    <div class="checklist">
+        <li>📤 <strong>Export opcional</strong> - deixe usuário salvar backup</li>
+        <li>☁️ <strong>Sync híbrido</strong> - local primeiro, nuvem opcional</li>
+        <li>⚠️ <strong>Avisos claros</strong> - usuário ciente dos riscos</li>
+        <li>🔄 <strong>Import fácil</strong> - recuperação simples</li>
+    </div>
+</div>
+
+<!-- Slide 15: Conclusão -->
+<div class="slide solution-slide" id="slide15">
+    <div class="slide-number">15/15</div>
+    <div class="timing">7:00</div>
+    <h1>🎯 Veredicto Final</h1>
+    <div class="big-text">
+        Storage local é <strong>transformador</strong> quando:<br><br>
+        🎯 Performance é crítica<br>
+        🔒 Privacidade é inegociável<br>
+        📶 Funcionar offline é essencial
+    </div>
+    <div class="highlight-box">
+        <h2>📚 Próximo: Armazenamento na Nuvem!</h2>
+        <div class="medium-text">Descubra como resolver os problemas que vimos aqui!</div>
+    </div>
+</div>
+
+<div class="navigation">
+    <button class="nav-btn" onclick="goToSlide(currentSlide - 1)">← Anterior</button>
+    <button class="nav-btn" onclick="goToSlide(1)">🏠 Início</button>
+    <button class="nav-btn" style="background: rgba(255,255,255,0.4);">
+        <span id="slideCounter">1 / 15</span>
+    </button>
+    <button class="nav-btn" onclick="goToSlide(15)">🏁 Fim</button>
+    <button class="nav-btn" onclick="goToSlide(currentSlide + 1)">Próximo →</button>
+</div>
+
+<script>
+let currentSlide = 1;
+const totalSlides = 15;
+
+function goToSlide(slideNumber) {
+    // Validar número do slide
+    if (slideNumber < 1) slideNumber = 1;
+    if (slideNumber > totalSlides) slideNumber = totalSlides;
+    
+    console.log('Indo para slide:', slideNumber);
+    
+    // Esconder slide atual
+    const currentSlideElement = document.getElementById(`slide${currentSlide}`);
+    if (currentSlideElement) {
+        currentSlideElement.classList.remove('active');
+    }
+    
+    // Mostrar novo slide
+    const newSlideElement = document.getElementById(`slide${slideNumber}`);
+    if (newSlideElement) {
+        newSlideElement.classList.add('active');
+    }
+    
+    // Atualizar variável
+    currentSlide = slideNumber;
+    
+    // Atualizar contador
+    const counter = document.getElementById('slideCounter');
+    if (counter) {
+        counter.textContent = `${currentSlide} / ${totalSlides}`;
+    }
+    
+    console.log('Slide atual agora:', currentSlide);
+}
+
+// Navegação por teclado
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToSlide(currentSlide - 1);
+    } else if (e.key === 'Home') {
+        e.preventDefault();
+        goToSlide(1);
+    } else if (e.key === 'End') {
+        e.preventDefault();
+        goToSlide(totalSlides);
+    }
+});
+
+// Clique na tela para navegar
+document.addEventListener('click', function(e) {
+    // Se clique foi em botão, ignorar
+    if (e.target.classList.contains('nav-btn') || e.target.closest('.nav-btn')) {
+        return;
+    }
+    
+    // Se clique no lado direito, avançar
+    if (e.clientX > window.innerWidth / 2) {
+        goToSlide(currentSlide + 1);
+    } else {
+        // Se clique no lado esquerdo, voltar
+        goToSlide(currentSlide - 1);
+    }
+});
+
+// Inicializar quando página carrega
+window.addEventListener('load', function() {
+    console.log('Página carregada, inicializando...');
+    goToSlide(1);
+});
+
+// Backup com DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM carregado, inicializando...');
+    goToSlide(1);
+});
+
+// Efeitos de transição suave entre slides
+document.querySelectorAll('.slide').forEach(slide => {
+    slide.style.transition = 'opacity 0.5s ease-in-out';
+});
+</script>
+
+</body>
+</html>
