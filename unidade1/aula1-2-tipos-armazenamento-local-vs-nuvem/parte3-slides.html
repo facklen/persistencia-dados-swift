@@ -23,7 +23,6 @@
             display: none;
             height: 100vh;
             padding: 60px;
-            display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -128,12 +127,39 @@
             color: #ecf0f1;
             padding: 30px;
             border-radius: 15px;
-            font-family: 'SF Mono', monospace;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Courier New', monospace;
             font-size: 1.3em;
             text-align: left;
             margin: 20px 0;
             max-width: 90%;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            white-space: pre-wrap;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .code-preview .comment {
+            color: #95a5a6;
+            font-style: italic;
+        }
+
+        .code-preview .success {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .code-preview .keyword {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .code-preview .string {
+            color: #f39c12;
+        }
+
+        .code-preview .type {
+            color: #3498db;
+            font-weight: bold;
         }
 
         .comparison-table {
@@ -206,6 +232,11 @@
         .nav-btn:hover {
             background: rgba(255,255,255,0.5);
             transform: translateY(-2px);
+        }
+
+        .nav-btn:active {
+            background: rgba(255,255,255,0.7);
+            transform: translateY(0);
         }
 
         .icon-grid {
@@ -282,6 +313,12 @@
                 font-size: 1.4em;
             }
 
+            .code-preview {
+                font-size: 1.1em;
+                padding: 20px;
+                margin: 15px 0;
+            }
+
             .icon-grid {
                 grid-template-columns: 1fr;
                 gap: 20px;
@@ -297,7 +334,7 @@
 <body>
 
 <!-- Slide 1: Título -->
-<div class="slide cloud-slide active" id="slide1">
+<div class="slide cloud-slide" id="slide1">
     <div class="slide-number">1/14</div>
     <div class="timing">0:00</div>
     <h1>☁️ Armazenamento na Nuvem</h1>
@@ -431,22 +468,28 @@
     <div class="timing">5:30</div>
     <h1>💻 Firebase em Ação</h1>
     
-    <div class="code-preview">
-// 🔥 Sincronização automática com Firebase
-class FirebaseSync {
-    func saveUserData() async {
-        // ✅ Salva na nuvem automaticamente
-        try await Firestore.firestore()
-            .collection("users")
+    <div class="code-preview"><span class="comment">// 🔥 Sincronização automática com Firebase</span>
+<span class="keyword">class</span> <span class="type">FirebaseSync</span> {
+    <span class="keyword">private let</span> firestore = <span class="type">Firestore</span>.firestore()
+    
+    <span class="keyword">func</span> saveUserData() <span class="keyword">async</span> {
+        <span class="keyword">let</span> startTime = <span class="type">Date</span>()
+        
+        <span class="success">// ✅ Salva na nuvem automaticamente</span>
+        <span class="keyword">try await</span> firestore
+            .collection(<span class="string">"users"</span>)
             .document(userID)
             .setData(userData)
         
-        // ✅ Sincroniza em todos os devices
-        // ✅ Backup automático garantido
-        // ✅ Acesso de qualquer lugar
+        <span class="keyword">let</span> endTime = <span class="type">Date</span>()
+        <span class="keyword">let</span> elapsed = endTime.timeIntervalSince(startTime)
+        print(<span class="string">"☁️ Sincronizado em \(elapsed * 1000)ms"</span>)
+        
+        <span class="success">// ✅ Sincroniza em todos os devices</span>
+        <span class="success">// ✅ Backup automático garantido</span>
+        <span class="success">// ✅ Acesso de qualquer lugar</span>
     }
-}
-    </div>
+}</div>
     
     <div class="highlight-box">
         <div class="medium-text">⚡ Uma linha de código = sincronização mundial!</div>
@@ -592,27 +635,34 @@ class FirebaseSync {
     <div class="timing">15:00</div>
     <h1>💰 Gestão Inteligente de Custos</h1>
     
-    <div class="code-preview">
-// 💡 Estratégia para reduzir custos na nuvem
-class SmartCloudStrategy {
+    <div class="code-preview"><span class="comment">// 💡 Estratégia para reduzir custos na nuvem</span>
+<span class="keyword">class</span> <span class="type">SmartCloudStrategy</span> {
+    <span class="keyword">private let</span> localCache = <span class="type">CacheManager</span>()
+    <span class="keyword">private let</span> firebase = <span class="type">FirebaseManager</span>()
     
-    // ✅ Cache local para reduzir chamadas
-    func loadData() async {
-        if let cached = localCache.getData() {
-            return cached  // Grátis e instantâneo
+    <span class="success">// ✅ Cache local para reduzir chamadas</span>
+    <span class="keyword">func</span> loadData() <span class="keyword">async</span> -> <span class="type">UserData</span>? {
+        <span class="comment">// Primeira tentativa: cache local (grátis e instantâneo)</span>
+        <span class="keyword">if let</span> cached = localCache.getData() {
+            <span class="keyword">return</span> cached
         }
         
-        // Só busca na nuvem se necessário
-        let cloudData = await firebase.getData()
-        localCache.save(cloudData)  // Cache para próxima vez
+        <span class="comment">// Só busca na nuvem se necessário</span>
+        <span class="keyword">let</span> cloudData = <span class="keyword">await</span> firebase.getData()
+        localCache.save(cloudData)  <span class="comment">// Cache para próxima vez</span>
+        <span class="keyword">return</span> cloudData
     }
     
-    // ✅ Batch operations para economia
-    func syncMultipleUpdates() {
-        // Agrupa várias operações em uma
-        // Reduz custos e melhora performance
+    <span class="success">// ✅ Batch operations para economia</span>
+    <span class="keyword">func</span> syncMultipleUpdates(<span class="keyword">_</span> updates: [<span class="type">Update</span>]) {
+        <span class="comment">// Agrupa várias operações em uma só</span>
+        <span class="comment">// Reduz custos e melhora performance</span>
+        firebase.batchWrite(updates)
     }
-}
+}</div>
+    
+    <div class="highlight-box">
+        <div class="medium-text">💡 Cache inteligente pode reduzir custos em 70-80%!</div>
     </div>
 </div>
 
@@ -654,13 +704,13 @@ class SmartCloudStrategy {
 </div>
 
 <div class="navigation">
-    <button class="nav-btn" onclick="goToSlide(currentSlide - 1)">← Anterior</button>
-    <button class="nav-btn" onclick="goToSlide(1)">🏠 Início</button>
+    <button class="nav-btn" id="prevBtn">← Anterior</button>
+    <button class="nav-btn" id="homeBtn">🏠 Início</button>
     <button class="nav-btn" style="background: rgba(255,255,255,0.4);">
         <span id="slideCounter">1 / 14</span>
     </button>
-    <button class="nav-btn" onclick="goToSlide(14)">🏁 Fim</button>
-    <button class="nav-btn" onclick="goToSlide(currentSlide + 1)">Próximo →</button>
+    <button class="nav-btn" id="endBtn">🏁 Fim</button>
+    <button class="nav-btn" id="nextBtn">Próximo →</button>
 </div>
 
 <script>
@@ -672,57 +722,58 @@ function goToSlide(slideNumber) {
     if (slideNumber < 1) slideNumber = 1;
     if (slideNumber > totalSlides) slideNumber = totalSlides;
     
-    console.log('Indo para slide:', slideNumber);
-    
-    // Esconder slide atual
-    const currentSlideElement = document.getElementById(`slide${currentSlide}`);
-    if (currentSlideElement) {
-        currentSlideElement.classList.remove('active');
+    try {
+        // Esconder todos os slides primeiro
+        const allSlides = document.querySelectorAll('.slide');
+        allSlides.forEach(slide => {
+            slide.classList.remove('active');
+        });
+        
+        // Mostrar o slide desejado
+        const targetSlide = document.getElementById(`slide${slideNumber}`);
+        if (targetSlide) {
+            targetSlide.classList.add('active');
+            currentSlide = slideNumber;
+            
+            // Atualizar contador
+            const counter = document.getElementById('slideCounter');
+            if (counter) {
+                counter.textContent = `${currentSlide} / ${totalSlides}`;
+            }
+        } else {
+            console.error('Slide não encontrado:', slideNumber);
+        }
+    } catch (error) {
+        console.error('Erro ao navegar para slide:', error);
     }
-    
-    // Mostrar novo slide
-    const newSlideElement = document.getElementById(`slide${slideNumber}`);
-    if (newSlideElement) {
-        newSlideElement.classList.add('active');
-    }
-    
-    // Atualizar variável
-    currentSlide = slideNumber;
-    
-    // Atualizar contador
-    const counter = document.getElementById('slideCounter');
-    if (counter) {
-        counter.textContent = `${currentSlide} / ${totalSlides}`;
-    }
-    
-    console.log('Slide atual agora:', currentSlide);
 }
 
 // Navegação por teclado
 document.addEventListener('keydown', function(e) {
-    if (e.key === 'ArrowRight' || e.key === ' ') {
-        e.preventDefault();
+    e.preventDefault();
+    
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
         goToSlide(currentSlide + 1);
-    } else if (e.key === 'ArrowLeft') {
-        e.preventDefault();
+    } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
         goToSlide(currentSlide - 1);
     } else if (e.key === 'Home') {
-        e.preventDefault();
         goToSlide(1);
     } else if (e.key === 'End') {
-        e.preventDefault();
         goToSlide(totalSlides);
     }
 });
 
 // Clique na tela para navegar
 document.addEventListener('click', function(e) {
-    // Se clique foi em botão, ignorar
-    if (e.target.classList.contains('nav-btn') || e.target.closest('.nav-btn')) {
+    // Se clique foi em botão de navegação ou dentro da área de navegação, ignorar
+    if (e.target.classList.contains('nav-btn') || 
+        e.target.closest('.nav-btn') || 
+        e.target.closest('.navigation') ||
+        e.target.id === 'slideCounter') {
         return;
     }
     
-    // Se clique no lado direito, avançar
+    // Se clique no lado direito da tela, avançar
     if (e.clientX > window.innerWidth / 2) {
         goToSlide(currentSlide + 1);
     } else {
@@ -731,17 +782,70 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Inicializar quando página carrega
-window.addEventListener('load', function() {
-    console.log('Página carregada, inicializando...');
+// Prevenir comportamento padrão em links
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurar botões de navegação usando IDs
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const homeBtn = document.getElementById('homeBtn');
+    const endBtn = document.getElementById('endBtn');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide - 1);
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide + 1);
+        });
+    }
+    
+    if (homeBtn) {
+        homeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(1);
+        });
+    }
+    
+    if (endBtn) {
+        endBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(totalSlides);
+        });
+    }
+    
+    // Inicializar primeiro slide
     goToSlide(1);
 });
 
-// Backup com DOMContentLoaded
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM carregado, inicializando...');
-    goToSlide(1);
+// Também inicializar quando window carrega (backup)
+window.addEventListener('load', function() {
+    // Garantir que o primeiro slide está ativo se nenhum outro estiver
+    const activeSlides = document.querySelectorAll('.slide.active');
+    if (activeSlides.length === 0) {
+        goToSlide(1);
+    }
 });
+
+// Função de debug para testar
+function testSlideNavigation() {
+    console.log('Testando navegação...');
+    console.log('Slide atual:', currentSlide);
+    console.log('Total de slides:', totalSlides);
+    
+    for (let i = 1; i <= totalSlides; i++) {
+        const slide = document.getElementById(`slide${i}`);
+        console.log(`Slide ${i}:`, slide ? 'existe' : 'não encontrado');
+    }
+}
 </script>
 
 </body>
