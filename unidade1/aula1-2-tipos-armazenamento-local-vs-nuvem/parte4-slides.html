@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slides - Parte 4: Estratégias Híbridas e Matriz de Decisão</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .slide {
+            display: none;
+            height: 100vh;
+            width: 100vw;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+            position: relative;
+        }
+        
+        .slide.active {
+            display: flex;
+        }
+        
+        .slide-number {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.2em;
+        }
+        
+        .timing {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.2em;
+        }
+        
+        h1 {
+            font-size: 4em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            line-height: 1.2;
+        }
+        
+        h2 {
+            font-size: 3em;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .big-text {
+            font-size: 2.5em;
+            line-height: 1.4;
+            max-width: 90%;
+        }
+        
+        .medium-text {
+            font-size: 2em;
+            line-height: 1.5;
+            max-width: 90%;
+        }
+        
+        .highlight-box {
+            background: rgba(255,255,255,0.15);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .problem-slide {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+        
+        .solution-slide {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+        }
+        
+        .hybrid-slide {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        }
+        
+        .matrix-slide {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+        
+        .scenario-slide {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+        
+        .checklist {
+            text-align: left;
+            font-size: 1.8em;
+            line-height: 1.8;
+            max-width: 80%;
+        }
+        
+        .checklist li {
+            margin: 15px 0;
+            list-style: none;
+        }
+        
+        .code-preview {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 25px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.3em;
+            text-align: left;
+            margin: 20px 0;
+            max-width: 90%;
+            line-height: 1.5;
+        }
+        
+        .comparison-table {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 1.4em;
+        }
+        
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .comparison-table th {
+            background: rgba(255,255,255,0.2);
+            font-weight: bold;
+        }
+        
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            background: rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.5);
+            transform: translateY(-2px);
+        }
+        
+        .dramatic-text {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .fade-in {
+            animation: fadeIn 1.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+            font-size: 1.2em;
+        }
+
+        .matrix-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .analogy-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .analogy-item {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 10px;
+            flex: 1;
+            min-width: 200px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Título -->
+<div class="slide active hybrid-slide" id="slide1">
+    <div class="slide-number">1/15</div>
+    <div class="timing">0:00</div>
+    <h1 class="fade-in">🤝 Estratégias Híbridas</h1>
+    <div class="big-text fade-in">
+        O Melhor dos Dois Mundos
+    </div>
+    <div class="highlight-box fade-in">
+        <h2>💡 A Solução Definitiva:</h2>
+        <div class="medium-text">Velocidade Local + Segurança da Nuvem</div>
+    </div>
+    <div class="subtitle fade-in">Parte 4: Matriz de Decisão Profissional</div>
+</div>
+
+<!-- Slide 2: O Grande Problema -->
+<div class="slide problem-slide" id="slide2">
+    <div class="slide-number">2/15</div>
+    <div class="timing">0:30</div>
+    <h1>😰 O Dilema que Todo Dev Enfrenta</h1>
+    <div class="big-text">
+        "Preciso escolher entre<br>
+        ⚡ <strong>Velocidade</strong> ou 🛡️ <strong>Segurança</strong>?<br><br>
+        📱 <strong>Offline</strong> ou 🌐 <strong>Sincronização</strong>?<br><br>
+        💰 <strong>Custo baixo</strong> ou 🔄 <strong>Backup automático</strong>?"
+    </div>
+    <div class="highlight-box">
+        <h2>❌ FALSO DILEMA!</h2>
+        <div class="medium-text">E se você pudesse ter TUDO?</div>
+    </div>
+</div>
+
+<!-- Slide 3: A Analogia da Biblioteca -->
+<div class="slide scenario-slide" id="slide3">
+    <div class="slide-number">3/15</div>
+    <div class="timing">1:00</div>
+    <h1>📚 A Analogia da Biblioteca Perfeita</h1>
+    <div class="analogy-container">
+        <div class="analogy-item">
+            <h3>🏠 Biblioteca Pessoal</h3>
+            <p>Livros que você lê diariamente<br>
+            <strong>Acesso instantâneo</strong><br>
+            Sempre disponível</p>
+        </div>
+        <div class="analogy-item">
+            <h3>🏛️ Biblioteca Municipal</h3>
+            <p>Backup de todos os livros<br>
+            <strong>Segurança total</strong><br>
+            Acesso de qualquer lugar</p>
+        </div>
+    </div>
+    <div class="highlight-box">
+        <h2>🔄 Sistema Inteligente de Sincronização</h2>
+        <div class="medium-text">Mantém tudo organizado automaticamente!</div>
+    </div>
+</div>
+
+<!-- Slide 4: Como Funciona -->
+<div class="slide hybrid-slide" id="slide4">
+    <div class="slide-number">4/15</div>
+    <div class="timing">1:30</div>
+    <h2>⚙️ Como Funciona na Prática</h2>
+    <div class="checklist">
+        <li>📱 <strong>Dados locais</strong> → Acesso instantâneo (1-5ms)</li>
+        <li>☁️ <strong>Backup na nuvem</strong> → Segurança automática</li>
+        <li>🔄 <strong>Sincronização inteligente</strong> → Quando tem internet</li>
+        <li>⚡ <strong>Funcionamento offline</strong> → 100% funcional</li>
+        <li>🤝 <strong>Resolução de conflitos</strong> → Automática</li>
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">Usuário nunca percebe a complexidade!</div>
+    </div>
+</div>
+
+<!-- Slide 5: Cenário 1 - Consultor -->
+<div class="slide scenario-slide" id="slide5">
+    <div class="slide-number">5/15</div>
+    <div class="timing">2:00</div>
+    <h1>✈️ Cenário: O Consultor em Viagem</h1>
+    <div class="big-text">
+        <strong>Pedro</strong> viaja muito pelo Brasil...<br><br>
+        🛫 <span style="color: #e74c3c;">No avião (sem internet)</span><br>
+        ✅ App funciona perfeitamente<br><br>
+        🏨 <span style="color: #f39c12;">No hotel (WiFi instável)</span><br>
+        ✅ Sincroniza automaticamente<br><br>
+        🏢 <span style="color: #2ecc71;">No cliente (internet boa)</span><br>
+        ✅ Apresentação fluida
+    </div>
+    <div class="highlight-box">
+        <h2>🎯 Resultado: 100% de produtividade!</h2>
+    </div>
+</div>
+
+<!-- Slide 6: Cenário 2 - Família -->
+<div class="slide scenario-slide" id="slide6">
+    <div class="slide-number">6/15</div>
+    <div class="timing">2:30</div>
+    <h1>👨‍👩‍👧‍👦 Cenário: Família Organizando Finanças</h1>
+    <div class="big-text">
+        <strong>Família Silva</strong> quer organizar orçamento...<br><br>
+        🏠 <span style="color: #2ecc71;">Em casa (WiFi bom)</span><br>
+        👨 Pai adiciona despesa → Todos veem<br><br>
+        🛒 <span style="color: #e74c3c;">No mercado (sem sinal)</span><br>
+        👩 Mãe adiciona compras → Salva local<br><br>
+        🔄 <span style="color: #3498db;">De volta</span><br>
+        ✅ Sincroniza automaticamente
+    </div>
+    <div class="highlight-box">
+        <h2>💕 Resultado: Harmonia familiar!</h2>
+    </div>
+</div>
+
+<!-- Slide 7: Exemplo Prático -->
+<div class="slide hybrid-slide" id="slide7">
+    <div class="slide-number">7/15</div>
+    <div class="timing">3:00</div>
+    <h2>💻 App de Finanças: Estratégia Híbrida</h2>
+    <div class="matrix-grid">
+        <div class="matrix-item">
+            <h3>💰 Transações</h3>
+            <p><strong>🤝 Híbrido</strong><br>
+            Local: velocidade<br>
+            Nuvem: backup</p>
+        </div>
+        <div class="matrix-item">
+            <h3>⚙️ Configurações</h3>
+            <p><strong>📱 Local</strong><br>
+            Específico do device<br>
+            Acesso instantâneo</p>
+        </div>
+        <div class="matrix-item">
+            <h3>📊 Relatórios</h3>
+            <p><strong>🤝 Híbrido</strong><br>
+            Computação local<br>
+            Sync multi-device</p>
+        </div>
+        <div class="matrix-item">
+            <h3>🔐 Dados bancários</h3>
+            <p><strong>📱 Local</strong><br>
+            Ultra-sensível<br>
+            Keychain seguro</p>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 8: Código Híbrido -->
+<div class="slide hybrid-slide" id="slide8">
+    <div class="slide-number">8/15</div>
+    <div class="timing">3:30</div>
+    <h2>🛠️ Código: Estratégia Híbrida</h2>
+    <div class="code-preview">
+class HybridDataManager {
+    func saveTransaction(_ transaction: Transaction) {
+        // ✅ Local: instantâneo (1-2ms)
+        localStore.save(transaction)
+        
+        // ✅ Nuvem: backup em background
+        cloudStore.syncInBackground(transaction)
+    }
+    
+    func loadTransactions() -> [Transaction] {
+        // ⚡ Sempre carrega do local
+        let data = localStore.fetchAll()
+        
+        // 🔄 Sincroniza se online
+        if NetworkManager.isConnected {
+            cloudStore.syncIfNeeded()
+        }
+        
+        return data
+    }
+}
+    </div>
+</div>
+
+<!-- Slide 9: Matriz de Decisão Intro -->
+<div class="slide matrix-slide" id="slide9">
+    <div class="slide-number">9/15</div>
+    <div class="timing">4:00</div>
+    <h1>📊 Matriz de Decisão</h1>
+    <div class="big-text">
+        Seu <strong>"GPS Arquitetural"</strong><br><br>
+        Para eliminar 99% das dúvidas<br>
+        sobre persistência de dados
+    </div>
+    <div class="highlight-box">
+        <h2>🎯 3 Passos Simples:</h2>
+        <div class="medium-text">
+            1. Identifica necessidades<br>
+            2. Aplica a matriz<br>
+            3. Valida com cenários
+        </div>
+    </div>
+</div>
+
+<!-- Slide 10: Matriz Simplificada -->
+<div class="slide matrix-slide" id="slide10">
+    <div class="slide-number">10/15</div>
+    <div class="timing">4:30</div>
+    <h2>📋 Matriz Simplificada</h2>
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Tipo de Dado</th>
+                    <th>📱 Local</th>
+                    <th>☁️ Nuvem</th>
+                    <th>🤝 Híbrido</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Configurações</td>
+                    <td style="color: #2ecc71;">✅</td>
+                    <td style="color: #e74c3c;">❌</td>
+                    <td style="color: #f39c12;">⚡</td>
+                </tr>
+                <tr>
+                    <td>Finanças pessoais</td>
+                    <td style="color: #f39c12;">⚡</td>
+                    <td style="color: #f39c12;">⚡</td>
+                    <td style="color: #2ecc71;">✅</td>
+                </tr>
+                <tr>
+                    <td>Colaboração</td>
+                    <td style="color: #e74c3c;">❌</td>
+                    <td style="color: #2ecc71;">✅</td>
+                    <td style="color: #2ecc71;">✅</td>
+                </tr>
+                <tr>
+                    <td>Cache</td>
+                    <td style="color: #2ecc71;">✅</td>
+                    <td style="color: #e74c3c;">❌</td>
+                    <td style="color: #f39c12;">⚡</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Slide 11: Fluxo de Decisão -->
+<div class="slide matrix-slide" id="slide11">
+    <div class="slide-number">11/15</div>
+    <div class="timing">5:00</div>
+    <h2>🔄 Fluxo de Decisão Rápida</h2>
+    <div class="checklist">
+        <li>🔍 <strong>Acesso frequente?</strong><br>
+            ✅ Sim → 📱 Local ou 🤝 Híbrido</li>
+        <li>💔 <strong>Perda é catastrófica?</strong><br>
+            ✅ Sim → ☁️ Nuvem ou 🤝 Híbrido</li>
+        <li>🤝 <strong>Colaboração obrigatória?</strong><br>
+            ✅ Sim → ☁️ Nuvem ou 🤝 Híbrido</li>
+        <li>📶 <strong>Deve funcionar offline?</strong><br>
+            ✅ Sim → 📱 Local ou 🤝 Híbrido</li>
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">Na dúvida: 🤝 Híbrido sempre funciona!</div>
+    </div>
+</div>
+
+<!-- Slide 12: Validação -->
+<div class="slide matrix-slide" id="slide12">
+    <div class="slide-number">12/15</div>
+    <div class="timing">5:30</div>
+    <h2>✅ Teste Mental de Validação</h2>
+    <div class="big-text">
+        Para cada decisão, imagine:<br><br>
+        📱 <strong>Usuário sem internet</strong><br>
+        App ainda funciona para tarefas essenciais?<br><br>
+        💔 <strong>Device perdido/roubado</strong><br>
+        Dados críticos estão seguros?<br><br>
+        📈 <strong>App cresceu 100x</strong><br>
+        Custos são sustentáveis?
+    </div>
+</div>
+
+<!-- Slide 13: Vantagens Combinadas -->
+<div class="slide solution-slide" id="slide13">
+    <div class="slide-number">13/15</div>
+    <div class="timing">6:00</div>
+    <h1>🌟 Vantagens das Estratégias Híbridas</h1>
+    <div class="checklist">
+        <li>⚡ <strong>Velocidade máxima</strong> → Dados locais</li>
+        <li>🛡️ <strong>Segurança total</strong> → Backup automático</li>
+        <li>📶 <strong>Funciona offline</strong> → 100% disponível</li>
+        <li>🔄 <strong>Sincronização</strong> → Multi-device</li>
+        <li>💰 <strong>Custos otimizados</strong> → Só usa nuvem quando necessário</li>
+        <li>👥 <strong>Colaboração</strong> → Quando precisar</li>
+    </div>
+    <div class="highlight-box">
+        <h2>🏆 O melhor de TODOS os mundos!</h2>
+    </div>
+</div>
+
+<!-- Slide 14: Próximos Passos -->
+<div class="slide solution-slide" id="slide14">
+    <div class="slide-number">14/15</div>
+    <div class="timing">6:30</div>
+    <h2>🚀 Próximos Passos</h2>
+    <div class="checklist">
+        <li>📖 <strong>Parte 5:</strong> Resumo completo da aula</li>
+        <li>💪 <strong>Exercícios práticos</strong> progressivos</li>
+        <li>🎓 <strong>Certificação</strong> de competências</li>
+        <li>🎯 <strong>Preparação</strong> para UserDefaults na prática</li>
+    </div>
+    <div class="highlight-box">
+        <h2>🎯 Meta: Aplicar conhecimento com confiança!</h2>
+    </div>
+</div>
+
+<!-- Slide 15: Conclusão -->
+<div class="slide solution-slide" id="slide15">
+    <div class="slide-number">15/15</div>
+    <div class="timing">7:00</div>
+    <h1>✨ Você Domina Estratégias Híbridas!</h1>
+    <div class="big-text">
+        🤝 <strong>Combinar</strong> local + nuvem<br>
+        📊 <strong>Decidir</strong> com matriz profissional<br>
+        🎯 <strong>Validar</strong> com cenários reais<br>
+        ⚡ <strong>Otimizar</strong> experiência do usuário
+    </div>
+    <div class="highlight-box">
+        <h2 class="dramatic-text">🚀 Pronto para a Parte 5!</h2>
+        <div class="medium-text">Continue dominando persistência de dados!</div>
+    </div>
+</div>
+
+<div class="navigation">
+    <button class="nav-btn" onclick="goToSlide(currentSlide - 1)">← Anterior</button>
+    <button class="nav-btn" onclick="goToSlide(1)">🏠 Início</button>
+    <button class="nav-btn" style="background: rgba(255,255,255,0.4);">
+        <span id="slideCounter">1 / 15</span>
+    </button>
+    <button class="nav-btn" onclick="goToSlide(15)">🏁 Fim</button>
+    <button class="nav-btn" onclick="goToSlide(currentSlide + 1)">Próximo →</button>
+</div>
+
+<script>
+let currentSlide = 1;
+const totalSlides = 15;
+
+function goToSlide(slideNumber) {
+    // Validar número do slide
+    if (slideNumber < 1) slideNumber = 1;
+    if (slideNumber > totalSlides) slideNumber = totalSlides;
+    
+    console.log('Indo para slide:', slideNumber);
+    
+    // Esconder slide atual
+    const currentSlideElement = document.getElementById(`slide${currentSlide}`);
+    if (currentSlideElement) {
+        currentSlideElement.classList.remove('active');
+    }
+    
+    // Mostrar novo slide
+    const newSlideElement = document.getElementById(`slide${slideNumber}`);
+    if (newSlideElement) {
+        newSlideElement.classList.add('active');
+    }
+    
+    // Atualizar variável
+    currentSlide = slideNumber;
+    
+    // Atualizar contador
+    const counter = document.getElementById('slideCounter');
+    if (counter) {
+        counter.textContent = `${currentSlide} / ${totalSlides}`;
+    }
+    
+    console.log('Slide atual agora:', currentSlide);
+}
+
+// Navegação por teclado
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        goToSlide(currentSlide - 1);
+    } else if (e.key === 'Home') {
+        e.preventDefault();
+        goToSlide(1);
+    } else if (e.key === 'End') {
+        e.preventDefault();
+        goToSlide(totalSlides);
+    }
+});
+
+// Clique na tela para navegar
+document.addEventListener('click', function(e) {
+    // Se clique foi em botão, ignorar
+    if (e.target.classList.contains('nav-btn') || e.target.closest('.nav-btn')) {
+        return;
+    }
+    
+    // Se clique no lado direito, avançar
+    if (e.clientX > window.innerWidth / 2) {
+        goToSlide(currentSlide + 1);
+    } else {
+        // Se clique no lado esquerdo, voltar
+        goToSlide(currentSlide - 1);
+    }
+});
+
+// Inicializar quando página carrega
+window.addEventListener('load', function() {
+    console.log('Página carregada, inicializando...');
+    goToSlide(1);
+});
+
+// Backup com DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM carregado, inicializando...');
+    goToSlide(1);
+});
+</script>
+
+</body>
+</html>
