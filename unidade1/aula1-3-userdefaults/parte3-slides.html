@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parte 3: Property Wrappers e Objetos Complexos - Slides Interativos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .slide {
+            display: none;
+            height: 100vh;
+            padding: 60px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        .slide-number {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+        }
+
+        .timing {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 4em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .big-text {
+            font-size: 2.5em;
+            line-height: 1.4;
+            max-width: 90%;
+        }
+        
+        .medium-text {
+            font-size: 2em;
+            line-height: 1.5;
+            max-width: 90%;
+        }
+        
+        .highlight-box {
+            background: rgba(255,255,255,0.15);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+            border: 2px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .intro-slide {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .concept-slide {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .magic-slide {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .comparison-slide {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .implementation-slide {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        .complex-slide {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+        
+        .decision-slide {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        }
+
+        .code-preview {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 30px;
+            border-radius: 15px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Courier New', monospace;
+            font-size: 1.3em;
+            text-align: left;
+            margin: 20px 0;
+            max-width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            white-space: pre-wrap;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .code-preview .comment {
+            color: #95a5a6;
+            font-style: italic;
+        }
+
+        .code-preview .success {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .code-preview .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .code-preview .keyword {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .code-preview .string {
+            color: #f39c12;
+        }
+
+        .code-preview .type {
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        .comparison-table {
+            background: rgba(255,255,255,0.95);
+            color: #2c3e50;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 1.2em;
+            max-width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .comparison-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .check { color: #27ae60; font-weight: bold; }
+        .cross { color: #e74c3c; font-weight: bold; }
+        .warning { color: #f39c12; font-weight: bold; }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            background: rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.5);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:active {
+            background: rgba(255,255,255,0.7);
+            transform: translateY(0);
+        }
+
+        .analogy-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            max-width: 1000px;
+            margin: 30px 0;
+        }
+
+        .analogy-item {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .analogy-item h3 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .dramatic-text {
+            color: #ecf0f1;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            max-width: 800px;
+            margin: 30px 0;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .checklist {
+            text-align: left;
+            font-size: 1.8em;
+            line-height: 1.8;
+            max-width: 80%;
+        }
+
+        .checklist li {
+            margin: 15px 0;
+            list-style: none;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Título -->
+<div class="slide intro-slide active" id="slide1">
+    <div class="slide-number">1/15</div>
+    <div class="timing">0:00</div>
+    <h1>🎁 Property Wrappers</h1>
+    <div class="big-text">A <strong>mágica</strong> que elimina<br>90% do código repetitivo!</div>
+    
+    <div class="highlight-box">
+        <h2>Objetos Complexos com Codable</h2>
+        <div class="medium-text">Persistência automática e transparente</div>
+    </div>
+</div>
+
+<!-- Slide 2: O Problema -->
+<div class="slide concept-slide" id="slide2">
+    <div class="slide-number">2/15</div>
+    <div class="timing">1:00</div>
+    <h1>😱 O Pesadelo do Copy-Paste</h1>
+    
+    <div class="code-preview">
+<span class="comment">// ❌ Código que você escreve 50+ vezes:</span>
+<span class="keyword">var</span> userName: <span class="type">String</span> {
+    <span class="keyword">get</span> { 
+        UserDefaults.standard.string(forKey: <span class="string">"user_name"</span>) ?? <span class="string">""</span> 
+    }
+    <span class="keyword">set</span> { 
+        UserDefaults.standard.set(newValue, forKey: <span class="string">"user_name"</span>) 
+    }
+}
+
+<span class="keyword">var</span> userAge: <span class="type">Int</span> {
+    <span class="keyword">get</span> { UserDefaults.standard.integer(forKey: <span class="string">"user_age"</span>) }
+    <span class="keyword">set</span> { UserDefaults.standard.set(newValue, forKey: <span class="string">"user_age"</span>) }
+}
+
+<span class="comment">// ... mais 48 propriedades iguais = 235 linhas! 😵</span>
+    </div>
+    
+    <div class="highlight-box">
+        <div class="dramatic-text">🔥 235 linhas de código repetitivo!</div>
+    </div>
+</div>
+
+<!-- Slide 3: Analogia do Assistente -->
+<div class="slide magic-slide" id="slide3">
+    <div class="slide-number">3/15</div>
+    <div class="timing">2:30</div>
+    <h1>🎭 Analogia do Assistente Mágico</h1>
+    
+    <div class="analogy-grid">
+        <div class="analogy-item">
+            <h3>🏢 Você (Executivo)</h3>
+            <div class="medium-text">
+                "Assine este documento"<br>
+                <span style="opacity: 0.8;">(simples e direto)</span>
+            </div>
+        </div>
+        
+        <div class="analogy-item">
+            <h3>👔 Assistente Mágico</h3>
+            <div class="medium-text">
+                1. Lê o documento<br>
+                2. Assina no lugar correto<br>
+                3. Carimba a data<br>
+                4. Arquiva na pasta<br>
+                5. Envia confirmação
+            </div>
+        </div>
+    </div>
+    
+    <div class="highlight-box">
+        <div class="big-text">Property Wrappers = Assistente mágico para suas propriedades!</div>
+    </div>
+</div>
+
+<!-- Slide 4: Casa Inteligente -->
+<div class="slide magic-slide" id="slide4">
+    <div class="slide-number">4/15</div>
+    <div class="timing">3:30</div>
+    <h1>🏡 Casa Normal vs Casa Inteligente</h1>
+    
+    <div class="analogy-grid">
+        <div class="analogy-item">
+            <h3>🏚️ Casa Normal</h3>
+            <div class="medium-text">
+                Para ligar a luz:<br>
+                • Ir até o interruptor<br>
+                • Verificar energia<br>
+                • Acionar manualmente<br>
+                • Ajustar intensidade<br>
+                <span style="color: #e74c3c;">= 10 passos toda vez!</span>
+            </div>
+        </div>
+        
+        <div class="analogy-item">
+            <h3>🏡 Casa Inteligente</h3>
+            <div class="medium-text">
+                Para ligar a luz:<br>
+                <strong>"Alexa, ligue a luz"</strong><br>
+                <span style="opacity: 0.8;">E ela cuida de tudo!</span><br><br>
+                <span style="color: #2ecc71;">= 1 comando apenas!</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="highlight-box">
+        <div class="medium-text">@UserDefault = Casa inteligente para suas variáveis!</div>
+    </div>
+</div>
+
+<!-- Slide 5: Implementação Básica -->
+<div class="slide implementation-slide" id="slide5">
+    <div class="slide-number">5/15</div>
+    <div class="timing">5:00</div>
+    <h1>🔧 Property Wrapper na Prática</h1>
+    
+    <div class="code-preview">
+<span class="comment">// ✨ O Property Wrapper mágico:</span>
+<span style="color: #f39c12;">@propertyWrapper</span>
+<span class="keyword">struct</span> <span class="type">UserDefault</span>&lt;<span class="type">T</span>&gt; {
+    <span class="keyword">let</span> key: <span class="type">String</span>
+    <span class="keyword">let</span> defaultValue: <span class="type">T</span>
+    
+    <span class="keyword">var</span> wrappedValue: <span class="type">T</span> {
+        <span class="keyword">get</span> {
+            <span class="comment">// 🔍 Busca automática no UserDefaults</span>
+            <span class="keyword">return</span> UserDefaults.standard.object(forKey: key) <span class="keyword">as?</span> <span class="type">T</span> ?? defaultValue
+        }
+        <span class="keyword">set</span> {
+            <span class="comment">// 💾 Salvamento automático</span>
+            UserDefaults.standard.set(newValue, forKey: key)
+        }
+    }
+}
+    </div>
+</div>
+
+<!-- Slide 6: Uso Simples -->
+<div class="slide comparison-slide" id="slide6">
+    <div class="slide-number">6/15</div>
+    <div class="timing">7:00</div>
+    <h1>✨ Uso = Propriedade Normal!</h1>
+    
+    <div class="code-preview">
+<span class="comment">// ✅ Agora é simples assim:</span>
+<span style="color: #f39c12;">@UserDefault("user_name", defaultValue: "")</span>
+<span class="keyword">var</span> userName: <span class="type">String</span>
+
+<span style="color: #f39c12;">@UserDefault("user_age", defaultValue: 0)</span>
+<span class="keyword">var</span> userAge: <span class="type">Int</span>
+
+<span style="color: #f39c12;">@UserDefault("notifications_enabled", defaultValue: true)</span>
+<span class="keyword">var</span> notificationsEnabled: <span class="type">Bool</span>
+
+<span class="comment">// 🎉 Uso normal:</span>
+userName = <span class="string">"João"</span>        <span class="comment">// Salva automaticamente!</span>
+<span class="keyword">print</span>(userName)            <span class="comment">// Carrega automaticamente!</span>
+    </div>
+    
+    <div class="highlight-box">
+        <div class="big-text">50 propriedades = 50 linhas elegantes!</div>
+    </div>
+</div>
+
+<!-- Slide 7: Comparação Dramática -->
+<div class="slide comparison-slide" id="slide7">
+    <div class="slide-number">7/15</div>
+    <div class="timing">8:30</div>
+    <h1>🥊 Comparação Dramática</h1>
+    
+    <div class="comparison-table">
+        <table>
+            <tr>
+                <th>Aspecto</th>
+                <th style="background: #e74c3c;">❌ SEM Property Wrapper</th>
+                <th style="background: #27ae60;">✅ COM Property Wrapper</th>
+            </tr>
+            <tr>
+                <td><strong>Código</strong></td>
+                <td class="cross">235 linhas repetitivas</td>
+                <td class="check">50 linhas elegantes</td>
+            </tr>
+            <tr>
+                <td><strong>Bugs</strong></td>
+                <td class="cross">Copy-paste errors</td>
+                <td class="check">Zero bugs humanos</td>
+            </tr>
+            <tr>
+                <td><strong>Manutenção</strong></td>
+                <td class="cross">Alterar 50+ lugares</td>
+                <td class="check">Alterar 1 lugar</td>
+            </tr>
+            <tr>
+                <td><strong>Type Safety</strong></td>
+                <td class="cross">Strings mágicas</td>
+                <td class="check">100% type-safe</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="highlight-box">
+        <div class="dramatic-text">90% menos código = 1000% mais produtividade!</div>
+    </div>
+</div>
+
+<!-- Slide 8: Quando Usar -->
+<div class="slide decision-slide" id="slide8">
+    <div class="slide-number">8/15</div>
+    <div class="timing">10:00</div>
+    <h1>🎯 Quando Usar Property Wrappers?</h1>
+    
+    <div class="stats-grid">
+        <div class="stat-item">
+            <div class="stat-number check">✅</div>
+            <div class="medium-text">
+                <strong>Código Repetitivo</strong><br>
+                Mesmo padrão 3+ vezes
+            </div>
+        </div>
+        
+        <div class="stat-item">
+            <div class="stat-number check">✅</div>
+            <div class="medium-text">
+                <strong>Lógica Complexa</strong><br>
+                Validação, criptografia, cache
+            </div>
+        </div>
+        
+        <div class="stat-item">
+            <div class="stat-number cross">❌</div>
+            <div class="medium-text">
+                <strong>Lógica Única</strong><br>
+                Cálculo específico de 1 propriedade
+            </div>
+        </div>
+        
+        <div class="stat-item">
+            <div class="stat-number cross">❌</div>
+            <div class="medium-text">
+                <strong>Só Computação</strong><br>
+                Sem persistência de estado
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 9: Objetos Complexos Intro -->
+<div class="slide complex-slide" id="slide9">
+    <div class="slide-number">9/15</div>
+    <div class="timing">12:00</div>
+    <h1>📦 Objetos Complexos</h1>
+    <div class="big-text">E se quisermos salvar<br><strong>estruturas inteiras?</strong></div>
+    
+    <div class="code-preview">
+<span class="comment">// 🏗️ Estrutura complexa com dados aninhados:</span>
+<span class="keyword">struct</span> <span class="type">UserProfile</span>: <span class="type">Codable</span> {
+    <span class="keyword">var</span> name: <span class="type">String</span>
+    <span class="keyword">var</span> email: <span class="type">String</span>
+    <span class="keyword">var</span> preferences: <span class="type">UserPreferences</span>
+    <span class="keyword">var</span> updatedAt: <span class="type">Date</span>
+}
+
+<span class="keyword">struct</span> <span class="type">UserPreferences</span>: <span class="type">Codable</span> {
+    <span class="keyword">var</span> theme: <span class="type">String</span>
+    <span class="keyword">var</span> notifications: <span class="type">NotificationSettings</span>
+}
+    </div>
+    
+    <div class="highlight-box">
+        <div class="medium-text">Como salvar isso tudo automaticamente?</div>
+    </div>
+</div>
+
+<!-- Slide 10: CodableUserDefault -->
+<div class="slide complex-slide" id="slide10">
+    <div class="slide-number">10/15</div>
+    <div class="timing">13:30</div>
+    <h1>🎁 @CodableUserDefault</h1>
+    
+    <div class="code-preview">
+<span class="comment">// ✨ Property Wrapper para objetos complexos:</span>
+<span style="color: #f39c12;">@propertyWrapper</span>
+<span class="keyword">struct</span> <span class="type">CodableUserDefault</span>&lt;<span class="type">T</span>: <span class="type">Codable</span>&gt; {
+    <span class="keyword">let</span> key: <span class="type">String</span>
+    <span class="keyword">let</span> defaultValue: <span class="type">T</span>
+    
+    <span class="keyword">var</span> wrappedValue: <span class="type">T</span> {
+        <span class="keyword">get</span> {
+            <span class="comment">// 🔍 Buscar e converter JSON → Objeto</span>
+            <span class="keyword">guard</span> <span class="keyword">let</span> data = UserDefaults.standard.data(forKey: key),
+                  <span class="keyword">let</span> object = <span class="keyword">try?</span> JSONDecoder().decode(<span class="type">T</span>.<span class="keyword">self</span>, from: data) <span class="keyword">else</span> {
+                <span class="keyword">return</span> defaultValue
+            }
+            <span class="keyword">return</span> object
+        }
+        <span class="keyword">set</span> {
+            <span class="comment">// 💾 Converter Objeto → JSON e salvar</span>
+            <span class="keyword">let</span> data = <span class="keyword">try?</span> JSONEncoder().encode(newValue)
+            UserDefaults.standard.set(data, forKey: key)
+        }
+    }
+}
+    </div>
+</div>
+
+<!-- Slide 11: Uso de Objetos Complexos -->
+<div class="slide complex-slide" id="slide11">
+    <div class="slide-number">11/15</div>
+    <div class="timing">15:00</div>
+    <h1>🚀 Uso = Simples como Antes!</h1>
+    
+    <div class="code-preview">
+<span class="comment">// ✅ Objeto complexo salvo automaticamente:</span>
+<span style="color: #f39c12;">@CodableUserDefault("user_profile", defaultValue: UserProfile.empty)</span>
+<span class="keyword">static</span> <span class="keyword">var</span> userProfile: <span class="type">UserProfile</span>
+
+<span class="comment">// 🎉 Uso normal como qualquer propriedade:</span>
+<span class="keyword">var</span> profile = AppSettings.userProfile
+profile.name = <span class="string">"Ana Silva"</span>
+profile.email = <span class="string">"ana@empresa.com"</span>
+profile.preferences.theme = <span class="string">"dark"</span>
+profile.preferences.notifications.enabled = <span class="keyword">true</span>
+
+<span class="comment">// 💾 Salvar é só uma atribuição!</span>
+AppSettings.userProfile = profile
+
+<span class="success">// ✨ Estrutura inteira salva automaticamente!</span>
+    </div>
+    
+    <div class="highlight-box">
+        <div class="medium-text">Objetos complexos = Propriedades simples!</div>
+    </div>
+</div>
+
+<!-- Slide 12: Demonstração Real -->
+<div class="slide implementation-slide" id="slide12">
+    <div class="slide-number">12/15</div>
+    <div class="timing">16:30</div>
+    <h1>🧪 Demonstração Prática</h1>
+    
+    <div class="checklist">
+        <ul>
+            <li>✅ <strong>Criar</strong> UserProfile complexo</li>
+            <li>✅ <strong>Modificar</strong> propriedades aninhadas</li>
+            <li>✅ <strong>Salvar</strong> com uma linha</li>
+            <li>✅ <strong>Force-close</strong> o app</li>
+            <li>✅ <strong>Reabrir</strong> e confirmar persistência</li>
+            <li>✅ <strong>Celebrar</strong> a mágica! 🎉</li>
+        </ul>
+    </div>
+    
+    <div class="highlight-box">
+        <div class="dramatic-text">Agora vamos ver isso funcionando no Xcode!</div>
+    </div>
+</div>
+
+<!-- Slide 13: Vantagens Resumidas -->
+<div class="slide comparison-slide" id="slide13">
+    <div class="slide-number">13/15</div>
+    <div class="timing">18:00</div>
+    <h1>🏆 Property Wrappers em 5 Pontos</h1>
+    
+    <div class="stats-grid">
+        <div class="stat-item">
+            <div class="stat-number">🎭</div>
+            <div class="medium-text">
+                <strong>"Assistentes Mágicos"</strong><br>
+                Trabalho complexo nos bastidores
+            </div>
+        </div>
+        
+        <div class="stat-item">
+            <div class="stat-number">✂️</div>
+            <div class="medium-text">
+                <strong>Eliminam Repetição</strong><br>
+                1 linha substitui 8 linhas
+            </div>
+        </div>
+        
+        <div class="stat-item">
+            <div class="stat-number">🛡️</div>
+            <div class="medium-text">
+                <strong>Garantem Consistência</strong><br>
+                Comportamento uniforme sempre
+            </div>
+        </div>
+        
+        <div class="stat-item">
+            <div class="stat-number">♻️</div>
+            <div class="medium-text">
+                <strong>São Reutilizáveis</strong><br>
+                Escreve 1x, usa infinitas vezes
+            </div>
+        </div>
+    </div>
+    
+    <div class="highlight-box">
+        <div class="big-text">✨ Mantêm Simplicidade = Propriedades normais!</div>
+    </div>
+</div>
+
+<!-- Slide 14: Regra de Ouro -->
+<div class="slide decision-slide" id="slide14">
+    <div class="slide-number">14/15</div>
+    <div class="timing">19:00</div>
+    <h1>💡 Regra de Ouro</h1>
+    
+    <div class="highlight-box" style="background: rgba(255,215,0,0.2); border-color: gold;">
+        <div class="big-text dramatic-text">
+            "Se você está copiando código similar<br>
+            <strong>3+ vezes</strong>,<br>
+            provavelmente precisa de um<br>
+            <strong>Property Wrapper!</strong>"
+        </div>
+    </div>
+    
+    <div class="stats-grid" style="margin-top: 40px;">
+        <div class="stat-item">
+            <div class="stat-number check">95%</div>
+            <div class="medium-text">
+                dos desenvolvedores iOS<br>
+                <strong>NÃO sabem</strong> Property Wrappers
+            </div>
+        </div>
+        
+        <div class="stat-item">
+            <div class="stat-number">🔥</div>
+            <div class="medium-text">
+                Você agora está no<br>
+                <strong>TOP 5%!</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 15: Próximos Passos -->
+<div class="slide intro-slide" id="slide15">
+    <div class="slide-number">15/15</div>
+    <div class="timing">19:30</div>
+    <h1>🚀 Você Agora Domina Property Wrappers!</h1>
+    
+    <div class="checklist">
+        <ul>
+            <li>✅ Entende o <strong>conceito</strong> por analogias</li>
+            <li>✅ Sabe <strong>implementar</strong> @UserDefault</li>
+            <li>✅ Domina <strong>objetos complexos</strong> com Codable</li>
+            <li>✅ Conhece <strong>quando usar</strong> cada abordagem</li>
+            <li>✅ Pode <strong>eliminar 90%</strong> do código repetitivo</li>
+        </ul>
+    </div>
+    
+    <div class="highlight-box">
+        <h2>🎯 Próximo: Parte 4 (Final)</h2>
+        <div class="medium-text">
+            Validação, migração e armadilhas<br>
+            que quebram apps em produção!
+        </div>
+    </div>
+</div>
+
+<div class="navigation">
+    <button class="nav-btn" id="prevBtn">← Anterior</button>
+    <button class="nav-btn" id="homeBtn">🏠 Início</button>
+    <button class="nav-btn" style="background: rgba(255,255,255,0.4);">
+        <span id="slideCounter">1 / 15</span>
+    </button>
+    <button class="nav-btn" id="endBtn">🏁 Fim</button>
+    <button class="nav-btn" id="nextBtn">Próximo →</button>
+</div>
+
+<script>
+let currentSlide = 1;
+const totalSlides = 15;
+
+function goToSlide(slideNumber) {
+    // Validar número do slide
+    if (slideNumber < 1) slideNumber = 1;
+    if (slideNumber > totalSlides) slideNumber = totalSlides;
+    
+    try {
+        // Esconder todos os slides primeiro
+        const allSlides = document.querySelectorAll('.slide');
+        allSlides.forEach(slide => {
+            slide.classList.remove('active');
+        });
+        
+        // Mostrar o slide desejado
+        const targetSlide = document.getElementById(`slide${slideNumber}`);
+        if (targetSlide) {
+            targetSlide.classList.add('active');
+            currentSlide = slideNumber;
+            
+            // Atualizar contador
+            const counter = document.getElementById('slideCounter');
+            if (counter) {
+                counter.textContent = `${currentSlide} / ${totalSlides}`;
+            }
+        } else {
+            console.error('Slide não encontrado:', slideNumber);
+        }
+    } catch (error) {
+        console.error('Erro ao navegar para slide:', error);
+    }
+}
+
+// Navegação por teclado
+document.addEventListener('keydown', function(e) {
+    e.preventDefault();
+    
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+        goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+        goToSlide(currentSlide - 1);
+    } else if (e.key === 'Home') {
+        goToSlide(1);
+    } else if (e.key === 'End') {
+        goToSlide(totalSlides);
+    }
+});
+
+// Clique na tela para navegar
+document.addEventListener('click', function(e) {
+    // Se clique foi em botão de navegação, ignorar
+    if (e.target.classList.contains('nav-btn') || 
+        e.target.closest('.nav-btn') || 
+        e.target.closest('.navigation') ||
+        e.target.id === 'slideCounter') {
+        return;
+    }
+    
+    // Se clique no lado direito da tela, avançar
+    if (e.clientX > window.innerWidth / 2) {
+        goToSlide(currentSlide + 1);
+    } else {
+        // Se clique no lado esquerdo, voltar
+        goToSlide(currentSlide - 1);
+    }
+});
+
+// Configurar botões de navegação
+document.addEventListener('DOMContentLoaded', function() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const homeBtn = document.getElementById('homeBtn');
+    const endBtn = document.getElementById('endBtn');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide - 1);
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide + 1);
+        });
+    }
+    
+    if (homeBtn) {
+        homeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(1);
+        });
+    }
+    
+    if (endBtn) {
+        endBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(totalSlides);
+        });
+    }
+    
+    // Inicializar primeiro slide
+    goToSlide(1);
+});
+
+// Inicializar quando window carrega (backup)
+window.addEventListener('load', function() {
+    const activeSlides = document.querySelectorAll('.slide.active');
+    if (activeSlides.length === 0) {
+        goToSlide(1);
+    }
+});
+</script>
+
+</body>
+</html>
