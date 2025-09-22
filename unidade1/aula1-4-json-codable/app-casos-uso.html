@@ -1,163 +1,414 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aula 1.4 - UserDefaults vs Outras Opções</title>
-  <meta name="description" content="App educacional para demonstrar quando usar UserDefaults vs Core Data, Firebase e Keychain">
-  
-  <!-- Tailwind CSS -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aula 1.4 - UserDefaults vs Outras Opções | Persistência de Dados Swift</title>
+  <meta name="description" content="App interativo para demonstrar quando usar UserDefaults vs Core Data, Firebase e Keychain"
+  <link rel="canonical" href="https://seu-usuario.github.io/persistencia-dados-swift/unidade1/aula1-4-json-codable/app-casos-uso-userdefaults.html">
   <script src="https://cdn.tailwindcss.com"></script>
-  
-  <!-- React 18 -->
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-  
-  <!-- Babel para transformar JSX -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .fade-in { animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   </style>
 </head>
-<body>
-  <div id="root"></div>
+<body class="bg-gray-100">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+    <div class="max-w-6xl mx-auto">
+      <h1 class="text-3xl font-bold mb-2">📚 Aula 1.4: Casos de Uso - UserDefaults vs Outras Opções</h1>
+      <p class="text-blue-100">Matriz de Decisão Técnica para Persistência de Dados</p>
+    </div>
+  </div>
 
-  <script type="text/babel">
-    // Importar ícones do Lucide
-    const { 
-      Settings, 
-      Database, 
-      Cloud, 
-      Shield, 
-      AlertTriangle, 
-      CheckCircle, 
-      XCircle, 
-      TrendingUp, 
-      Clock, 
-      Users 
-    } = lucide;
+  <div class="max-w-6xl mx-auto p-6">
+    <!-- Navigation Tabs -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+      <button onclick="showCase('config')" id="btn-config" class="case-btn bg-green-500 text-white p-4 rounded-lg border-2 border-transparent">
+        <div class="text-2xl mb-2">⚙️</div>
+        <h3 class="font-bold text-sm">✅ Configurações</h3>
+        <p class="text-xs opacity-75">Uso CORRETO</p>
+      </button>
+      
+      <button onclick="showCase('large')" id="btn-large" class="case-btn bg-white border-gray-200 p-4 rounded-lg border-2 hover:border-gray-300">
+        <div class="text-2xl mb-2">⚠️</div>
+        <h3 class="font-bold text-sm">❌ Dados Grandes</h3>
+        <p class="text-xs opacity-75">Uso INCORRETO</p>
+      </button>
 
-    // Seu código React aqui (cole o código do app completo)
-    const App = () => {
-      const [selectedCase, setSelectedCase] = React.useState('config');
-      const [userDefaultsData, setUserDefaultsData] = React.useState({
-        theme: 'light',
-        notifications: true,
-        language: 'pt-BR',
-        fontSize: 'medium'
-      });
-      const [performanceData, setPerformanceData] = React.useState({
-        userDefaults: { size: '2KB', loadTime: '0.1s', memory: '1MB' },
-        largeData: { size: '15MB', loadTime: '3.2s', memory: '45MB' }
-      });
+      <button onclick="showCase('coredata')" id="btn-coredata" class="case-btn bg-white border-gray-200 p-4 rounded-lg border-2 hover:border-gray-300">
+        <div class="text-2xl mb-2">🗄️</div>
+        <h3 class="font-bold text-sm">Core Data</h3>
+        <p class="text-xs opacity-75">Dados relacionais</p>
+      </button>
 
-      const cases = {
-        config: {
-          title: "✅ Configurações do App",
-          subtitle: "Uso CORRETO do UserDefaults",
-          icon: Settings,
-          color: "bg-green-500",
-          description: "Dados pequenos, simples e que mudam raramente",
-          example: "Tema, idioma, preferências de notificação"
-        },
-        large: {
-          title: "❌ Dados Grandes",
-          subtitle: "Uso INCORRETO do UserDefaults",
-          icon: AlertTriangle,
-          color: "bg-red-500",
-          description: "Arrays grandes, listas complexas",
-          example: "2000+ transações, listas de produtos"
-        },
-        coredata: {
-          title: "🗄️ Core Data",
-          subtitle: "Para dados relacionais complexos",
-          icon: Database,
-          color: "bg-blue-500",
-          description: "Relacionamentos, queries, grandes volumes locais",
-          example: "Banco de dados local com relacionamentos"
-        },
-        firebase: {
-          title: "☁️ Firebase",
-          subtitle: "Para sincronização e colaboração",
-          icon: Cloud,
-          color: "bg-purple-500",
-          description: "Dados compartilhados, sincronização automática",
-          example: "Dados colaborativos, backup automático"
-        },
-        keychain: {
-          title: "🔐 Keychain",
-          subtitle: "Para dados sensíveis",
-          icon: Shield,
-          color: "bg-yellow-500",
-          description: "Senhas, tokens, dados biométricos",
-          example: "Credenciais, certificados, chaves de API"
+      <button onclick="showCase('firebase')" id="btn-firebase" class="case-btn bg-white border-gray-200 p-4 rounded-lg border-2 hover:border-gray-300">
+        <div class="text-2xl mb-2">☁️</div>
+        <h3 class="font-bold text-sm">Firebase</h3>
+        <p class="text-xs opacity-75">Sincronização</p>
+      </button>
+
+      <button onclick="showCase('keychain')" id="btn-keychain" class="case-btn bg-white border-gray-200 p-4 rounded-lg border-2 hover:border-gray-300">
+        <div class="text-2xl mb-2">🔐</div>
+        <h3 class="font-bold text-sm">Keychain</h3>
+        <p class="text-xs opacity-75">Dados sensíveis</p>
+      </button>
+    </div>
+
+    <!-- Content Area -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Left Column -->
+      <div class="space-y-6">
+        <!-- Case Content -->
+        <div id="case-config" class="case-content bg-white p-6 rounded-lg shadow">
+          <h2 class="text-2xl font-bold mb-4">✅ Configurações do App</h2>
+          <p class="text-gray-600 mb-4">Dados pequenos, simples e que mudam raramente</p>
+          <div class="bg-blue-50 p-3 rounded border-l-4 border-blue-500">
+            <p class="text-sm"><strong>Exemplo:</strong> Tema, idioma, preferências de notificação</p>
+          </div>
+          
+          <!-- Interactive Demo -->
+          <div class="mt-6 bg-green-50 p-4 rounded-lg border border-green-200">
+            <h4 class="font-bold text-green-800 mb-3">🎛️ Configurações Interativas</h4>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <label class="text-sm font-medium">Tema:</label>
+                <select class="border rounded px-2 py-1">
+                  <option value="light">Claro</option>
+                  <option value="dark">Escuro</option>
+                  <option value="auto">Automático</option>
+                </select>
+              </div>
+              <div class="flex items-center justify-between">
+                <label class="text-sm font-medium">Notificações:</label>
+                <input type="checkbox" checked class="rounded">
+              </div>
+            </div>
+            <div class="mt-4 p-3 bg-green-100 rounded">
+              <p class="text-sm text-green-700">💾 <strong>Tamanho:</strong> 2KB | ⚡ <strong>Carregamento:</strong> 0.1s</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="case-large" class="case-content bg-white p-6 rounded-lg shadow hidden">
+          <h2 class="text-2xl font-bold mb-4">❌ Dados Grandes</h2>
+          <p class="text-gray-600 mb-4">Arrays grandes, listas complexas</p>
+          <div class="bg-red-50 p-3 rounded border-l-4 border-red-500">
+            <p class="text-sm"><strong>Problema:</strong> 2000+ transações, listas de produtos</p>
+          </div>
+          
+          <div class="mt-6 bg-red-50 p-4 rounded-lg border border-red-200">
+            <h4 class="font-bold text-red-800 mb-3">⚠️ Problemas de Performance</h4>
+            <div class="space-y-2">
+              <div class="flex items-center space-x-2">
+                <span class="text-red-600">🕐</span>
+                <span>Inicialização lenta: 3+ segundos</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-red-600">💥</span>
+                <span>App travando ao salvar dados</span>
+              </div>
+              <div class="bg-red-100 p-3 rounded mt-4">
+                <p class="text-sm text-red-700">💾 <strong>Tamanho:</strong> 15MB | 🐌 <strong>Carregamento:</strong> 3.2s</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="case-coredata" class="case-content bg-white p-6 rounded-lg shadow hidden">
+          <h2 class="text-2xl font-bold mb-4">🗄️ Core Data</h2>
+          <p class="text-gray-600 mb-4">Relacionamentos, queries, grandes volumes locais</p>
+          <div class="bg-blue-50 p-3 rounded border-l-4 border-blue-500">
+            <p class="text-sm"><strong>Ideal para:</strong> Banco de dados local com relacionamentos</p>
+          </div>
+          
+          <div class="mt-6 bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <h4 class="font-bold text-blue-800 mb-3">✅ Vantagens</h4>
+            <ul class="space-y-2 text-sm">
+              <li>✅ Queries SQL eficientes</li>
+              <li>✅ Relacionamentos entre entidades</li>
+              <li>✅ Performance para grandes volumes</li>
+              <li>✅ Funciona 100% offline</li>
+            </ul>
+          </div>
+        </div>
+
+        <div id="case-firebase" class="case-content bg-white p-6 rounded-lg shadow hidden">
+          <h2 class="text-2xl font-bold mb-4">☁️ Firebase</h2>
+          <p class="text-gray-600 mb-4">Dados compartilhados, sincronização automática</p>
+          <div class="bg-purple-50 p-3 rounded border-l-4 border-purple-500">
+            <p class="text-sm"><strong>Ideal para:</strong> Dados colaborativos, backup automático</p>
+          </div>
+          
+          <div class="mt-6 bg-purple-50 p-4 rounded-lg border border-purple-200">
+            <h4 class="font-bold text-purple-800 mb-3">☁️ Vantagens</h4>
+            <ul class="space-y-2 text-sm">
+              <li>✅ Sincronização automática</li>
+              <li>✅ Backup automático</li>
+              <li>👥 Colaboração em tempo real</li>
+              <li>📈 Escalabilidade infinita</li>
+            </ul>
+          </div>
+        </div>
+
+        <div id="case-keychain" class="case-content bg-white p-6 rounded-lg shadow hidden">
+          <h2 class="text-2xl font-bold mb-4">🔐 Keychain</h2>
+          <p class="text-gray-600 mb-4">Senhas, tokens, dados biométricos</p>
+          <div class="bg-yellow-50 p-3 rounded border-l-4 border-yellow-500">
+            <p class="text-sm"><strong>Crítico para:</strong> Credenciais, certificados, chaves de API</p>
+          </div>
+          
+          <div class="mt-6 bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+            <h4 class="font-bold text-yellow-800 mb-3">🔒 Segurança</h4>
+            <ul class="space-y-2 text-sm">
+              <li>🛡️ Criptografia hardware</li>
+              <li>🔄 Sobrevive a reinstalações</li>
+              <li>👆 Integração com Touch/Face ID</li>
+              <li>❌ Não sincroniza entre devices</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="space-y-6">
+        <!-- Code Examples -->
+        <div class="bg-white p-6 rounded-lg shadow">
+          <h3 class="text-lg font-bold mb-4">💻 Exemplo de Código</h3>
+          <div class="bg-gray-900 text-gray-100 p-4 rounded-lg">
+            <pre id="code-example" class="text-sm overflow-x-auto whitespace-pre-wrap">// ✅ CORRETO: Configurações simples
+@UserDefault("app_theme", defaultValue: "light")
+static var theme: String
+
+@UserDefault("notifications_enabled", defaultValue: true)
+static var notificationsEnabled: Bool
+
+// Uso simples e eficiente
+AppSettings.theme = "dark"
+print("Tema atual: \(AppSettings.theme)")</pre>
+          </div>
+        </div>
+
+        <!-- Decision Framework -->
+        <div class="bg-gray-50 p-6 rounded-lg">
+          <h3 class="text-xl font-bold mb-4 text-center">🎯 Framework de Decisão</h3>
+          <div class="space-y-4">
+            <div class="bg-yellow-100 p-4 rounded-lg border-l-4 border-yellow-500">
+              <h4 class="font-bold text-yellow-800">1. 🔐 Os dados são sensíveis?</h4>
+              <p class="text-yellow-700">SIM → Keychain | NÃO → Continue</p>
+            </div>
+            <div class="bg-blue-100 p-4 rounded-lg border-l-4 border-blue-500">
+              <h4 class="font-bold text-blue-800">2. ☁️ Precisa de sincronização?</h4>
+              <p class="text-blue-700">SIM → Firebase | NÃO → Continue</p>
+            </div>
+            <div class="bg-purple-100 p-4 rounded-lg border-l-4 border-purple-500">
+              <h4 class="font-bold text-purple-800">3. 🗄️ Dados complexos ou grandes?</h4>
+              <p class="text-purple-700">SIM → Core Data/SQLite | NÃO → Continue</p>
+            </div>
+            <div class="bg-green-100 p-4 rounded-lg border-l-4 border-green-500">
+              <h4 class="font-bold text-green-800">4. 🎯 Configurações simples?</h4>
+              <p class="text-green-700">SIM → UserDefaults</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Decision Matrix -->
+    <div class="mt-12 bg-white p-6 rounded-lg shadow">
+      <h2 class="text-2xl font-bold mb-6 text-center">📊 Matriz de Decisão Técnica Completa</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse border border-gray-300">
+          <thead>
+            <tr class="bg-gray-50">
+              <th class="border border-gray-300 p-3 text-left">Critério / Cenário</th>
+              <th class="border border-gray-300 p-3 text-center">UserDefaults</th>
+              <th class="border border-gray-300 p-3 text-center">Core Data</th>
+              <th class="border border-gray-300 p-3 text-center">Firebase</th>
+              <th class="border border-gray-300 p-3 text-center">Keychain</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="hover:bg-gray-50">
+              <td class="border border-gray-300 p-3 font-medium">Configurações simples</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">✅</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">❌</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">❌</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">❌</td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="border border-gray-300 p-3 font-medium">Dados &lt; 1MB</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">✅</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">⚡</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">✅</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">⚡</td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="border border-gray-300 p-3 font-medium">Dados &gt; 1MB</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">❌</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">✅</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">✅</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">❌</td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="border border-gray-300 p-3 font-medium">Relacionamentos complexos</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">❌</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">✅</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">⚡</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">❌</td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="border border-gray-300 p-3 font-medium">Sincronização automática</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">❌</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">❌</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">✅</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">❌</td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="border border-gray-300 p-3 font-medium">Dados sensíveis</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">❌</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">❌</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">⚠️</td>
+              <td class="border border-gray-300 p-3 text-center text-lg">✅</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="mt-4 flex flex-wrap gap-4 text-sm">
+        <div class="flex items-center space-x-1">
+          <span class="text-green-600 text-lg">✅</span>
+          <span>Perfeito para este cenário</span>
+        </div>
+        <div class="flex items-center space-x-1">
+          <span class="text-yellow-600 text-lg">⚡</span>
+          <span>Funciona bem com considerações</span>
+        </div>
+        <div class="flex items-center space-x-1">
+          <span class="text-red-600 text-lg">❌</span>
+          <span>Não recomendado</span>
+        </div>
+        <div class="flex items-center space-x-1">
+          <span class="text-orange-600 text-lg">⚠️</span>
+          <span>Atenção especial necessária</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Golden Rule -->
+    <div class="mt-8 bg-gradient-to-r from-green-500 to-blue-500 text-white p-6 rounded-lg">
+      <h2 class="text-2xl font-bold mb-4">🎯 Regra de Ouro dos 3 Ks</h2>
+      <p class="text-lg mb-4">Use UserDefaults apenas quando os dados são:</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white bg-opacity-20 p-4 rounded">
+          <h3 class="font-bold">1. 🎯 Kompactos</h3>
+          <p class="text-sm">Menos de 100KB total</p>
+        </div>
+        <div class="bg-white bg-opacity-20 p-4 rounded">
+          <h3 class="font-bold">2. ⚙️ Konfigurações</h3>
+          <p class="text-sm">Preferências do usuário</p>
+        </div>
+        <div class="bg-white bg-opacity-20 p-4 rounded">
+          <h3 class="font-bold">3. 🔄 Konstantes</h3>
+          <p class="text-sm">Mudam raramente</p>
+        </div>
+      </div>
+      <p class="mt-4 text-center font-bold">Se qualquer "K" for falso → NÃO use UserDefaults!</p>
+    </div>
+  </div>
+
+  <script>
+    const codeExamples = {
+      config: `// ✅ CORRETO: Configurações simples
+@UserDefault("app_theme", defaultValue: "light")
+static var theme: String
+
+@UserDefault("notifications_enabled", defaultValue: true)
+static var notificationsEnabled: Bool
+
+// Uso simples e eficiente
+AppSettings.theme = "dark"
+print("Tema atual: \\(AppSettings.theme)")`,
+
+      large: `// ❌ INCORRETO: Dados grandes no UserDefaults
+let transactions = loadTransactions() // 2000+ itens
+UserDefaults.standard.set(transactions, forKey: "transactions")
+
+// Problemas:
+// - Carregamento lento (3+ segundos)
+// - Consumo excessivo de memória
+// - Impossível fazer queries eficientes
+// - App pode travar`,
+
+      coredata: `// ✅ CORRETO: Core Data para dados complexos
+@FetchRequest(
+    entity: Transaction.entity(),
+    sortDescriptors: [NSSortDescriptor(keyPath: \\Transaction.date, ascending: false)]
+)
+private var transactions: FetchedResults<Transaction>
+
+// Vantagens:
+// - Queries eficientes
+// - Relacionamentos entre entidades
+// - Performance otimizada para grandes volumes`,
+
+      firebase: `// ✅ CORRETO: Firebase para sincronização
+class FirebaseManager {
+    func syncData() async {
+        // Sincronização automática
+        await db.collection("transactions").addSnapshotListener { snapshot, error in
+            // Dados sempre atualizados em tempo real
         }
-      };
+    }
+}`,
 
-      const matrizDecisao = [
-        { criterio: "Configurações simples", userDefaults: "✅", coreData: "❌", firebase: "❌", keychain: "❌" },
-        { criterio: "Dados < 1MB", userDefaults: "✅", coreData: "⚡", firebase: "✅", keychain: "⚡" },
-        { criterio: "Dados > 1MB", userDefaults: "❌", coreData: "✅", firebase: "✅", keychain: "❌" },
-        { criterio: "Relacionamentos complexos", userDefaults: "❌", coreData: "✅", firebase: "⚡", keychain: "❌" },
-        { criterio: "Queries complexas", userDefaults: "❌", coreData: "✅", firebase: "✅", keychain: "❌" },
-        { criterio: "Sincronização automática", userDefaults: "❌", coreData: "❌", firebase: "✅", keychain: "❌" },
-        { criterio: "Funciona 100% offline", userDefaults: "✅", coreData: "✅", firebase: "⚡", keychain: "✅" },
-        { criterio: "Facilidade implementação", userDefaults: "✅", coreData: "❌", firebase: "⚡", keychain: "⚡" },
-        { criterio: "Dados sensíveis", userDefaults: "❌", coreData: "❌", firebase: "⚠️", keychain: "✅" }
-      ];
-
-      const DecisionFlowchart = () => (
-        React.createElement('div', { className: "bg-gray-50 p-6 rounded-lg" },
-          React.createElement('h3', { className: "text-xl font-bold mb-4 text-center" }, "🎯 Framework de Decisão"),
-          React.createElement('div', { className: "space-y-4" },
-            React.createElement('div', { className: "bg-yellow-100 p-4 rounded-lg border-l-4 border-yellow-500" },
-              React.createElement('h4', { className: "font-bold text-yellow-800" }, "1. 🔐 Os dados são sensíveis?"),
-              React.createElement('p', { className: "text-yellow-700" }, "SIM → Keychain | NÃO → Continue")
-            ),
-            React.createElement('div', { className: "bg-blue-100 p-4 rounded-lg border-l-4 border-blue-500" },
-              React.createElement('h4', { className: "font-bold text-blue-800" }, "2. ☁️ Precisa de sincronização?"),
-              React.createElement('p', { className: "text-blue-700" }, "SIM → Firebase | NÃO → Continue")
-            ),
-            React.createElement('div', { className: "bg-purple-100 p-4 rounded-lg border-l-4 border-purple-500" },
-              React.createElement('h4', { className: "font-bold text-purple-800" }, "3. 🗄️ Dados complexos ou grandes?"),
-              React.createElement('p', { className: "text-purple-700" }, "SIM → Core Data/SQLite | NÃO → Continue")
-            ),
-            React.createElement('div', { className: "bg-green-100 p-4 rounded-lg border-l-4 border-green-500" },
-              React.createElement('h4', { className: "font-bold text-green-800" }, "4. 🎯 Configurações simples?"),
-              React.createElement('p', { className: "text-green-700" }, "SIM → UserDefaults")
-            )
-          )
-        )
-      );
-
-      // Resto do componente App aqui...
-      // (Cole todo o código JSX do App original aqui)
-
-      return React.createElement('div', { className: "min-h-screen bg-gray-100" },
-        // Header
-        React.createElement('div', { className: "bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6" },
-          React.createElement('div', { className: "max-w-6xl mx-auto" },
-            React.createElement('h1', { className: "text-3xl font-bold mb-2" }, "📚 Aula 1.4: Casos de Uso - UserDefaults vs Outras Opções"),
-            React.createElement('p', { className: "text-blue-100" }, "Matriz de Decisão Técnica para Persistência de Dados")
-          )
-        ),
-        // Resto do conteúdo...
-        React.createElement('div', { className: "max-w-6xl mx-auto p-6" },
-          React.createElement('p', { className: "text-center text-gray-600 text-lg" }, 
-            "🚧 App em construção - Versão completa será adicionada em breve!"
-          )
-        )
-      );
+      keychain: `// ✅ CORRETO: Keychain para dados sensíveis
+class KeychainManager {
+    func saveCredentials(username: String, password: String) {
+        let data = password.data(using: .utf8)!
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: username,
+            kSecValueData as String: data
+        ]
+        SecItemAdd(query as CFDictionary, nil)
+    }
+}`
     };
 
-    // Renderizar o app
-    ReactDOM.render(React.createElement(App), document.getElementById('root'));
+    function showCase(caseType) {
+      // Hide all content
+      document.querySelectorAll('.case-content').forEach(el => {
+        el.classList.add('hidden');
+      });
+
+      // Reset all buttons
+      document.querySelectorAll('.case-btn').forEach(btn => {
+        btn.className = 'case-btn bg-white border-gray-200 p-4 rounded-lg border-2 hover:border-gray-300';
+      });
+
+      // Show selected content
+      document.getElementById(`case-${caseType}`).classList.remove('hidden');
+      document.getElementById(`case-${caseType}`).classList.add('fade-in');
+
+      // Highlight selected button
+      const btn = document.getElementById(`btn-${caseType}`);
+      const colors = {
+        config: 'bg-green-500 text-white',
+        large: 'bg-red-500 text-white',
+        coredata: 'bg-blue-500 text-white',
+        firebase: 'bg-purple-500 text-white',
+        keychain: 'bg-yellow-500 text-white'
+      };
+      btn.className = `case-btn ${colors[caseType]} p-4 rounded-lg border-2 border-transparent`;
+
+      // Update code example
+      document.getElementById('code-example').textContent = codeExamples[caseType];
+    }
+
+    // Initialize with config case
+    showCase('config');
   </script>
 </body>
 </html>
