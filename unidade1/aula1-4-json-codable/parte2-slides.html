@@ -82,18 +82,30 @@
         }
 
         .highlight-box {
-            background: rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.2);
             padding: 30px;
             border-radius: 20px;
             backdrop-filter: blur(10px);
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.4);
             margin: 20px 0;
             max-width: 800px;
         }
 
+        .red-flags .highlight-box {
+            background: rgba(255,255,255,0.95);
+            color: #2c3e50;
+            border: 2px solid rgba(255,255,255,0.8);
+        }
+
+        .monitoring .highlight-box {
+            background: rgba(255,255,255,0.95);
+            color: #2c3e50;
+            border: 2px solid rgba(255,255,255,0.8);
+        }
+
         .code-block {
-            background: #2c3e50;
-            color: #ecf0f1;
+            background: #1a1a1a;
+            color: #ffffff;
             padding: 25px;
             border-radius: 15px;
             font-family: 'Courier New', monospace;
@@ -105,18 +117,20 @@
             white-space: pre-wrap;
             overflow-x: auto;
             border-left: 5px solid #e74c3c;
+            border: 2px solid rgba(255,255,255,0.3);
         }
 
         .code-block.success {
             border-left: 5px solid #27ae60;
+            border: 2px solid rgba(255,255,255,0.3);
         }
 
-        .comment { color: #95a5a6; }
-        .keyword { color: #3498db; }
-        .string { color: #2ecc71; }
-        .error { color: #e74c3c; }
-        .success { color: #2ecc71; }
-        .warning { color: #f39c12; }
+        .comment { color: #a0a0a0; }
+        .keyword { color: #66d9ef; }
+        .string { color: #a6e22e; }
+        .error { color: #ff6b6b; }
+        .success { color: #51cf66; }
+        .warning { color: #ffd43b; }
 
         .metrics-grid {
             display: grid;
@@ -127,11 +141,15 @@
         }
 
         .metric-card {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.15);
             padding: 25px;
             border-radius: 15px;
             backdrop-filter: blur(10px);
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.4);
+        }
+
+        .metric-card .medium-text {
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
         }
 
         .metric-value {
@@ -154,8 +172,9 @@
             grid-template-columns: 2fr 1fr 1fr 1fr;
             gap: 20px;
             padding: 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.3);
             align-items: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
 
         .table-header {
@@ -167,9 +186,9 @@
             border-radius: 15px 15px 0 0;
         }
 
-        .zone-green { color: #2ecc71; font-weight: bold; }
-        .zone-yellow { color: #f1c40f; font-weight: bold; }
-        .zone-red { color: #e74c3c; font-weight: bold; }
+        .zone-green { color: #51cf66; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.7); }
+        .zone-yellow { color: #ffd43b; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.7); }
+        .zone-red { color: #ff6b6b; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.7); }
 
         .three-ks {
             display: flex;
@@ -217,8 +236,8 @@
         }
         
         .nav-btn {
-            background: rgba(255,255,255,0.3);
-            border: 2px solid rgba(255,255,255,0.5);
+            background: rgba(0,0,0,0.7);
+            border: 2px solid rgba(255,255,255,0.8);
             color: white;
             padding: 12px 20px;
             border-radius: 25px;
@@ -226,15 +245,17 @@
             font-weight: bold;
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
         }
         
         .nav-btn:hover {
-            background: rgba(255,255,255,0.5);
+            background: rgba(0,0,0,0.8);
+            border: 2px solid rgba(255,255,255,1);
             transform: translateY(-2px);
         }
 
         .nav-btn:active {
-            background: rgba(255,255,255,0.7);
+            background: rgba(0,0,0,0.9);
             transform: translateY(0);
         }
 
@@ -346,8 +367,8 @@ UserDefaults.standard.set(largeArray, forKey: "data") <span class="comment">// >
 <span class="comment">// ❌ RED FLAG #3: "Queries" manuais</span>
 transactions.filter { $0.category == selected } <span class="comment">// 2000 itens!</span>
     </div>
-    <div class="highlight-box">
-        <div class="big-text error">⛔ PARE IMEDIATAMENTE!</div>
+    <div class="highlight-box" style="background: rgba(255,255,255,0.95); color: #2c3e50;">
+        <div class="big-text" style="color: #e74c3c; font-weight: bold;">⛔ PARE IMEDIATAMENTE!</div>
     </div>
 </div>
 
@@ -614,7 +635,7 @@ class AppDelegate {
 <div class="navigation">
     <button class="nav-btn" id="prevBtn">← Anterior</button>
     <button class="nav-btn" id="homeBtn">🏠 Início</button>
-    <button class="nav-btn" style="background: rgba(255,255,255,0.4);">
+    <button class="nav-btn" style="background: rgba(0,0,0,0.8); border: 2px solid rgba(255,255,255,0.9);">
         <span id="slideCounter">1 / 13</span>
     </button>
     <button class="nav-btn" id="endBtn">🏁 Fim</button>
