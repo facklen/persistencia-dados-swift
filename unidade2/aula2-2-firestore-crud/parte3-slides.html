@@ -396,88 +396,91 @@
     </div>
 </div>
 
-<!-- Slide 5: Código do Sistema de Ambientes -->
+<!-- Slide 5: Criando AppEnvironment.swift -->
 <div class="slide environment-slide" id="slide5">
     <div class="slide-number">5/12</div>
-    <div class="timing">2:30</div>
-    <h1>💻 Implementando Ambientes</h1>
+    <div class="timing">0:30</div>
+    <h1>💻 1. Criando AppEnvironment.swift</h1>
+    <div class="big-text">
+        <strong>File → New → Swift File</strong><br>
+        Nome: <strong>AppEnvironment</strong>
+    </div>
     <div class="code-preview">
-<span class="comment">// ✅ SISTEMA DE AMBIENTES PROFISSIONAL</span>
+<span class="comment">// ✅ DETECÇÃO AUTOMÁTICA DE AMBIENTE</span>
 <span class="keyword">enum</span> <span class="type">AppEnvironment</span> {
     <span class="keyword">case</span> development, staging, production
     
     <span class="keyword">static</span> <span class="keyword">var</span> <span class="success">current</span>: <span class="type">AppEnvironment</span> {
-        <span class="comment">// 🎯 Detecta ambiente automaticamente</span>
         #<span class="keyword">if</span> DEBUG
         <span class="keyword">return</span> .development
         #<span class="keyword">else</span>
         <span class="keyword">return</span> .production
         #<span class="keyword">endif</span>
     }
-    
-    <span class="keyword">var</span> <span class="success">displayName</span>: <span class="type">String</span> {
-        <span class="keyword">switch</span> <span class="keyword">self</span> {
-        <span class="keyword">case</span> .development: <span class="keyword">return</span> <span class="string">"🔧 Development"</span>
-        <span class="keyword">case</span> .staging: <span class="keyword">return</span> <span class="string">"🧪 Staging"</span>
-        <span class="keyword">case</span> .production: <span class="keyword">return</span> <span class="string">"🚀 Production"</span>
-        }
-    }
 }
+    </div>
+    <div class="highlight-box">
+        <h2>📝 90 linhas de código profissional!</h2>
     </div>
 </div>
 
-<!-- Slide 6: Configuração do Firestore -->
+<!-- Slide 6: FirestoreConfiguration.swift -->
 <div class="slide config-slide" id="slide6">
     <div class="slide-number">6/12</div>
-    <div class="timing">3:30</div>
-    <h1>⚡ Configuração Avançada</h1>
-    <div class="code-preview">
-<span class="comment">// ⚙️ CONFIGURAÇÕES ESPECÍFICAS POR AMBIENTE</span>
-<span class="keyword">var</span> <span class="success">firestoreSettings</span>: <span class="type">FirestoreSettings</span> {
-    <span class="keyword">let</span> settings = <span class="type">FirestoreSettings</span>()
-    
-    <span class="keyword">switch</span> <span class="keyword">self</span> {
-    <span class="keyword">case</span> .development:
-        <span class="comment">// 💾 Cache agressivo para desenvolvimento</span>
-        settings.<span class="success">cacheSizeBytes</span> = <span class="string">100_000_000</span> <span class="comment">// 100MB</span>
-        settings.<span class="success">isPersistenceEnabled</span> = <span class="keyword">true</span>
-        
-    <span class="keyword">case</span> .production:
-        <span class="comment">// 🚀 Otimizado para produção</span>
-        settings.<span class="success">cacheSizeBytes</span> = <span class="string">50_000_000</span> <span class="comment">// 50MB</span>
-        settings.<span class="success">isPersistenceEnabled</span> = <span class="keyword">true</span>
-    }
-    
-    settings.<span class="success">isSSLEnabled</span> = <span class="keyword">true</span> <span class="comment">// 🛡️ Sempre</span>
-    <span class="keyword">return</span> settings
-}
+    <div class="timing">2:15</div>
+    <h1>💻 2. Criando FirestoreConfiguration.swift</h1>
+    <div class="big-text">
+        <strong>File → New → Swift File</strong><br>
+        Nome: <strong>FirestoreConfiguration</strong>
     </div>
-</div>
-
-<!-- Slide 7: Configuração Centralizada -->
-<div class="slide config-slide" id="slide7">
-    <div class="slide-number">7/12</div>
-    <div class="timing">4:30</div>
-    <h1>🎯 Configuração Centralizada</h1>
     <div class="code-preview">
-<span class="comment">// 🏛️ CLASSE CENTRAL DE CONFIGURAÇÃO</span>
+<span class="comment">// 🏛️ CONFIGURAÇÃO CENTRALIZADA</span>
 <span class="keyword">class</span> <span class="type">FirestoreConfiguration</span> {
     
     <span class="keyword">static</span> <span class="keyword">func</span> <span class="success">configure</span>() {
         <span class="keyword">let</span> db = <span class="type">Firestore</span>.<span class="success">firestore</span>()
         <span class="keyword">let</span> environment = <span class="type">AppEnvironment</span>.<span class="success">current</span>
         
-        <span class="comment">// 🎯 APLICAR CONFIGURAÇÕES DO AMBIENTE</span>
+        <span class="comment">// 🎯 APLICAR CONFIGURAÇÕES</span>
         db.<span class="success">settings</span> = environment.<span class="success">firestoreSettings</span>
         
-        <span class="comment">// 📊 CONFIGURAR LOGGING</span>
-        <span class="keyword">if</span> environment.<span class="success">debugLogging</span> {
-            <span class="type">FirebaseConfiguration</span>.<span class="success">shared</span>.<span class="success">setLoggerLevel</span>(.<span class="success">debug</span>)
-        }
-        
-        <span class="success">print</span>(<span class="string">"✅ Firestore configurado: \(environment.displayName)"</span>)
+        <span class="success">print</span>(<span class="string">"✅ Firestore configurado!"</span>)
     }
 }
+    </div>
+    <div class="highlight-box">
+        <h2>📝 140 linhas de configuração profissional!</h2>
+    </div>
+</div>
+
+<!-- Slide 7: ConfigurationValidator.swift -->
+<div class="slide validation-slide" id="slide7">
+    <div class="slide-number">7/12</div>
+    <div class="timing">4:00</div>
+    <h1>💻 3. Criando ConfigurationValidator.swift</h1>
+    <div class="big-text">
+        <strong>File → New → Swift File</strong><br>
+        Nome: <strong>ConfigurationValidator</strong>
+    </div>
+    <div class="code-preview">
+<span class="comment">// 🧪 VALIDAÇÃO AUTOMÁTICA</span>
+<span class="keyword">class</span> <span class="type">ConfigurationValidator</span> {
+    
+    <span class="keyword">static</span> <span class="keyword">func</span> <span class="success">validateSetup</span>() <span class="keyword">async</span> {
+        <span class="success">print</span>(<span class="string">"🧪 Validando configuração..."</span>)
+        
+        <span class="comment">// ✅ Testar conexão</span>
+        <span class="keyword">await</span> <span class="success">testFirestoreConnection</span>()
+        
+        <span class="comment">// ✅ Validar settings</span>
+        <span class="success">validateAppliedSettings</span>()
+        
+        <span class="success">print</span>(<span class="string">"✅ Configuração validada!"</span>)
+    }
+}
+    </div>
+    <div class="highlight-box">
+        <h2>📝 130 linhas de validação automática!</h2>
     </div>
 </div>
 
@@ -540,15 +543,18 @@
     </div>
 </div>
 
-<!-- Slide 10: Integração com o App -->
+<!-- Slide 10: Integração App Principal -->
 <div class="slide demo-slide" id="slide10">
     <div class="slide-number">10/12</div>
-    <div class="timing">6:30</div>
-    <h1>📱 Integração com o App</h1>
+    <div class="timing">5:30</div>
+    <h1>💻 4. Integração no App Principal</h1>
+    <div class="big-text">
+        Modificar <strong>@main struct</strong>
+    </div>
     <div class="code-preview">
-<span class="comment">// 🚀 INTEGRAÇÃO NO APP PRINCIPAL</span>
+<span class="comment">// 🚀 INTEGRAÇÃO COMPLETA</span>
 @<span class="keyword">main</span>
-<span class="keyword">struct</span> <span class="type">FinancasApp</span>: <span class="type">App</span> {
+<span class="keyword">struct</span> <span class="type">FirestoreAdvancedApp</span>: <span class="type">App</span> {
     
     <span class="keyword">init</span>() {
         <span class="success">configureFirebase</span>()
@@ -564,35 +570,41 @@
                 }
         }
     }
-    
-    <span class="keyword">private</span> <span class="keyword">func</span> <span class="success">configureFirebase</span>() {
-        <span class="comment">// 1️⃣ Configuração base</span>
-        <span class="type">FirebaseApp</span>.<span class="success">configure</span>()
-        
-        <span class="comment">// 2️⃣ Configuração avançada</span>
-        <span class="type">FirestoreConfiguration</span>.<span class="success">configure</span>()
-    }
 }
+    </div>
+    <div class="highlight-box">
+        <h2>⚡ Cmd+B → Cmd+R</h2>
+        <div class="medium-text">Compilar e rodar!</div>
     </div>
 </div>
 
-<!-- Slide 11: Demonstração Prática -->
+<!-- Slide 11: Logs no Console -->
 <div class="slide demo-slide" id="slide11">
     <div class="slide-number">11/12</div>
-    <div class="timing">7:00</div>
-    <h1>🎬 Demonstração Prática</h1>
+    <div class="timing">6:45</div>
+    <h1>📊 Verificar Console Xcode</h1>
     <div class="big-text">
-        Agora vamos ver tudo funcionando no Xcode!
+        Logs que devem aparecer:
     </div>
-    <div class="checklist">
-        <li>Implementar sistema de ambientes</li>
-        <li>Configurar Firestore avançado</li>
-        <li>Adicionar validação automática</li>
-        <li>Testar em diferentes ambientes</li>
-        <li>Verificar logs e performance</li>
+    <div class="code-preview">
+🚀 Iniciando configuração completa do Firebase...
+📊 Ambiente detectado: 🔧 Development
+🔧 Configurando Firestore para: 🔧 Development
+📝 Debug logging habilitado para 🔧 Development
+✅ Firestore configurado com sucesso!
+   • Ambiente: 🔧 Development
+   • Cache offline: HABILITADO
+   • Tamanho do cache: 100MB
+   • SSL: HABILITADO
+🧪 Executando validação automática...
+✅ Conexão Firestore OK
+✅ Configurações validadas
+✅ Operação de escrita OK
+🎉 App pronto para uso!
     </div>
     <div class="highlight-box">
-        <h2>⚡ Resultado: Configuração Profissional!</h2>
+        <h2>🔍 Firebase Console</h2>
+        <div class="medium-text">Verificar collection "config_test"</div>
     </div>
 </div>
 
