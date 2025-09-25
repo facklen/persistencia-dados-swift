@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parte 2: Setup Prático no Console e Configuração iOS - Slides Interativos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .slide {
+            display: none;
+            height: 100vh;
+            padding: 60px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        .slide-number {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+        }
+
+        .timing {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 4em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .big-text {
+            font-size: 2.5em;
+            line-height: 1.4;
+            max-width: 90%;
+        }
+        
+        .medium-text {
+            font-size: 2em;
+            line-height: 1.5;
+            max-width: 90%;
+        }
+        
+        .highlight-box {
+            background: rgba(255,255,255,0.15);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+            border: 2px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .setup-slide {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+        
+        .config-slide {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+        
+        .plist-slide {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        }
+        
+        .success-slide {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        }
+        
+        .checklist {
+            text-align: left;
+            font-size: 1.8em;
+            line-height: 1.8;
+            max-width: 80%;
+        }
+        
+        .checklist li {
+            margin: 15px 0;
+            list-style: none;
+        }
+        
+        .code-preview {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 30px;
+            border-radius: 15px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Courier New', monospace;
+            font-size: 1.3em;
+            text-align: left;
+            margin: 20px 0;
+            max-width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            white-space: pre-wrap;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .code-preview .comment {
+            color: #95a5a6;
+            font-style: italic;
+        }
+
+        .code-preview .success {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .code-preview .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .code-preview .warning {
+            color: #f39c12;
+            font-weight: bold;
+        }
+
+        .step-card {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 10px;
+            width: 45%;
+            backdrop-filter: blur(10px);
+        }
+
+        .step-number {
+            background: rgba(255,255,255,0.3);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+
+        .steps-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            max-width: 90%;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide.active {
+            animation: fadeIn 0.5s ease-in;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Título -->
+<div class="slide active" id="slide1">
+    <div class="slide-number">1/12</div>
+    <div class="timing">0:00</div>
+    <h1>🔥 Setup Prático no Console</h1>
+    <div class="big-text">
+        <strong>Firebase + iOS</strong><br>
+        Do zero ao funcionando!
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">15 minutos de implementação guiada</div>
+    </div>
+</div>
+
+<!-- Slide 2: Problema Central -->
+<div class="slide setup-slide" id="slide2">
+    <div class="slide-number">2/12</div>
+    <div class="timing">0:30</div>
+    <h1>🤔 O Problema</h1>
+    <div class="big-text">
+        Você tem um <strong>app incrível</strong><br>
+        Mas precisa de <strong>dados na nuvem</strong><br>
+        Por onde começar?
+    </div>
+    <div class="highlight-box">
+        <h2>Firebase = Solução Completa! ☁️</h2>
+    </div>
+</div>
+
+<!-- Slide 3: Visão Geral dos Passos -->
+<div class="slide" id="slide3">
+    <div class="slide-number">3/12</div>
+    <div class="timing">1:00</div>
+    <h1>📋 4 Passos Simples</h1>
+    <div class="steps-container">
+        <div class="step-card">
+            <div class="step-number">1</div>
+            <h3>🌐 Criar Projeto</h3>
+            <p>Console Firebase</p>
+        </div>
+        <div class="step-card">
+            <div class="step-number">2</div>
+            <h3>📱 Configurar iOS</h3>
+            <p>Bundle ID correto</p>
+        </div>
+        <div class="step-card">
+            <div class="step-number">3</div>
+            <h3>📄 GoogleService</h3>
+            <p>Arquivo de config</p>
+        </div>
+        <div class="step-card">
+            <div class="step-number">4</div>
+            <h3>✅ Finalizar</h3>
+            <p>Verificar tudo</p>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 4: Passo 1 - Console Firebase -->
+<div class="slide setup-slide" id="slide4">
+    <div class="slide-number">4/12</div>
+    <div class="timing">2:00</div>
+    <h1>🌐 Passo 1: Console Firebase</h1>
+    <div class="checklist">
+        <div>✅ Acesse: <strong>console.firebase.google.com</strong></div>
+        <div>✅ Login com Google</div>
+        <div>✅ "Criar projeto" ou "Add project"</div>
+        <div>✅ Nome: <strong>"FinancasApp"</strong></div>
+        <div>✅ Ativar Google Analytics ✅</div>
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">⏱️ 2 minutos</div>
+    </div>
+</div>
+
+<!-- Slide 5: Passo 2 - App iOS -->
+<div class="slide config-slide" id="slide5">
+    <div class="slide-number">5/12</div>
+    <div class="timing">4:00</div>
+    <h1>📱 Passo 2: Configurar iOS</h1>
+    <div class="big-text">
+        Clique no ícone <strong>iOS (</>) </strong>
+    </div>
+    <div class="code-preview">
+<span class="warning">⚠️ CRÍTICO: Bundle ID</span>
+
+<span class="error">❌ ERRO FATAL:</span>
+Xcode: com.empresa.financasapp
+Firebase: com.empresa.FinancasApp
+
+<span class="success">✅ CORRETO:</span>
+Xcode: com.empresa.financasapp  
+Firebase: com.empresa.financasapp
+
+<span class="comment">// Case-sensitive!</span>
+    </div>
+</div>
+
+<!-- Slide 6: Bundle ID Crítico -->
+<div class="slide config-slide" id="slide6">
+    <div class="slide-number">6/12</div>
+    <div class="timing">6:00</div>
+    <h1>🚨 Bundle ID = Tudo!</h1>
+    <div class="big-text">
+        Bundle ID <strong>errado</strong> = <br>
+        App <strong>NUNCA</strong> conecta!
+    </div>
+    <div class="highlight-box">
+        <h2>Como encontrar no Xcode:</h2>
+        <div class="medium-text">
+            Project → Target → General →<br>
+            <strong>Bundle Identifier</strong>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 7: GoogleService-Info.plist -->
+<div class="slide plist-slide" id="slide7">
+    <div class="slide-number">7/12</div>
+    <div class="timing">9:00</div>
+    <h1>📄 Passo 3: GoogleService-Info.plist</h1>
+    <div class="big-text">
+        O arquivo <strong>mais importante</strong><br>
+        da configuração!
+    </div>
+    <div class="checklist">
+        <div>📥 Download GoogleService-Info.plist</div>
+        <div>🎯 Arrastar para o Xcode</div>
+        <div>☑️ "Copy items if needed"</div>
+        <div>🎯 Selecionar seu target</div>
+    </div>
+</div>
+
+<!-- Slide 8: Estrutura do Arquivo -->
+<div class="slide plist-slide" id="slide8">
+    <div class="slide-number">8/12</div>
+    <div class="timing">11:00</div>
+    <h1>🔍 O que contém o arquivo?</h1>
+    <div class="code-preview">
+<span class="comment">// GoogleService-Info.plist</span>
+{
+  "project_info": {
+    "project_id": "financas-app-123456",
+    "storage_bucket": "financas-app.appspot.com"
+  },
+  "client": [
+    {
+      "api_key": "AIzaSyB...", <span class="warning">// 🔑 CHAVE SECRETA</span>
+      "services": {
+        "analytics_service": {},
+        "appinvite_service": {}
+      }
+    }
+  ]
+}
+    </div>
+</div>
+
+<!-- Slide 9: Segurança do Arquivo -->
+<div class="slide plist-slide" id="slide9">
+    <div class="slide-number">9/12</div>
+    <div class="timing">12:00</div>
+    <h1>🔐 Segurança Crítica!</h1>
+    <div class="big-text">
+        GoogleService-Info.plist contém<br>
+        <strong>chaves secretas</strong>
+    </div>
+    <div class="checklist">
+        <div>❌ NÃO compartilhar publicamente</div>
+        <div>❌ NÃO commitar em Git público</div>
+        <div>✅ Cada ambiente = arquivo diferente</div>
+        <div>✅ Dev ≠ Produção</div>
+    </div>
+</div>
+
+<!-- Slide 10: Finalização -->
+<div class="slide success-slide" id="slide10">
+    <div class="slide-number">10/12</div>
+    <div class="timing">13:00</div>
+    <h1>✅ Passo 4: Finalizar</h1>
+    <div class="big-text">
+        No Console Firebase:<br>
+        "Continue to console"
+    </div>
+    <div class="highlight-box">
+        <h2>Verificar se aparece:</h2>
+        <div class="medium-text">
+            App iOS <strong>listado</strong> no projeto<br>
+            Menu lateral com <strong>serviços</strong>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 11: Checklist Final -->
+<div class="slide success-slide" id="slide11">
+    <div class="slide-number">11/12</div>
+    <div class="timing">14:00</div>
+    <h1>📋 Checklist de Sucesso</h1>
+    <div class="checklist">
+        <div>✅ Projeto Firebase criado</div>
+        <div>✅ App iOS registrado</div>
+        <div>✅ Bundle ID idêntico</div>
+        <div>✅ GoogleService-Info.plist baixado</div>
+        <div>✅ Arquivo integrado ao Xcode</div>
+        <div>✅ Target membership correto</div>
+    </div>
+</div>
+
+<!-- Slide 12: Próximos Passos -->
+<div class="slide success-slide" id="slide12">
+    <div class="slide-number">12/12</div>
+    <div class="timing">15:00</div>
+    <h1>🚀 Base Criada com Sucesso!</h1>
+    <div class="big-text">
+        ✅ Projeto configurado<br>
+        ✅ iOS integrado<br>
+        ✅ Arquivo de segurança instalado
+    </div>
+    <div class="highlight-box">
+        <h2>🔜 Próxima: Parte 3</h2>
+        <div class="medium-text">Firebase SDK + Código iOS</div>
+    </div>
+</div>
+
+<div class="navigation">
+    <button class="nav-btn" id="prevBtn">← Anterior</button>
+    <button class="nav-btn" id="homeBtn">🏠 Início</button>
+    <button class="nav-btn" style="background: rgba(255,255,255,0.4);">
+        <span id="slideCounter">1 / 12</span>
+    </button>
+    <button class="nav-btn" id="endBtn">🏁 Fim</button>
+    <button class="nav-btn" id="nextBtn">Próximo →</button>
+</div>
+
+<script>
+let currentSlide = 1;
+const totalSlides = 12;
+
+function goToSlide(slideNumber) {
+    // Validar número do slide
+    if (slideNumber < 1) slideNumber = 1;
+    if (slideNumber > totalSlides) slideNumber = totalSlides;
+    
+    try {
+        // Esconder todos os slides primeiro
+        const allSlides = document.querySelectorAll('.slide');
+        allSlides.forEach(slide => {
+            slide.classList.remove('active');
+        });
+        
+        // Mostrar o slide desejado
+        const targetSlide = document.getElementById(`slide${slideNumber}`);
+        if (targetSlide) {
+            targetSlide.classList.add('active');
+            currentSlide = slideNumber;
+            
+            // Atualizar contador
+            const counter = document.getElementById('slideCounter');
+            if (counter) {
+                counter.textContent = `${currentSlide} / ${totalSlides}`;
+            }
+        } else {
+            console.error('Slide não encontrado:', slideNumber);
+        }
+    } catch (error) {
+        console.error('Erro ao navegar para slide:', error);
+    }
+}
+
+// Navegação por teclado
+document.addEventListener('keydown', function(e) {
+    e.preventDefault();
+    
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+        goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+        goToSlide(currentSlide - 1);
+    } else if (e.key === 'Home') {
+        goToSlide(1);
+    } else if (e.key === 'End') {
+        goToSlide(totalSlides);
+    }
+});
+
+// Clique na tela para navegar
+document.addEventListener('click', function(e) {
+    // Se clique foi em botão de navegação ou dentro da área de navegação, ignorar
+    if (e.target.classList.contains('nav-btn') || 
+        e.target.closest('.nav-btn') || 
+        e.target.closest('.navigation') ||
+        e.target.id === 'slideCounter') {
+        return;
+    }
+    
+    // Se clique no lado direito da tela, avançar
+    if (e.clientX > window.innerWidth / 2) {
+        goToSlide(currentSlide + 1);
+    } else {
+        // Se clique no lado esquerdo, voltar
+        goToSlide(currentSlide - 1);
+    }
+});
+
+// Configurar botões de navegação
+document.addEventListener('DOMContentLoaded', function() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const homeBtn = document.getElementById('homeBtn');
+    const endBtn = document.getElementById('endBtn');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide - 1);
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide + 1);
+        });
+    }
+    
+    if (homeBtn) {
+        homeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(1);
+        });
+    }
+    
+    if (endBtn) {
+        endBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(totalSlides);
+        });
+    }
+    
+    // Inicializar primeiro slide
+    goToSlide(1);
+});
+
+// Função de teste
+function testSlideNavigation() {
+    console.log('Testando navegação...');
+    console.log('Slide atual:', currentSlide);
+    console.log('Total de slides:', totalSlides);
+    
+    for (let i = 1; i <= totalSlides; i++) {
+        const slide = document.getElementById(`slide${i}`);
+        console.log(`Slide ${i}:`, slide ? 'existe' : 'não encontrado');
+    }
+}
+</script>
+
+</body>
+</html>
