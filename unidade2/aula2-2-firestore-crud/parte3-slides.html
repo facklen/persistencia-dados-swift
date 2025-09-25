@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 2.2 Parte 3: Configuração e Setup Inicial</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 60px;
+            position: relative;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide-number {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(0,0,0,0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .timing {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        h1 {
+            font-size: 4em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .big-text {
+            font-size: 2em;
+            line-height: 1.4;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .medium-text {
+            font-size: 1.5em;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .highlight-box {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            padding: 40px;
+            margin: 30px 0;
+            max-width: 80%;
+        }
+
+        .dramatic-text {
+            font-size: 3em;
+            color: #ff6b6b;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.7);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 90%;
+            margin: 20px 0;
+        }
+
+        .icon-item {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .icon-item:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.2);
+        }
+
+        .icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .icon-item h3 {
+            color: #ffd700;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .icon-item p {
+            font-size: 1em;
+            line-height: 1.4;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .title-slide {
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+        }
+
+        .setup-slide {
+            background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+        }
+
+        .config-slide {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        }
+
+        .environment-slide {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        }
+
+        .validation-slide {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .demo-slide {
+            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+        }
+
+        .conclusion-slide {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+        }
+
+        .code-preview {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 25px;
+            border-radius: 12px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Courier New', monospace;
+            font-size: 1.1em;
+            text-align: left;
+            margin: 20px 0;
+            max-width: 85%;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            white-space: pre-wrap;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+
+        .code-preview .comment {
+            color: #95a5a6;
+            font-style: italic;
+        }
+
+        .code-preview .success {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .code-preview .keyword {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .code-preview .string {
+            color: #f39c12;
+        }
+
+        .code-preview .type {
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            max-width: 90%;
+            margin: 30px 0;
+        }
+
+        .comparison-item {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: left;
+        }
+
+        .comparison-item h3 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .comparison-item.before {
+            border-left: 5px solid #e74c3c;
+        }
+
+        .comparison-item.after {
+            border-left: 5px solid #27ae60;
+        }
+
+        .checklist {
+            text-align: left;
+            font-size: 1.4em;
+            line-height: 1.8;
+            max-width: 80%;
+        }
+
+        .checklist li {
+            margin: 15px 0;
+            list-style: none;
+            padding-left: 30px;
+            position: relative;
+        }
+
+        .checklist li::before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5em; }
+            .big-text { font-size: 1.5em; }
+            .icon-grid { grid-template-columns: 1fr; }
+            .comparison-grid { grid-template-columns: 1fr; }
+            .slide { padding: 30px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Título -->
+<div class="slide title-slide active" id="slide1">
+    <div class="slide-number">1/12</div>
+    <div class="timing">0:00</div>
+    <h1>⚙️ Configuração e Setup Inicial</h1>
+    <div class="big-text">
+        Da configuração básica para a <strong>performance profissional</strong>!
+    </div>
+    <div class="highlight-box">
+        <h2>🎯 8 minutos práticos</h2>
+        <div class="medium-text">Transforme seu Firebase em uma máquina otimizada</div>
+    </div>
+</div>
+
+<!-- Slide 2: Problema Atual -->
+<div class="slide setup-slide" id="slide2">
+    <div class="slide-number">2/12</div>
+    <div class="timing">0:30</div>
+    <h1>🤔 O Problema Atual</h1>
+    <div class="big-text">
+        Sua configuração básica da Aula 2.1 <strong>funciona</strong>...<br>
+        Mas não está <strong>otimizada para produção</strong>!
+    </div>
+    <div class="comparison-grid">
+        <div class="comparison-item before">
+            <h3>🔥 Configuração Básica</h3>
+            <ul style="font-size: 1.1em; line-height: 1.6;">
+                <li>✅ Firebase funciona</li>
+                <li>❌ Um ambiente só</li>
+                <li>❌ Cache padrão</li>
+                <li>❌ Sem validação</li>
+                <li>❌ Debug limitado</li>
+            </ul>
+        </div>
+        <div class="comparison-item after">
+            <h3>⚡ Configuração Avançada</h3>
+            <ul style="font-size: 1.1em; line-height: 1.6;">
+                <li>✅ Firebase otimizado</li>
+                <li>✅ Dev/Staging/Prod</li>
+                <li>✅ Cache inteligente</li>
+                <li>✅ Validação automática</li>
+                <li>✅ Debug profissional</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 3: Pré-requisitos -->
+<div class="slide validation-slide" id="slide3">
+    <div class="slide-number">3/12</div>
+    <div class="timing">1:00</div>
+    <h1>⚠️ Pré-requisitos Obrigatórios</h1>
+    <div class="checklist">
+        <li>Firebase projeto configurado no console</li>
+        <li>GoogleService-Info.plist instalado</li>
+        <li>Firebase SDK via Swift Package Manager</li>
+        <li>FirebaseApp.configure() funcionando</li>
+        <li>Consegue salvar dados no Firebase Console</li>
+    </div>
+    <div class="highlight-box">
+        <h2>🧪 Se não tem isso funcionando...</h2>
+        <div class="medium-text">Volte para a Aula 2.1 primeiro!</div>
+    </div>
+</div>
+
+<!-- Slide 4: Sistema de Ambientes -->
+<div class="slide environment-slide" id="slide4">
+    <div class="slide-number">4/12</div>
+    <div class="timing">1:30</div>
+    <h1>🏗️ Sistema de Ambientes</h1>
+    <div class="icon-grid">
+        <div class="icon-item">
+            <div class="icon">🔧</div>
+            <h3>Development</h3>
+            <p>Cache agressivo • Debug completo • Logs detalhados</p>
+        </div>
+        <div class="icon-item">
+            <div class="icon">🧪</div>
+            <h3>Staging</h3>
+            <p>Configuração híbrida • Testes de integração</p>
+        </div>
+        <div class="icon-item">
+            <div class="icon">🚀</div>
+            <h3>Production</h3>
+            <p>Performance otimizada • Logs mínimos • Segurança</p>
+        </div>
+    </div>
+    <div class="highlight-box">
+        <h2>🎯 Por que ambientes separados?</h2>
+        <div class="medium-text">Desenvolvimento bagunçado = Produção problemática!</div>
+    </div>
+</div>
+
+<!-- Slide 5: Código do Sistema de Ambientes -->
+<div class="slide environment-slide" id="slide5">
+    <div class="slide-number">5/12</div>
+    <div class="timing">2:30</div>
+    <h1>💻 Implementando Ambientes</h1>
+    <div class="code-preview">
+<span class="comment">// ✅ SISTEMA DE AMBIENTES PROFISSIONAL</span>
+<span class="keyword">enum</span> <span class="type">AppEnvironment</span> {
+    <span class="keyword">case</span> development, staging, production
+    
+    <span class="keyword">static</span> <span class="keyword">var</span> <span class="success">current</span>: <span class="type">AppEnvironment</span> {
+        <span class="comment">// 🎯 Detecta ambiente automaticamente</span>
+        #<span class="keyword">if</span> DEBUG
+        <span class="keyword">return</span> .development
+        #<span class="keyword">else</span>
+        <span class="keyword">return</span> .production
+        #<span class="keyword">endif</span>
+    }
+    
+    <span class="keyword">var</span> <span class="success">displayName</span>: <span class="type">String</span> {
+        <span class="keyword">switch</span> <span class="keyword">self</span> {
+        <span class="keyword">case</span> .development: <span class="keyword">return</span> <span class="string">"🔧 Development"</span>
+        <span class="keyword">case</span> .staging: <span class="keyword">return</span> <span class="string">"🧪 Staging"</span>
+        <span class="keyword">case</span> .production: <span class="keyword">return</span> <span class="string">"🚀 Production"</span>
+        }
+    }
+}
+    </div>
+</div>
+
+<!-- Slide 6: Configuração do Firestore -->
+<div class="slide config-slide" id="slide6">
+    <div class="slide-number">6/12</div>
+    <div class="timing">3:30</div>
+    <h1>⚡ Configuração Avançada</h1>
+    <div class="code-preview">
+<span class="comment">// ⚙️ CONFIGURAÇÕES ESPECÍFICAS POR AMBIENTE</span>
+<span class="keyword">var</span> <span class="success">firestoreSettings</span>: <span class="type">FirestoreSettings</span> {
+    <span class="keyword">let</span> settings = <span class="type">FirestoreSettings</span>()
+    
+    <span class="keyword">switch</span> <span class="keyword">self</span> {
+    <span class="keyword">case</span> .development:
+        <span class="comment">// 💾 Cache agressivo para desenvolvimento</span>
+        settings.<span class="success">cacheSizeBytes</span> = <span class="string">100_000_000</span> <span class="comment">// 100MB</span>
+        settings.<span class="success">isPersistenceEnabled</span> = <span class="keyword">true</span>
+        
+    <span class="keyword">case</span> .production:
+        <span class="comment">// 🚀 Otimizado para produção</span>
+        settings.<span class="success">cacheSizeBytes</span> = <span class="string">50_000_000</span> <span class="comment">// 50MB</span>
+        settings.<span class="success">isPersistenceEnabled</span> = <span class="keyword">true</span>
+    }
+    
+    settings.<span class="success">isSSLEnabled</span> = <span class="keyword">true</span> <span class="comment">// 🛡️ Sempre</span>
+    <span class="keyword">return</span> settings
+}
+    </div>
+</div>
+
+<!-- Slide 7: Configuração Centralizada -->
+<div class="slide config-slide" id="slide7">
+    <div class="slide-number">7/12</div>
+    <div class="timing">4:30</div>
+    <h1>🎯 Configuração Centralizada</h1>
+    <div class="code-preview">
+<span class="comment">// 🏛️ CLASSE CENTRAL DE CONFIGURAÇÃO</span>
+<span class="keyword">class</span> <span class="type">FirestoreConfiguration</span> {
+    
+    <span class="keyword">static</span> <span class="keyword">func</span> <span class="success">configure</span>() {
+        <span class="keyword">let</span> db = <span class="type">Firestore</span>.<span class="success">firestore</span>()
+        <span class="keyword">let</span> environment = <span class="type">AppEnvironment</span>.<span class="success">current</span>
+        
+        <span class="comment">// 🎯 APLICAR CONFIGURAÇÕES DO AMBIENTE</span>
+        db.<span class="success">settings</span> = environment.<span class="success">firestoreSettings</span>
+        
+        <span class="comment">// 📊 CONFIGURAR LOGGING</span>
+        <span class="keyword">if</span> environment.<span class="success">debugLogging</span> {
+            <span class="type">FirebaseConfiguration</span>.<span class="success">shared</span>.<span class="success">setLoggerLevel</span>(.<span class="success">debug</span>)
+        }
+        
+        <span class="success">print</span>(<span class="string">"✅ Firestore configurado: \(environment.displayName)"</span>)
+    }
+}
+    </div>
+</div>
+
+<!-- Slide 8: Validação da Configuração -->
+<div class="slide validation-slide" id="slide8">
+    <div class="slide-number">8/12</div>
+    <div class="timing">5:30</div>
+    <h1>🧪 Validação Automática</h1>
+    <div class="icon-grid">
+        <div class="icon-item">
+            <div class="icon">🔍</div>
+            <h3>Verificação de Conexão</h3>
+            <p>Testa conectividade com Firestore</p>
+        </div>
+        <div class="icon-item">
+            <div class="icon">⚙️</div>
+            <h3>Validação de Settings</h3>
+            <p>Confirma configurações aplicadas</p>
+        </div>
+        <div class="icon-item">
+            <div class="icon">📊</div>
+            <h3>Métricas de Performance</h3>
+            <p>Monitora tempo de resposta</p>
+        </div>
+    </div>
+    <div class="highlight-box">
+        <h2>🎯 Melhor descobrir problemas no debug...</h2>
+        <div class="medium-text">Do que na loja de apps! 🛡️</div>
+    </div>
+</div>
+
+<!-- Slide 9: Implementação da Validação -->
+<div class="slide validation-slide" id="slide9">
+    <div class="slide-number">9/12</div>
+    <div class="timing">6:00</div>
+    <h1>💻 Código de Validação</h1>
+    <div class="code-preview">
+<span class="comment">// 🧪 VALIDADOR DE CONFIGURAÇÃO</span>
+<span class="keyword">class</span> <span class="type">ConfigurationValidator</span> {
+    
+    <span class="keyword">static</span> <span class="keyword">func</span> <span class="success">validateSetup</span>() <span class="keyword">async</span> {
+        <span class="success">print</span>(<span class="string">"🧪 Validando configuração..."</span>)
+        
+        <span class="comment">// ✅ 1. Testar conexão básica</span>
+        <span class="keyword">await</span> <span class="success">testConnection</span>()
+        
+        <span class="comment">// ✅ 2. Validar settings</span>
+        <span class="success">validateSettings</span>()
+        
+        <span class="comment">// ✅ 3. Testar operação simples</span>
+        <span class="keyword">await</span> <span class="success">testSimpleOperation</span>()
+        
+        <span class="success">print</span>(<span class="string">"✅ Configuração validada com sucesso!"</span>)
+    }
+    
+    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">func</span> <span class="success">testConnection</span>() <span class="keyword">async</span> {
+        <span class="comment">// 🔗 Teste de conectividade</span>
+    }
+}
+    </div>
+</div>
+
+<!-- Slide 10: Integração com o App -->
+<div class="slide demo-slide" id="slide10">
+    <div class="slide-number">10/12</div>
+    <div class="timing">6:30</div>
+    <h1>📱 Integração com o App</h1>
+    <div class="code-preview">
+<span class="comment">// 🚀 INTEGRAÇÃO NO APP PRINCIPAL</span>
+@<span class="keyword">main</span>
+<span class="keyword">struct</span> <span class="type">FinancasApp</span>: <span class="type">App</span> {
+    
+    <span class="keyword">init</span>() {
+        <span class="success">configureFirebase</span>()
+    }
+    
+    <span class="keyword">var</span> body: <span class="keyword">some</span> <span class="type">Scene</span> {
+        <span class="type">WindowGroup</span> {
+            <span class="type">ContentView</span>()
+                .<span class="success">onAppear</span> {
+                    <span class="type">Task</span> {
+                        <span class="keyword">await</span> <span class="type">ConfigurationValidator</span>.<span class="success">validateSetup</span>()
+                    }
+                }
+        }
+    }
+    
+    <span class="keyword">private</span> <span class="keyword">func</span> <span class="success">configureFirebase</span>() {
+        <span class="comment">// 1️⃣ Configuração base</span>
+        <span class="type">FirebaseApp</span>.<span class="success">configure</span>()
+        
+        <span class="comment">// 2️⃣ Configuração avançada</span>
+        <span class="type">FirestoreConfiguration</span>.<span class="success">configure</span>()
+    }
+}
+    </div>
+</div>
+
+<!-- Slide 11: Demonstração Prática -->
+<div class="slide demo-slide" id="slide11">
+    <div class="slide-number">11/12</div>
+    <div class="timing">7:00</div>
+    <h1>🎬 Demonstração Prática</h1>
+    <div class="big-text">
+        Agora vamos ver tudo funcionando no Xcode!
+    </div>
+    <div class="checklist">
+        <li>Implementar sistema de ambientes</li>
+        <li>Configurar Firestore avançado</li>
+        <li>Adicionar validação automática</li>
+        <li>Testar em diferentes ambientes</li>
+        <li>Verificar logs e performance</li>
+    </div>
+    <div class="highlight-box">
+        <h2>⚡ Resultado: Configuração Profissional!</h2>
+    </div>
+</div>
+
+<!-- Slide 12: Próximos Passos -->
+<div class="slide conclusion-slide" id="slide12">
+    <div class="slide-number">12/12</div>
+    <div class="timing">7:30</div>
+    <h1>🚀 Configuração Profissional Completa!</h1>
+    <div class="big-text">
+        ✅ Sistema de ambientes funcionando<br>
+        ✅ Cache offline otimizado<br>
+        ✅ Validação automática ativa<br>
+        ✅ Pronto para produção!
+    </div>
+    <div class="highlight-box">
+        <h2>🔜 Próximo: Service Layer Profissional</h2>
+        <div class="medium-text">Vamos construir a arquitetura que usa toda essa configuração!</div>
+    </div>
+</div>
+
+<div class="navigation">
+    <button class="nav-btn" id="prevBtn">← Anterior</button>
+    <button class="nav-btn" id="homeBtn">🏠 Início</button>
+    <button class="nav-btn" style="background: rgba(255,255,255,0.4);">
+        <span id="slideCounter">1 / 12</span>
+    </button>
+    <button class="nav-btn" id="endBtn">🏁 Fim</button>
+    <button class="nav-btn" id="nextBtn">Próximo →</button>
+</div>
+
+<script>
+let currentSlide = 1;
+const totalSlides = 12;
+
+function goToSlide(slideNumber) {
+    // Validar número do slide
+    if (slideNumber < 1) slideNumber = 1;
+    if (slideNumber > totalSlides) slideNumber = totalSlides;
+    
+    try {
+        // Esconder todos os slides primeiro
+        const allSlides = document.querySelectorAll('.slide');
+        allSlides.forEach(slide => {
+            slide.classList.remove('active');
+        });
+        
+        // Mostrar o slide desejado
+        const targetSlide = document.getElementById(`slide${slideNumber}`);
+        if (targetSlide) {
+            targetSlide.classList.add('active');
+            currentSlide = slideNumber;
+            
+            // Atualizar contador
+            const counter = document.getElementById('slideCounter');
+            if (counter) {
+                counter.textContent = `${currentSlide} / ${totalSlides}`;
+            }
+        } else {
+            console.error('Slide não encontrado:', slideNumber);
+        }
+    } catch (error) {
+        console.error('Erro ao navegar para slide:', error);
+    }
+}
+
+// Navegação por teclado
+document.addEventListener('keydown', function(e) {
+    e.preventDefault();
+    
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+        goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+        goToSlide(currentSlide - 1);
+    } else if (e.key === 'Home') {
+        goToSlide(1);
+    } else if (e.key === 'End') {
+        goToSlide(totalSlides);
+    }
+});
+
+// Clique na tela para navegar
+document.addEventListener('click', function(e) {
+    // Se clique foi em botão de navegação ou dentro da área de navegação, ignorar
+    if (e.target.classList.contains('nav-btn') || 
+        e.target.closest('.nav-btn') || 
+        e.target.closest('.navigation') ||
+        e.target.id === 'slideCounter') {
+        return;
+    }
+    
+    // Se clique no lado direito da tela, avançar
+    if (e.clientX > window.innerWidth / 2) {
+        goToSlide(currentSlide + 1);
+    } else {
+        // Se clique no lado esquerdo, voltar
+        goToSlide(currentSlide - 1);
+    }
+});
+
+// Configurar botões de navegação usando IDs
+document.addEventListener('DOMContentLoaded', function() {
+    // Buscar botões por IDs
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const homeBtn = document.getElementById('homeBtn');
+    const endBtn = document.getElementById('endBtn');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide - 1);
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide + 1);
+        });
+    }
+    
+    if (homeBtn) {
+        homeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(1);
+        });
+    }
+    
+    if (endBtn) {
+        endBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(totalSlides);
+        });
+    }
+    
+    // Inicializar primeiro slide
+    goToSlide(1);
+});
+
+// Também inicializar quando window carrega (backup)
+window.addEventListener('load', function() {
+    // Garantir que o primeiro slide está ativo se nenhum outro estiver
+    const activeSlides = document.querySelectorAll('.slide.active');
+    if (activeSlides.length === 0) {
+        goToSlide(1);
+    }
+});
+
+// Função de debug para testar
+function testSlideNavigation() {
+    console.log('Testando navegação...');
+    console.log('Slide atual:', currentSlide);
+    console.log('Total de slides:', totalSlides);
+    
+    for (let i = 1; i <= totalSlides; i++) {
+        const slide = document.getElementById(`slide${i}`);
+        console.log(`Slide ${i}:`, slide ? 'existe' : 'não encontrado');
+    }
+}
+</script>
+
+</body>
+</html>
