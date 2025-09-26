@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parte 5: Operações CRUD Básicas - Slides Interativos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .slide {
+            display: none;
+            height: 100vh;
+            padding: 60px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        .slide-number {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+        }
+
+        .timing {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 4em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .big-text {
+            font-size: 2.5em;
+            line-height: 1.4;
+            max-width: 90%;
+        }
+        
+        .medium-text {
+            font-size: 2em;
+            line-height: 1.5;
+            max-width: 90%;
+        }
+        
+        .highlight-box {
+            background: rgba(255,255,255,0.15);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+            border: 2px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .crud-slide {
+            background: linear-gradient(135deg, #ff7b7b 0%, #667eea 100%);
+        }
+        
+        .create-slide {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .read-slide {
+            background: linear-gradient(135deg, #007bff 0%, #6f42c1 100%);
+        }
+        
+        .update-slide {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        }
+        
+        .delete-slide {
+            background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+        }
+
+        .code-block {
+            background: rgba(44, 62, 80, 0.9);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            text-align: left;
+            max-width: 90%;
+            overflow-x: auto;
+            backdrop-filter: blur(10px);
+        }
+
+        .code-block pre {
+            color: #ecf0f1;
+            font-size: 1.4em;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .comment { color: #95a5a6; }
+        .keyword { color: #74b9ff; }
+        .function { color: #55a3ff; }
+        .string { color: #fdcb6e; }
+        .success { color: #2ecc71; }
+        .error { color: #e74c3c; }
+        .warning { color: #f39c12; }
+
+        .crud-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 40px;
+            margin: 30px 0;
+            max-width: 1000px;
+        }
+
+        .crud-item {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+
+        .crud-item:hover {
+            transform: translateY(-10px);
+        }
+
+        .crud-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            background: rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.5);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:active {
+            background: rgba(255,255,255,0.7);
+            transform: translateY(0);
+        }
+
+        .dramatic-text {
+            color: #ecf0f1;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .flow-diagram {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 40px 0;
+            max-width: 1200px;
+        }
+
+        .flow-step {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+            position: relative;
+        }
+
+        .flow-step::after {
+            content: '→';
+            position: absolute;
+            right: -30px;
+            font-size: 2em;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .flow-step:last-child::after {
+            display: none;
+        }
+
+        .demo-box {
+            background: rgba(0,0,0,0.3);
+            border: 3px solid #00ff88;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            backdrop-filter: blur(5px);
+        }
+
+        .demo-box h3 {
+            color: #00ff88;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Título -->
+<div class="slide crud-slide active" id="slide1">
+    <div class="slide-number">1/12</div>
+    <div class="timing">0:00</div>
+    <h1>🔥 CRUD Básico em Firestore</h1>
+    <div class="big-text dramatic-text">
+        Create • Read • Update • Delete
+    </div>
+    <div class="highlight-box">
+        <h2>🚀 Hora de Colocar Para Funcionar!</h2>
+        <div class="medium-text">Sistema bancário com operações reais</div>
+    </div>
+</div>
+
+<!-- Slide 2: O Que é CRUD -->
+<div class="slide" id="slide2">
+    <div class="slide-number">2/12</div>
+    <div class="timing">0:30</div>
+    <h1>🤔 O Que é CRUD?</h1>
+    <div class="crud-grid">
+        <div class="crud-item">
+            <div class="crud-icon">✅</div>
+            <h3><strong>C</strong>REATE</h3>
+            <p>Adicionar novos dados</p>
+        </div>
+        <div class="crud-item">
+            <div class="crud-icon">📖</div>
+            <h3><strong>R</strong>EAD</h3>
+            <p>Consultar dados existentes</p>
+        </div>
+        <div class="crud-item">
+            <div class="crud-icon">✏️</div>
+            <h3><strong>U</strong>PDATE</h3>
+            <p>Modificar dados existentes</p>
+        </div>
+        <div class="crud-item">
+            <div class="crud-icon">🗑️</div>
+            <h3><strong>D</strong>ELETE</h3>
+            <p>Remover dados</p>
+        </div>
+    </div>
+    <div class="highlight-box">
+        <h2>💰 Exemplo: Sistema Bancário</h2>
+        <div class="medium-text">Transações financeiras completas</div>
+    </div>
+</div>
+
+<!-- Slide 3: CREATE Operation -->
+<div class="slide create-slide" id="slide3">
+    <div class="slide-number">3/12</div>
+    <div class="timing">0:30</div>
+    <h1>✅ CREATE: Criar Transação</h1>
+    <div class="code-block">
+        <pre><span class="comment">// ✅ CRIAR NOVA TRANSAÇÃO</span>
+<span class="keyword">func</span> <span class="function">createTransaction</span>(_ transaction: Transaction) <span class="keyword">async throws</span> -> String {
+    <span class="comment">// 🔍 Validar dados</span>
+    <span class="keyword">try</span> validateTransaction(transaction)
+    
+    <span class="comment">// ⏱️ Adicionar timestamps</span>
+    <span class="keyword">var</span> mutableTransaction = transaction
+    mutableTransaction.createdAt = Timestamp(date: Date())
+    
+    <span class="comment">// 🔥 Enviar para Firestore</span>
+    <span class="keyword">let</span> docRef = <span class="keyword">try await</span> db.collection(<span class="string">"transactions"</span>)
+        .addDocument(data: mutableTransaction.dictionary)
+    
+    <span class="success">return</span> docRef.documentID
+}</pre>
+    </div>
+    <div class="highlight-box">
+        <h2>💡 Sempre com Validação</h2>
+    </div>
+</div>
+
+<!-- Slide 4: READ Operation -->
+<div class="slide read-slide" id="slide4">
+    <div class="slide-number">4/12</div>
+    <div class="timing">2:00</div>
+    <h1>📖 READ: Consultar Transações</h1>
+    <div class="code-block">
+        <pre><span class="comment">// 📖 BUSCAR TRANSAÇÕES DO USUÁRIO</span>
+<span class="keyword">func</span> <span class="function">getUserTransactions</span>(userId: String) <span class="keyword">async throws</span> -> [Transaction] {
+    <span class="comment">// 🎯 Query otimizada</span>
+    <span class="keyword">let</span> snapshot = <span class="keyword">try await</span> db.collection(<span class="string">"transactions"</span>)
+        .whereField(<span class="string">"userId"</span>, isEqualTo: userId)
+        .order(by: <span class="string">"date"</span>, descending: <span class="keyword">true</span>)
+        .limit(to: <span class="warning">50</span>)
+        .getDocuments()
+    
+    <span class="comment">// 🏭 Converter para objetos</span>
+    <span class="success">return</span> snapshot.documents.compactMap { doc <span class="keyword">in</span>
+        <span class="keyword">try</span>? doc.data(as: Transaction.<span class="keyword">self</span>)
+    }
+}</pre>
+    </div>
+    <div class="highlight-box">
+        <h2>🔍 Queries Inteligentes</h2>
+    </div>
+</div>
+
+<!-- Slide 5: UPDATE Operation -->
+<div class="slide update-slide" id="slide5">
+    <div class="slide-number">5/12</div>
+    <div class="timing">3:30</div>
+    <h1>✏️ UPDATE: Atualizar Transação</h1>
+    <div class="code-block">
+        <pre><span class="comment">// ✏️ ATUALIZAR TRANSAÇÃO EXISTENTE</span>
+<span class="keyword">func</span> <span class="function">updateTransaction</span>(_ transaction: Transaction) <span class="keyword">async throws</span> {
+    <span class="comment">// 🔒 Verificar ID</span>
+    <span class="keyword">guard let</span> id = transaction.id <span class="keyword">else</span> {
+        <span class="keyword">throw</span> FirestoreError.missingDocumentID
+    }
+    
+    <span class="comment">// ⏰ Atualizar timestamp</span>
+    <span class="keyword">var</span> updateData = transaction.dictionary
+    updateData[<span class="string">"updatedAt"</span>] = Timestamp(date: Date())
+    
+    <span class="comment">// 🔥 Merge com dados existentes</span>
+    <span class="keyword">try await</span> db.collection(<span class="string">"transactions"</span>)
+        .document(id)
+        .setData(updateData, merge: <span class="keyword">true</span>)
+}</pre>
+    </div>
+    <div class="highlight-box">
+        <h2>🔄 Merge Inteligente</h2>
+    </div>
+</div>
+
+<!-- Slide 6: DELETE Operation -->
+<div class="slide delete-slide" id="slide6">
+    <div class="slide-number">6/12</div>
+    <div class="timing">4:30</div>
+    <h1>🗑️ DELETE: Remover Transação</h1>
+    <div class="code-block">
+        <pre><span class="comment">// 🗑️ DELETE COM OPÇÃO SOFT/HARD</span>
+<span class="keyword">func</span> <span class="function">deleteTransaction</span>(id: String, softDelete: Bool = <span class="keyword">true</span>) <span class="keyword">async throws</span> {
+    <span class="keyword">let</span> docRef = db.collection(<span class="string">"transactions"</span>).document(id)
+    
+    <span class="keyword">if</span> softDelete {
+        <span class="comment">// 🏷️ Soft delete: marcar como deletado</span>
+        <span class="keyword">try await</span> docRef.setData([
+            <span class="string">"isDeleted"</span>: <span class="keyword">true</span>,
+            <span class="string">"deletedAt"</span>: Timestamp(date: Date())
+        ], merge: <span class="keyword">true</span>)
+    } <span class="keyword">else</span> {
+        <span class="comment">// 💥 Hard delete: remover fisicamente</span>
+        <span class="keyword">try await</span> docRef.delete()
+    }
+}</pre>
+    </div>
+    <div class="highlight-box">
+        <h2>🛡️ Delete Seguro</h2>
+    </div>
+</div>
+
+<!-- Slide 7: Fluxo Completo -->
+<div class="slide" id="slide7">
+    <div class="slide-number">7/12</div>
+    <div class="timing">5:30</div>
+    <h1>🔄 Fluxo CRUD Completo</h1>
+    <div class="flow-diagram">
+        <div class="flow-step">
+            <h3>✅ CREATE</h3>
+            <p>Nova transação<br>com validação</p>
+        </div>
+        <div class="flow-step">
+            <h3>📖 READ</h3>
+            <p>Listar todas<br>do usuário</p>
+        </div>
+        <div class="flow-step">
+            <h3>✏️ UPDATE</h3>
+            <p>Corrigir valor<br>ou categoria</p>
+        </div>
+        <div class="flow-step">
+            <h3>🗑️ DELETE</h3>
+            <p>Remover<br>inválidas</p>
+        </div>
+    </div>
+    <div class="highlight-box">
+        <h2>💰 Sistema Bancário Completo!</h2>
+        <div class="medium-text">Todas as operações funcionando</div>
+    </div>
+</div>
+
+<!-- Slide 8: ViewModel Integration -->
+<div class="slide" id="slide8">
+    <div class="slide-number">8/12</div>
+    <div class="timing">6:00</div>
+    <h1>📱 Integração com ViewModel</h1>
+    <div class="code-block">
+        <pre><span class="comment">// 📱 VIEWMODEL COMPLETO</span>
+<span class="keyword">class</span> <span class="function">TransactionViewModel</span>: ObservableObject {
+    <span class="keyword">@Published var</span> transactions: [Transaction] = []
+    <span class="keyword">private let</span> service = TransactionService()
+    
+    <span class="comment">// ✅ Criar nova transação</span>
+    <span class="keyword">func</span> <span class="function">addTransaction</span>(_ transaction: Transaction) <span class="keyword">async</span> {
+        <span class="keyword">do</span> {
+            <span class="keyword">let</span> id = <span class="keyword">try await</span> service.createTransaction(transaction)
+            <span class="keyword">await</span> loadTransactions() <span class="comment">// Recarregar lista</span>
+        } <span class="keyword">catch</span> {
+            <span class="error">print</span>(<span class="string">"Erro ao criar:"</span>, error)
+        }
+    }
+}</pre>
+    </div>
+    <div class="highlight-box">
+        <h2>🔄 Interface Reativa</h2>
+    </div>
+</div>
+
+<!-- Slide 9: Error Handling -->
+<div class="slide" id="slide9">
+    <div class="slide-number">9/12</div>
+    <div class="timing">6:30</div>
+    <h1>🛡️ Error Handling Robusto</h1>
+    <div class="code-block">
+        <pre><span class="comment">// 🛡️ TRATAMENTO DE ERROS</span>
+<span class="keyword">enum</span> <span class="function">FirestoreError</span>: LocalizedError {
+    <span class="keyword">case</span> missingDocumentID
+    <span class="keyword">case</span> invalidData
+    <span class="keyword">case</span> networkError(Error)
+    <span class="keyword">case</span> permissionDenied
+    
+    <span class="keyword">var</span> <span class="function">errorDescription</span>: String? {
+        <span class="keyword">switch self</span> {
+        <span class="keyword">case</span> .missingDocumentID:
+            <span class="success">return</span> <span class="string">"ID do documento não encontrado"</span>
+        <span class="keyword">case</span> .invalidData:
+            <span class="success">return</span> <span class="string">"Dados inválidos fornecidos"</span>
+        <span class="comment">// ... outros casos</span>
+        }
+    }
+}</pre>
+    </div>
+    <div class="highlight-box">
+        <h2>🎯 Erros Descritivos</h2>
+    </div>
+</div>
+
+<!-- Slide 10: Tela de Demonstração -->
+<div class="slide" id="slide10">
+    <div class="slide-number">10/12</div>
+    <div class="timing">7:00</div>
+    <h1>📱 Interface Completa</h1>
+    <div class="demo-box">
+        <h3>💰 App de Transações Funcionando</h3>
+        <div class="medium-text">
+            ✅ Adicionar transação: "Salário +R$ 5.000"<br>
+            📖 Listar todas do usuário atual<br>
+            ✏️ Editar: "Corrigir valor para R$ 5.100"<br>
+            🗑️ Deletar: "Remover transação teste"
+        </div>
+    </div>
+    <div class="highlight-box">
+        <h2>🚀 Tudo Funcionando no Simulador!</h2>
+        <div class="medium-text">Teste cada operação ao vivo</div>
+    </div>
+</div>
+
+<!-- Slide 11: Performance Tips -->
+<div class="slide" id="slide11">
+    <div class="slide-number">11/12</div>
+    <div class="timing">7:30</div>
+    <h1>⚡ Dicas de Performance</h1>
+    <div class="crud-grid">
+        <div class="crud-item">
+            <div class="crud-icon">🎯</div>
+            <h3>Paginação</h3>
+            <p>.limit(to: 50)<br>para listas grandes</p>
+        </div>
+        <div class="crud-item">
+            <div class="crud-icon">📊</div>
+            <h3>Índices</h3>
+            <p>Criar índices<br>para queries</p>
+        </div>
+        <div class="crud-item">
+            <div class="crud-icon">💾</div>
+            <h3>Cache Local</h3>
+            <p>Dados offline<br>primeiro</p>
+        </div>
+        <div class="crud-item">
+            <div class="crud-icon">⏱️</div>
+            <h3>Timestamps</h3>
+            <p>Automáticos<br>sempre</p>
+        </div>
+    </div>
+    <div class="highlight-box">
+        <h2>💡 CRUD Profissional!</h2>
+    </div>
+</div>
+
+<!-- Slide 12: Próximos Passos -->
+<div class="slide" id="slide12">
+    <div class="slide-number">12/12</div>
+    <div class="timing">8:00</div>
+    <h1>🎉 CRUD Dominado!</h1>
+    <div class="big-text">
+        ✅ Create com <strong>validação</strong><br>
+        ✅ Read com <strong>queries otimizadas</strong><br>
+        ✅ Update com <strong>merge inteligente</strong><br>
+        ✅ Delete com <strong>soft/hard options</strong>
+    </div>
+    <div class="highlight-box">
+        <h2>🔜 Próximo: Listeners em Tempo Real</h2>
+        <div class="medium-text">Sincronização automática instantânea!</div>
+    </div>
+</div>
+
+<div class="navigation">
+    <button class="nav-btn" id="prevBtn">← Anterior</button>
+    <button class="nav-btn" id="homeBtn">🏠 Início</button>
+    <button class="nav-btn" style="background: rgba(255,255,255,0.4);">
+        <span id="slideCounter">1 / 12</span>
+    </button>
+    <button class="nav-btn" id="endBtn">🏁 Fim</button>
+    <button class="nav-btn" id="nextBtn">Próximo →</button>
+</div>
+
+<script>
+let currentSlide = 1;
+const totalSlides = 12;
+
+function goToSlide(slideNumber) {
+    // Validar número do slide
+    if (slideNumber < 1) slideNumber = 1;
+    if (slideNumber > totalSlides) slideNumber = totalSlides;
+    
+    try {
+        // Esconder todos os slides primeiro
+        const allSlides = document.querySelectorAll('.slide');
+        allSlides.forEach(slide => {
+            slide.classList.remove('active');
+        });
+        
+        // Mostrar o slide desejado
+        const targetSlide = document.getElementById(`slide${slideNumber}`);
+        if (targetSlide) {
+            targetSlide.classList.add('active');
+            currentSlide = slideNumber;
+            
+            // Atualizar contador
+            const counter = document.getElementById('slideCounter');
+            if (counter) {
+                counter.textContent = `${currentSlide} / ${totalSlides}`;
+            }
+        } else {
+            console.error('Slide não encontrado:', slideNumber);
+        }
+    } catch (error) {
+        console.error('Erro ao navegar para slide:', error);
+    }
+}
+
+// Navegação por teclado
+document.addEventListener('keydown', function(e) {
+    e.preventDefault();
+    
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+        goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+        goToSlide(currentSlide - 1);
+    } else if (e.key === 'Home') {
+        goToSlide(1);
+    } else if (e.key === 'End') {
+        goToSlide(totalSlides);
+    }
+});
+
+// Clique na tela para navegar
+document.addEventListener('click', function(e) {
+    // Se clique foi em botão de navegação ou dentro da área de navegação, ignorar
+    if (e.target.classList.contains('nav-btn') || 
+        e.target.closest('.nav-btn') || 
+        e.target.closest('.navigation') ||
+        e.target.id === 'slideCounter') {
+        return;
+    }
+    
+    // Se clique no lado direito da tela, avançar
+    if (e.clientX > window.innerWidth / 2) {
+        goToSlide(currentSlide + 1);
+    } else {
+        // Se clique no lado esquerdo, voltar
+        goToSlide(currentSlide - 1);
+    }
+});
+
+// Configurar botões de navegação usando IDs
+document.addEventListener('DOMContentLoaded', function() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const homeBtn = document.getElementById('homeBtn');
+    const endBtn = document.getElementById('endBtn');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide - 1);
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide + 1);
+        });
+    }
+    
+    if (homeBtn) {
+        homeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(1);
+        });
+    }
+    
+    if (endBtn) {
+        endBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(totalSlides);
+        });
+    }
+    
+    // Inicializar primeiro slide
+    goToSlide(1);
+});
+
+// Também inicializar quando window carrega (backup)
+window.addEventListener('load', function() {
+    // Garantir que o primeiro slide está ativo se nenhum outro estiver
+    const activeSlides = document.querySelectorAll('.slide.active');
+    if (activeSlides.length === 0) {
+        goToSlide(1);
+    }
+});
+</script>
+
+</body>
+</html>
