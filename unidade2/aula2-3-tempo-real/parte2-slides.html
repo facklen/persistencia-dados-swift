@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parte 2: Implementação Básica de Listeners - Slides Interativos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .slide {
+            display: none;
+            height: 100vh;
+            padding: 60px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        .slide-number {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+        }
+
+        .timing {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 4em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .big-text {
+            font-size: 2.5em;
+            line-height: 1.4;
+            max-width: 90%;
+        }
+        
+        .medium-text {
+            font-size: 2em;
+            line-height: 1.5;
+            max-width: 90%;
+        }
+        
+        .highlight-box {
+            background: rgba(255,255,255,0.15);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+            border: 2px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .implementation-slide {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+        
+        .code-slide {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        }
+        
+        .testing-slide {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        }
+        
+        .success-slide {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+        
+        .checklist {
+            text-align: left;
+            font-size: 1.8em;
+            line-height: 1.8;
+            max-width: 80%;
+        }
+        
+        .checklist li {
+            margin: 15px 0;
+            list-style: none;
+        }
+        
+        .code-preview {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 30px;
+            border-radius: 15px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Courier New', monospace;
+            font-size: 1.3em;
+            text-align: left;
+            margin: 20px 0;
+            max-width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            white-space: pre-wrap;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .code-preview .comment {
+            color: #95a5a6;
+            font-style: italic;
+        }
+
+        .code-preview .success {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .code-preview .keyword {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .code-preview .string {
+            color: #f39c12;
+        }
+
+        .code-preview .type {
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .step-indicator {
+            position: absolute;
+            top: 50%;
+            right: 50px;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .step-number {
+            font-size: 3em;
+            font-weight: bold;
+            color: #f39c12;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .step-title {
+            font-size: 1.2em;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .slide {
+                padding: 40px 20px;
+            }
+            
+            h1 {
+                font-size: 2.5em;
+            }
+            
+            h2 {
+                font-size: 2em;
+            }
+            
+            .big-text {
+                font-size: 1.8em;
+            }
+            
+            .medium-text {
+                font-size: 1.4em;
+            }
+            
+            .code-preview {
+                font-size: 1em;
+                padding: 20px;
+            }
+            
+            .step-indicator {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Título -->
+<div class="slide active" id="slide1">
+    <div class="slide-number">1/12</div>
+    <div class="timing">0:00</div>
+    <h1>🎧 Implementação Básica de Listeners</h1>
+    <div class="big-text">Da teoria para a <strong>prática funcional</strong>!</div>
+    <div class="highlight-box">
+        <h2>🎯 Objetivo: Primeiro listener 100% funcional</h2>
+        <div class="medium-text">Com logs educativos e interface reativa</div>
+    </div>
+</div>
+
+<!-- Slide 2: O que vamos construir -->
+<div class="slide implementation-slide" id="slide2">
+    <div class="slide-number">2/12</div>
+    <div class="timing">0:30</div>
+    <h1>🏗️ O que vamos construir</h1>
+    <div class="checklist">
+        <li>✅ <strong>TransactionListener</strong> - Classe principal</li>
+        <li>✅ <strong>@Published properties</strong> - Estado reativo</li>
+        <li>✅ <strong>Logs educativos</strong> - Para aprender</li>
+        <li>✅ <strong>Interface SwiftUI</strong> - Visualização</li>
+        <li>✅ <strong>Testes práticos</strong> - Validação</li>
+    </div>
+</div>
+
+<!-- Slide 3: Anatomia de um Listener -->
+<div class="slide code-slide" id="slide3">
+    <div class="slide-number">3/12</div>
+    <div class="timing">1:00</div>
+    <h1>🔍 Anatomia de um Listener</h1>
+    <div class="code-preview">
+<span class="comment">// 🎧 Os 4 componentes essenciais</span>
+
+<span class="keyword">1.</span> <span class="type">@Published</span> properties  <span class="comment">// Estado observável</span>
+<span class="keyword">2.</span> <span class="type">Firestore</span> connection   <span class="comment">// Conexão BD</span>
+<span class="keyword">3.</span> <span class="type">Query</span> + <span class="type">Listener</span>        <span class="comment">// Escuta mudanças</span>
+<span class="keyword">4.</span> <span class="type">Cleanup</span> method        <span class="comment">// Remove listener</span>
+    </div>
+</div>
+
+<!-- Slide 4: Estrutura da Classe -->
+<div class="slide implementation-slide" id="slide4">
+    <div class="slide-number">4/12</div>
+    <div class="timing">2:00</div>
+    <h2>🏗️ Estrutura da Classe</h2>
+    <div class="code-preview">
+<span class="keyword">class</span> <span class="type">TransactionListener</span>: <span class="type">ObservableObject</span> {
+    
+    <span class="comment">// 📊 PROPRIEDADES OBSERVÁVEIS</span>
+    <span class="success">@Published</span> <span class="keyword">var</span> transactions: [Transaction] = []
+    <span class="success">@Published</span> <span class="keyword">var</span> isLoading = <span class="keyword">true</span>
+    <span class="success">@Published</span> <span class="keyword">var</span> errorMessage: String?
+    
+    <span class="comment">// 🔥 CONEXÕES FIREBASE</span>
+    <span class="keyword">private let</span> db = Firestore.firestore()
+    <span class="keyword">private var</span> listener: ListenerRegistration?
+}
+    </div>
+</div>
+
+<!-- Slide 5: Método Principal -->
+<div class="slide code-slide" id="slide5">
+    <div class="slide-number">5/12</div>
+    <div class="timing">3:30</div>
+    <h2>🚀 Método Principal - startListening()</h2>
+    <div class="code-preview">
+<span class="keyword">func</span> startListening() {
+    print(<span class="string">"🎧 === INICIANDO LISTENER ==="</span>)
+    
+    <span class="comment">// ⚠️ Parar listener anterior</span>
+    stopListening()
+    
+    isLoading = <span class="keyword">true</span>
+    errorMessage = <span class="keyword">nil</span>
+    
+    <span class="comment">// 🎯 QUERY ESPECÍFICA</span>
+    <span class="keyword">let</span> query = db.collection(<span class="string">"transactions"</span>)
+        .order(by: <span class="string">"date"</span>, descending: <span class="keyword">true</span>)
+        .limit(to: 50)
+}
+    </div>
+</div>
+
+<!-- Slide 6: Adicionar Listener -->
+<div class="slide implementation-slide" id="slide6">
+    <div class="slide-number">6/12</div>
+    <div class="timing">4:30</div>
+    <h1>✨ A Mágica Acontece Aqui!</h1>
+    <div class="code-preview">
+<span class="comment">// 🎧 ADICIONAR LISTENER</span>
+listener = query.<span class="success">addSnapshotListener</span> { snapshot, error <span class="keyword">in</span>
+    
+    <span class="keyword">if let</span> error = error {
+        print(<span class="string">"❌ Erro:"</span>, error.localizedDescription)
+        <span class="keyword">self</span>.errorMessage = error.localizedDescription
+        <span class="keyword">return</span>
+    }
+    
+    <span class="keyword">guard let</span> snapshot = snapshot <span class="keyword">else</span> { <span class="keyword">return</span> }
+    
+    print(<span class="string">"📡 LISTENER CALLBACK EXECUTADO!"</span>)
+    print(<span class="string">"📄 Documentos recebidos:"</span>, snapshot.documents.count)
+}
+    </div>
+</div>
+
+<!-- Slide 7: Processamento de Dados -->
+<div class="slide code-slide" id="slide7">
+    <div class="slide-number">7/12</div>
+    <div class="timing">5:30</div>
+    <h2>🔄 Processamento de Dados</h2>
+    <div class="code-preview">
+<span class="comment">// 🔄 CONVERTER DOCUMENTOS PARA OBJETOS</span>
+<span class="keyword">let</span> newTransactions = snapshot.documents.compactMap { doc <span class="keyword">in</span>
+    <span class="keyword">do</span> {
+        <span class="keyword">var</span> transaction = <span class="keyword">try</span> doc.data(as: Transaction.<span class="keyword">self</span>)
+        transaction.id = doc.documentID
+        <span class="keyword">return</span> transaction
+    } <span class="keyword">catch</span> {
+        print(<span class="string">"⚠️ Erro ao converter documento:"</span>, error)
+        <span class="keyword">return nil</span>
+    }
+}
+
+<span class="comment">// ✅ ATUALIZAR UI NO MAIN THREAD</span>
+DispatchQueue.main.async {
+    <span class="keyword">self</span>.transactions = newTransactions
+    <span class="keyword">self</span>.isLoading = <span class="keyword">false</span>
+}
+    </div>
+</div>
+
+<!-- Slide 8: Modelo Transaction -->
+<div class="slide implementation-slide" id="slide8">
+    <div class="slide-number">8/12</div>
+    <div class="timing">6:30</div>
+    <h2>📄 Modelo Transaction</h2>
+    <div class="code-preview">
+<span class="keyword">struct</span> <span class="type">Transaction</span>: <span class="type">Codable</span>, <span class="type">Identifiable</span> {
+    <span class="keyword">var</span> id: String = UUID().uuidString
+    <span class="keyword">let</span> amount: Double
+    <span class="keyword">let</span> category: String
+    <span class="keyword">let</span> description: String
+    <span class="keyword">let</span> date: Date
+    <span class="keyword">let</span> userId: String
+    
+    <span class="comment">// 💰 Formatação de valores</span>
+    <span class="keyword">var</span> formattedAmount: String {
+        <span class="keyword">let</span> formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = Locale(identifier: <span class="string">"pt_BR"</span>)
+        <span class="keyword">return</span> formatter.string(from: NSNumber(value: amount)) ?? <span class="string">"R$ 0"</span>
+    }
+}
+    </div>
+</div>
+
+<!-- Slide 9: Interface SwiftUI -->
+<div class="slide testing-slide" id="slide9">
+    <div class="slide-number">9/12</div>
+    <div class="timing">7:30</div>
+    <h1>📱 Interface SwiftUI Reativa</h1>
+    <div class="code-preview">
+<span class="keyword">struct</span> <span class="type">TransactionListView</span>: <span class="type">View</span> {
+    <span class="success">@StateObject</span> <span class="keyword">private var</span> listener = TransactionListener()
+    
+    <span class="keyword">var</span> body: <span class="keyword">some</span> <span class="type">View</span> {
+        NavigationView {
+            <span class="type">List</span>(listener.transactions) { transaction <span class="keyword">in</span>
+                <span class="type">TransactionRowView</span>(transaction: transaction)
+            }
+            .navigationTitle(<span class="string">"💰 Transações"</span>)
+            .onAppear {
+                listener.startListening()
+            }
+            .onDisappear {
+                listener.stopListening()
+            }
+        }
+    }
+}
+    </div>
+</div>
+
+<!-- Slide 10: Teste Prático -->
+<div class="slide testing-slide" id="slide10">
+    <div class="slide-number">10/12</div>
+    <div class="timing">8:30</div>
+    <h1>🧪 Roteiro de Teste</h1>
+    <div class="checklist">
+        <li>1️⃣ <strong>Execute o app</strong> - Observe logs no console</li>
+        <li>2️⃣ <strong>Abra Firebase Console</strong> - Vá para Firestore</li>
+        <li>3️⃣ <strong>Adicione documento</strong> - Veja aparecer no app!</li>
+        <li>4️⃣ <strong>Modifique dados</strong> - Atualização instantânea</li>
+        <li>5️⃣ <strong>Delete documento</strong> - Remove do app</li>
+    </div>
+    <div class="highlight-box">
+        <h2>✨ Sincronização em tempo real funcionando!</h2>
+    </div>
+</div>
+
+<!-- Slide 11: Logs Educativos -->
+<div class="slide code-slide" id="slide11">
+    <div class="slide-number">11/12</div>
+    <div class="timing">9:00</div>
+    <h2>📋 Logs que você vai ver</h2>
+    <div class="code-preview">
+🎧 === INICIANDO LISTENER ===
+👤 Usuário: user123
+📍 Coleção: users/user123/transactions  
+⏰ Timestamp: 2024-03-15 10:30:00
+
+📡 LISTENER CALLBACK EXECUTADO!
+📄 Documentos recebidos: 3
+🔄 Convertendo documentos...
+✅ Documento convertido: Compra no supermercado
+✅ Documento convertido: Pagamento Netflix  
+✅ Documento convertido: Salário recebido
+
+🎯 UI atualizada com 3 transações
+🟢 Status: Ao vivo e sincronizado!
+    </div>
+</div>
+
+<!-- Slide 12: Sucesso! -->
+<div class="slide success-slide" id="slide12">
+    <div class="slide-number">12/12</div>
+    <div class="timing">9:30</div>
+    <h1>🎉 Você Implementou seu Primeiro Listener!</h1>
+    <div class="big-text">
+        ✅ <strong>Listener funcional</strong> conectado ao Firestore<br>
+        ✅ <strong>Interface reativa</strong> que atualiza automaticamente<br>
+        ✅ <strong>Logs educativos</strong> para entender cada passo<br>
+        ✅ <strong>Base sólida</strong> para técnicas avançadas
+    </div>
+    <div class="highlight-box">
+        <h2>🚀 Próximo: Listeners Avançados e Otimização</h2>
+        <div class="medium-text">Filtros, paginação e performance!</div>
+    </div>
+</div>
+
+<div class="navigation">
+    <button class="nav-btn" id="prevBtn">← Anterior</button>
+    <button class="nav-btn" id="homeBtn">🏠 Início</button>
+    <button class="nav-btn" style="background: rgba(255,255,255,0.4);">
+        <span id="slideCounter">1 / 12</span>
+    </button>
+    <button class="nav-btn" id="endBtn">🏁 Fim</button>
+    <button class="nav-btn" id="nextBtn">Próximo →</button>
+</div>
+
+<script>
+let currentSlide = 1;
+const totalSlides = 12;
+
+function goToSlide(slideNumber) {
+    // Validar número do slide
+    if (slideNumber < 1) slideNumber = 1;
+    if (slideNumber > totalSlides) slideNumber = totalSlides;
+    
+    try {
+        // Esconder todos os slides primeiro
+        const allSlides = document.querySelectorAll('.slide');
+        allSlides.forEach(slide => {
+            slide.classList.remove('active');
+        });
+        
+        // Mostrar o slide desejado
+        const targetSlide = document.getElementById(`slide${slideNumber}`);
+        if (targetSlide) {
+            targetSlide.classList.add('active');
+            currentSlide = slideNumber;
+            
+            // Atualizar contador
+            const counter = document.getElementById('slideCounter');
+            if (counter) {
+                counter.textContent = `${currentSlide} / ${totalSlides}`;
+            }
+        } else {
+            console.error('Slide não encontrado:', slideNumber);
+        }
+    } catch (error) {
+        console.error('Erro ao navegar para slide:', error);
+    }
+}
+
+// Navegação por teclado
+document.addEventListener('keydown', function(e) {
+    e.preventDefault();
+    
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+        goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+        goToSlide(currentSlide - 1);
+    } else if (e.key === 'Home') {
+        goToSlide(1);
+    } else if (e.key === 'End') {
+        goToSlide(totalSlides);
+    }
+});
+
+// Clique na tela para navegar
+document.addEventListener('click', function(e) {
+    // Se clique foi em botão de navegação ou dentro da área de navegação, ignorar
+    if (e.target.classList.contains('nav-btn') || 
+        e.target.closest('.nav-btn') || 
+        e.target.closest('.navigation') ||
+        e.target.id === 'slideCounter') {
+        return;
+    }
+    
+    // Se clique no lado direito da tela, avançar
+    if (e.clientX > window.innerWidth / 2) {
+        goToSlide(currentSlide + 1);
+    } else {
+        // Se clique no lado esquerdo, voltar
+        goToSlide(currentSlide - 1);
+    }
+});
+
+// Prevenir comportamento padrão em links
+document.addEventListener('DOMContentLoaded', function() {
+    // Configurar botões de navegação usando IDs
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const homeBtn = document.getElementById('homeBtn');
+    const endBtn = document.getElementById('endBtn');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide - 1);
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide + 1);
+        });
+    }
+    
+    if (homeBtn) {
+        homeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(1);
+        });
+    }
+    
+    if (endBtn) {
+        endBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(totalSlides);
+        });
+    }
+    
+    // Inicializar primeiro slide
+    goToSlide(1);
+});
+
+// Também inicializar quando window carrega (backup)
+window.addEventListener('load', function() {
+    // Garantir que o primeiro slide está ativo se nenhum outro estiver
+    const activeSlides = document.querySelectorAll('.slide.active');
+    if (activeSlides.length === 0) {
+        goToSlide(1);
+    }
+});
+
+// Função de debug para testar
+function testSlideNavigation() {
+    console.log('Testando navegação...');
+    console.log('Slide atual:', currentSlide);
+    console.log('Total de slides:', totalSlides);
+    
+    for (let i = 1; i <= totalSlides; i++) {
+        const slide = document.getElementById(`slide${i}`);
+        console.log(`Slide ${i}:`, slide ? 'existe' : 'não encontrado');
+    }
+}
+</script>
+
+</body>
+</html>
