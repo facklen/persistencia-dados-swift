@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parte 3: Listeners Avançados e Otimização - Slides Interativos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .slide {
+            display: none;
+            height: 100vh;
+            padding: 60px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        .slide-number {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+        }
+
+        .timing {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 4em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .big-text {
+            font-size: 2.5em;
+            line-height: 1.4;
+            max-width: 90%;
+        }
+        
+        .medium-text {
+            font-size: 2em;
+            line-height: 1.5;
+            max-width: 90%;
+        }
+        
+        .highlight-box {
+            background: rgba(255,255,255,0.15);
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+            border: 2px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .advanced-slide {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+
+        .performance-slide {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .optimization-slide {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .code-slide {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+        }
+
+        .success-slide {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+
+        .code-block {
+            background: rgba(0,0,0,0.7);
+            padding: 30px;
+            border-radius: 15px;
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 1.3em;
+            text-align: left;
+            max-width: 90%;
+            overflow-x: auto;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            max-width: 1000px;
+            margin: 30px 0;
+        }
+
+        .comparison-item {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            max-width: 900px;
+            margin: 30px 0;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 3em;
+            font-weight: bold;
+            color: #2ecc71;
+            margin-bottom: 10px;
+        }
+
+        .technique-list {
+            text-align: left;
+            font-size: 1.8em;
+            line-height: 2;
+            max-width: 80%;
+        }
+
+        .technique-item {
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            border-left: 5px solid #2ecc71;
+        }
+
+        .dramatic-text {
+            color: #ecf0f1;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            background: rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.5);
+            transform: translateY(-2px);
+        }
+
+        .problem-highlight {
+            background: rgba(231, 76, 60, 0.8);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #e74c3c;
+        }
+
+        .solution-highlight {
+            background: rgba(46, 204, 113, 0.8);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid #2ecc71;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Título -->
+<div class="slide active advanced-slide" id="slide1">
+    <div class="slide-number">1/12</div>
+    <div class="timing">0:00</div>
+    <h1>⚡ Listeners Avançados</h1>
+    <div class="big-text">
+        Técnicas <strong>profissionais</strong> para<br>
+        <span class="dramatic-text">apps que escalam</span>
+    </div>
+    <div class="highlight-box">
+        <h2>🎯 O Próximo Nível</h2>
+        <div class="medium-text">Performance + Filtros + Otimização</div>
+    </div>
+</div>
+
+<!-- Slide 2: O Problema -->
+<div class="slide performance-slide" id="slide2">
+    <div class="slide-number">2/12</div>
+    <div class="timing">0:30</div>
+    <h1>😱 O Pesadelo Real</h1>
+    <div class="big-text">
+        App com <strong>100.000 transações</strong><br>
+        Filtros em tempo real<br>
+        <span style="color: #e74c3c;">Interface travando...</span>
+    </div>
+    <div class="problem-highlight">
+        <h2>❌ Problemas Típicos:</h2>
+        <div class="medium-text">
+            • Download de dados desnecessários<br>
+            • Spam de queries no Firebase<br>
+            • Memory leaks com listeners<br>
+            • Interface não responsiva
+        </div>
+    </div>
+</div>
+
+<!-- Slide 3: A Solução Profissional -->
+<div class="slide success-slide" id="slide3">
+    <div class="slide-number">3/12</div>
+    <div class="timing">1:00</div>
+    <h1>🚀 Solução Profissional</h1>
+    <div class="stats-grid">
+        <div class="stat-item">
+            <div class="stat-number">90%</div>
+            <div>Menos dados</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">5x</div>
+            <div>Mais rápido</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">100%</div>
+            <div>Controle</div>
+        </div>
+    </div>
+    <div class="solution-highlight">
+        <h2>✅ Nossa Arquitetura:</h2>
+        <div class="medium-text">
+            Paginação + Cache + Debounce + Monitoring
+        </div>
+    </div>
+</div>
+
+<!-- Slide 4: Paginação Inteligente -->
+<div class="slide advanced-slide" id="slide4">
+    <div class="slide-number">4/12</div>
+    <div class="timing">1:30</div>
+    <h1>📄 Paginação Inteligente</h1>
+    <div class="comparison-grid">
+        <div class="comparison-item">
+            <h3 style="color: #e74c3c;">❌ Antes</h3>
+            <div class="medium-text">
+                • Carrega tudo de uma vez<br>
+                • 100MB+ de download<br>
+                • App trava 30 segundos<br>
+                • Usuário abandona
+            </div>
+        </div>
+        <div class="comparison-item">
+            <h3 style="color: #2ecc71;">✅ Depois</h3>
+            <div class="medium-text">
+                • Carrega 20 itens por vez<br>
+                • 500KB por request<br>
+                • Interface responsiva<br>
+                • Usuário feliz! 😊
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 5: Código - Query Paginada -->
+<div class="slide code-slide" id="slide5">
+    <div class="slide-number">5/12</div>
+    <div class="timing">2:00</div>
+    <h2>💻 Query Paginada</h2>
+    <div class="code-block">
+func loadMore() async {
+    let query = db.collection("transactions")
+        .whereField("userId", isEqualTo: currentUserId)
+        .order(by: "date", descending: true)
+        <span style="color: #2ecc71;">// 🔥 MAGIC: Apenas 20 itens!</span>
+        .limit(to: 20)
+        .start(afterDocument: lastDocument)
+    
+    <span style="color: #f39c12;">// ✅ 90% menos dados transferidos</span>
+    let snapshot = try await query.getDocuments()
+    // Processar resultados...
+}
+    </div>
+</div>
+
+<!-- Slide 6: Cache Inteligente -->
+<div class="slide optimization-slide" id="slide6">
+    <div class="slide-number">6/12</div>
+    <div class="timing">3:00</div>
+    <h1>💾 Cache Multi-Camadas</h1>
+    <div class="technique-list">
+        <div class="technique-item">
+            <strong>NSCache</strong> - Dados temporários em memória
+        </div>
+        <div class="technique-item">
+            <strong>UserDefaults</strong> - Configurações de filtro
+        </div>
+        <div class="technique-item">
+            <strong>Core Data</strong> - Cache persistente local
+        </div>
+        <div class="technique-item">
+            <strong>Invalidação</strong> - Sistema inteligente de limpeza
+        </div>
+    </div>
+</div>
+
+<!-- Slide 7: Código - Cache Manager -->
+<div class="slide code-slide" id="slide7">
+    <div class="slide-number">7/12</div>
+    <div class="timing">4:00</div>
+    <h2>🗄️ Smart Cache</h2>
+    <div class="code-block">
+class SmartCacheManager {
+    private let memoryCache = NSCache&lt;NSString, AnyObject&gt;()
+    
+    <span style="color: #2ecc71;">// 🚀 SPEED: Acesso instantâneo</span>
+    func getCachedTransactions(for filter: String) -> [Transaction]? {
+        return memoryCache.object(forKey: filter as NSString) as? [Transaction]
+    }
+    
+    <span style="color: #f39c12;">// 💡 SMART: Invalidação automática</span>
+    func invalidateCache(for userId: String) {
+        memoryCache.removeAllObjects()
+    }
+}
+    </div>
+</div>
+
+<!-- Slide 8: Debounce -->
+<div class="slide performance-slide" id="slide8">
+    <div class="slide-number">8/12</div>
+    <div class="timing">5:00</div>
+    <h1>⚡ Debounce Power</h1>
+    <div class="big-text">
+        Usuário digita "casa"...<br>
+        <span style="color: #e74c3c;">"c" → Query</span><br>
+        <span style="color: #e74c3c;">"ca" → Query</span><br>
+        <span style="color: #e74c3c;">"cas" → Query</span><br>
+        <span style="color: #e74c3c;">"casa" → Query</span>
+    </div>
+    <div class="highlight-box">
+        <h2 style="color: #2ecc71;">✅ Com Debounce:</h2>
+        <div class="medium-text">Apenas 1 query após 300ms!</div>
+    </div>
+</div>
+
+<!-- Slide 9: Código - Debounce -->
+<div class="slide code-slide" id="slide9">
+    <div class="slide-number">9/12</div>
+    <div class="timing">5:30</div>
+    <h2>🔄 Debounce Implementation</h2>
+    <div class="code-block">
+@Published var searchText = ""
+
+init() {
+    <span style="color: #2ecc71;">// 🎯 MAGIC: 300ms de paciência</span>
+    $searchText
+        .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
+        .sink { [weak self] text in
+            <span style="color: #f39c12;">// ✅ Apenas 1 query por busca!</span>
+            self?.performSearch(text)
+        }
+        .store(in: &cancellables)
+}
+    </div>
+</div>
+
+<!-- Slide 10: Performance Monitoring -->
+<div class="slide optimization-slide" id="slide10">
+    <div class="slide-number">10/12</div>
+    <div class="timing">6:30</div>
+    <h1>📊 Performance Analytics</h1>
+    <div class="stats-grid">
+        <div class="stat-item">
+            <div class="stat-number">3</div>
+            <div>Listeners Ativos</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">45MB</div>
+            <div>Memória Cache</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-number">2.1</div>
+            <div>Queries/seg</div>
+        </div>
+    </div>
+    <div class="highlight-box">
+        <h2>🔍 Monitoramento Real-time</h2>
+        <div class="medium-text">Visibilidade total do sistema!</div>
+    </div>
+</div>
+
+<!-- Slide 11: Arquitetura Completa -->
+<div class="slide success-slide" id="slide11">
+    <div class="slide-number">11/12</div>
+    <div class="timing">8:00</div>
+    <h1>🏗️ Arquitetura Final</h1>
+    <div class="technique-list">
+        <div class="technique-item">
+            <strong>AdvancedTransactionService</strong> - Core business logic
+        </div>
+        <div class="technique-item">
+            <strong>SmartCacheManager</strong> - Multi-layer caching
+        </div>
+        <div class="technique-item">
+            <strong>PerformanceManager</strong> - Real-time monitoring
+        </div>
+        <div class="technique-item">
+            <strong>ListenerRegistry</strong> - Lifecycle management
+        </div>
+    </div>
+    <div class="highlight-box">
+        <h2>🎯 Resultado: App Sênior!</h2>
+    </div>
+</div>
+
+<!-- Slide 12: Próximos Passos -->
+<div class="slide advanced-slide" id="slide12">
+    <div class="slide-number">12/12</div>
+    <div class="timing">9:30</div>
+    <h1>🚀 Você Domina Listeners!</h1>
+    <div class="big-text">
+        ✅ Paginação inteligente<br>
+        ✅ Cache multi-camadas<br>
+        ✅ Debounce profissional<br>
+        ✅ Monitoring em tempo real
+    </div>
+    <div class="highlight-box">
+        <h2>🔜 Próximo: SwiftUI Reativo</h2>
+        <div class="medium-text">Interfaces que usam toda essa arquitetura!</div>
+    </div>
+</div>
+
+<div class="navigation">
+    <button class="nav-btn" id="prevBtn">← Anterior</button>
+    <button class="nav-btn" id="homeBtn">🏠 Início</button>
+    <button class="nav-btn" style="background: rgba(255,255,255,0.4);">
+        <span id="slideCounter">1 / 12</span>
+    </button>
+    <button class="nav-btn" id="endBtn">🏁 Fim</button>
+    <button class="nav-btn" id="nextBtn">Próximo →</button>
+</div>
+
+<script>
+let currentSlide = 1;
+const totalSlides = 12;
+
+function goToSlide(slideNumber) {
+    // Validar número do slide
+    if (slideNumber < 1) slideNumber = 1;
+    if (slideNumber > totalSlides) slideNumber = totalSlides;
+    
+    try {
+        // Esconder todos os slides primeiro
+        const allSlides = document.querySelectorAll('.slide');
+        allSlides.forEach(slide => {
+            slide.classList.remove('active');
+        });
+        
+        // Mostrar o slide desejado
+        const targetSlide = document.getElementById(`slide${slideNumber}`);
+        if (targetSlide) {
+            targetSlide.classList.add('active');
+            currentSlide = slideNumber;
+            
+            // Atualizar contador
+            const counter = document.getElementById('slideCounter');
+            if (counter) {
+                counter.textContent = `${currentSlide} / ${totalSlides}`;
+            }
+        } else {
+            console.error('Slide não encontrado:', slideNumber);
+        }
+    } catch (error) {
+        console.error('Erro ao navegar para slide:', error);
+    }
+}
+
+// Navegação por teclado
+document.addEventListener('keydown', function(e) {
+    e.preventDefault();
+    
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+        goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+        goToSlide(currentSlide - 1);
+    } else if (e.key === 'Home') {
+        goToSlide(1);
+    } else if (e.key === 'End') {
+        goToSlide(totalSlides);
+    }
+});
+
+// Clique na tela para navegar
+document.addEventListener('click', function(e) {
+    // Se clique foi em botão de navegação ou dentro da área de navegação, ignorar
+    if (e.target.classList.contains('nav-btn') || 
+        e.target.closest('.nav-btn') || 
+        e.target.closest('.navigation') ||
+        e.target.id === 'slideCounter') {
+        return;
+    }
+    
+    // Se clique no lado direito da tela, avançar
+    if (e.clientX > window.innerWidth / 2) {
+        goToSlide(currentSlide + 1);
+    } else {
+        // Se clique no lado esquerdo, voltar
+        goToSlide(currentSlide - 1);
+    }
+});
+
+// Configurar botões de navegação
+document.addEventListener('DOMContentLoaded', function() {
+    // Obter botões por IDs
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const homeBtn = document.getElementById('homeBtn');
+    const endBtn = document.getElementById('endBtn');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide - 1);
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide + 1);
+        });
+    }
+    
+    if (homeBtn) {
+        homeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(1);
+        });
+    }
+    
+    if (endBtn) {
+        endBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(totalSlides);
+        });
+    }
+    
+    // Inicializar primeiro slide
+    goToSlide(1);
+});
+
+// Também inicializar quando window carrega (backup)
+window.addEventListener('load', function() {
+    // Garantir que o primeiro slide está ativo se nenhum outro estiver
+    const activeSlides = document.querySelectorAll('.slide.active');
+    if (activeSlides.length === 0) {
+        goToSlide(1);
+    }
+});
+</script>
+
+</body>
+</html>
