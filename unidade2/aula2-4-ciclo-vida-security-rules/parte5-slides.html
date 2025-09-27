@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slides - Parte 5: AppStateManager - Implementação Prática</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+        
+        .slide {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            background-attachment: fixed;
+        }
+        
+        .slide.active {
+            display: flex;
+        }
+        
+        .slide-number {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 1.1em;
+            backdrop-filter: blur(10px);
+        }
+        
+        .timing {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 1.1em;
+            backdrop-filter: blur(10px);
+        }
+        
+        h1 {
+            font-size: 4em;
+            margin-bottom: 30px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            line-height: 1.2;
+        }
+        
+        h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        h3 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+        
+        .big-text {
+            font-size: 2.2em;
+            line-height: 1.4;
+            margin: 30px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .medium-text {
+            font-size: 1.8em;
+            line-height: 1.5;
+            margin: 20px 0;
+        }
+        
+        .highlight-box {
+            background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            backdrop-filter: blur(15px);
+            max-width: 90%;
+        }
+        
+        .intro-slide {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .concept-slide {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .implementation-slide {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .lifecycle-slide {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .monitoring-slide {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        .integration-slide {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+        
+        .results-slide {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        }
+        
+        .code-preview {
+            background: #1a1a1a;
+            color: #f8f8f2;
+            padding: 25px;
+            border-radius: 15px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Courier New', monospace;
+            font-size: 1.1em;
+            text-align: left;
+            margin: 20px 0;
+            max-width: 95%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            white-space: pre-wrap;
+            line-height: 1.6;
+            overflow-x: auto;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .code-preview .comment {
+            color: #75715e;
+            font-style: italic;
+        }
+
+        .code-preview .success {
+            color: #a6e22e;
+            font-weight: bold;
+        }
+
+        .code-preview .keyword {
+            color: #f92672;
+            font-weight: bold;
+        }
+
+        .code-preview .string {
+            color: #e6db74;
+        }
+
+        .code-preview .type {
+            color: #66d9ef;
+            font-weight: bold;
+        }
+
+        .comparison-table {
+            background: rgba(255,255,255,0.95);
+            color: #2c3e50;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 1.1em;
+            max-width: 95%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .comparison-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .check { color: #27ae60; font-weight: bold; }
+        .cross { color: #e74c3c; font-weight: bold; }
+        .warning { color: #f39c12; font-weight: bold; }
+
+        .dramatic-text {
+            color: #ecf0f1;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            background: rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.5);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:active {
+            background: rgba(255,255,255,0.7);
+            transform: translateY(0);
+        }
+
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin: 30px 0;
+            max-width: 900px;
+        }
+
+        .icon-item {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .icon-item .icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .feature-list {
+            text-align: left;
+            font-size: 1.4em;
+            line-height: 1.8;
+            max-width: 80%;
+        }
+
+        .feature-list li {
+            margin: 15px 0;
+            list-style: none;
+            padding-left: 40px;
+            position: relative;
+        }
+
+        .feature-list li:before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+            font-size: 1.2em;
+        }
+
+        .problem-list li:before {
+            content: "❌";
+        }
+
+        .solution-list li:before {
+            content: "🔧";
+        }
+
+        .benefit-list li:before {
+            content: "💎";
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Título Principal -->
+<div class="slide intro-slide active" id="slide1">
+    <div class="slide-number">1/12</div>
+    <div class="timing">0:00</div>
+    <h1>🔥 AppStateManager</h1>
+    <div class="big-text">Implementação Prática</div>
+    <div class="highlight-box">
+        <h2>⚡ O "Piloto Automático" do Seu App</h2>
+        <div class="medium-text">Gestão inteligente de recursos e otimização automática</div>
+    </div>
+</div>
+
+<!-- Slide 2: O Problema -->
+<div class="slide concept-slide" id="slide2">
+    <div class="slide-number">2/12</div>
+    <div class="timing">0:30</div>
+    <h1>😵 O Caos Sem Controle</h1>
+    <div class="big-text">
+        "Meu app está <strong>gastando bateria</strong> desnecessariamente...<br>
+        Os listeners ficam <strong>ativos no background</strong>...<br>
+        E não sei <strong>quando otimizar recursos</strong>!"
+    </div>
+    <div class="highlight-box">
+        <h2 class="dramatic-text">🚨 SEM UM "PILOTO AUTOMÁTICO", SEU APP É INEFICIENTE!</h2>
+    </div>
+</div>
+
+<!-- Slide 3: A Solução -->
+<div class="slide implementation-slide" id="slide3">
+    <div class="slide-number">3/12</div>
+    <div class="timing">1:15</div>
+    <h1>🤖 AppStateManager: O "Piloto Automático"</h1>
+    
+    <div class="icon-grid">
+        <div class="icon-item">
+            <div class="icon">📊</div>
+            <h3>Monitoramento</h3>
+            <p>Observa estado do app automaticamente</p>
+        </div>
+        <div class="icon-item">
+            <div class="icon">⚡</div>
+            <h3>Otimização</h3>
+            <p>Ajusta recursos baseado no contexto</p>
+        </div>
+        <div class="icon-item">
+            <div class="icon">🔋</div>
+            <h3>Economia</h3>
+            <p>Minimiza uso de bateria quando possível</p>
+        </div>
+        <div class="icon-item">
+            <div class="icon">💾</div>
+            <h3>Persistência</h3>
+            <p>Salva estado antes de suspensão</p>
+        </div>
+        <div class="icon-item">
+            <div class="icon">🧹</div>
+            <h3>Limpeza</h3>
+            <p>Remove recursos desnecessários</p>
+        </div>
+        <div class="icon-item">
+            <div class="icon">🎯</div>
+            <h3>Precisão</h3>
+            <p>Uma instância única para todo o app</p>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 4: Estrutura Base -->
+<div class="slide implementation-slide" id="slide4">
+    <div class="slide-number">4/12</div>
+    <div class="timing">2:30</div>
+    <h1>🏗️ Estrutura Base da Classe</h1>
+    
+    <div class="code-preview">
+<span class="comment">// ✅ APPSTATEMANAGER - O "Piloto Automático" Completo</span>
+<span class="keyword">import</span> SwiftUI
+<span class="keyword">import</span> Combine
+<span class="keyword">import</span> FirebaseFirestore
+<span class="keyword">import</span> Network
+
+<span class="type">class</span> AppStateManager: ObservableObject {
+    
+    <span class="comment">// MARK: - 🎯 Singleton Instance</span>
+    <span class="keyword">static let</span> shared = AppStateManager()
+    <span class="keyword">private</span> <span class="type">init</span>() {
+        print(<span class="string">"🚀 === INICIALIZANDO APPSTATEMANAGER ==="</span>)
+        setupObservers()
+        print(<span class="string">"✅ AppStateManager pronto!"</span>)
+    }
+    
+    <span class="comment">// MARK: - 📊 Estados Observáveis</span>
+    @Published <span class="keyword">var</span> currentPhase: ScenePhase = .active
+    @Published <span class="keyword">var</span> isConnected: Bool = <span class="keyword">true</span>
+    @Published <span class="keyword">var</span> performanceMode: PerformanceMode = .normal
+}
+    </div>
+</div>
+
+<!-- Slide 5: Modos de Performance -->
+<div class="slide lifecycle-slide" id="slide5">
+    <div class="slide-number">5/12</div>
+    <div class="timing">3:45</div>
+    <h1>⚡ Modos de Performance Inteligentes</h1>
+    
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Modo</th>
+                    <th>Situação</th>
+                    <th>Comportamento</th>
+                    <th>Economia</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>🚀 Normal</strong></td>
+                    <td>Foreground ativo</td>
+                    <td>Performance máxima</td>
+                    <td class="cross">0%</td>
+                </tr>
+                <tr>
+                    <td><strong>⚡ Otimizado</strong></td>
+                    <td>Transição/recursos limitados</td>
+                    <td>Reduz operações não-críticas</td>
+                    <td class="warning">30%</td>
+                </tr>
+                <tr>
+                    <td><strong>🔋 Crítico</strong></td>
+                    <td>Background/emergência</td>
+                    <td>Economia máxima</td>
+                    <td class="check">70%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="highlight-box">
+        <div class="medium-text">🎯 Transições automáticas baseadas no contexto!</div>
+    </div>
+</div>
+
+<!-- Slide 6: Gestão do Ciclo de Vida -->
+<div class="slide lifecycle-slide" id="slide6">
+    <div class="slide-number">6/12</div>
+    <div class="timing">5:00</div>
+    <h1>🔄 Coração do Sistema</h1>
+    
+    <div class="code-preview">
+<span class="comment">// 🎯 ESTA É A FUNÇÃO MAIS IMPORTANTE!</span>
+<span class="keyword">func</span> handleScenePhaseChange(<span class="keyword">_</span> newPhase: ScenePhase) {
+    print(<span class="string">"🔄 === MUDANÇA DE ESTADO DO APP ==="</span>)
+    
+    <span class="keyword">switch</span> newPhase {
+    <span class="keyword">case</span> .active:
+        handleActivation(from: oldPhase)
+        
+    <span class="keyword">case</span> .inactive:
+        handleInactivation()
+        
+    <span class="keyword">case</span> .background:
+        handleBackground()
+        
+    @unknown <span class="keyword">default</span>:
+        handleBackground() <span class="comment">// Fallback conservador</span>
+    }
+    
+    updatePerformanceMode()
+    notifyStateChange()
+}
+    </div>
+    
+    <div class="highlight-box">
+        <div class="medium-text">🤖 Decisões inteligentes tomadas automaticamente!</div>
+    </div>
+</div>
+
+<!-- Slide 7: App Ativo -->
+<div class="slide lifecycle-slide" id="slide7">
+    <div class="slide-number">7/12</div>
+    <div class="timing">6:15</div>
+    <h1>🟢 App Ficou Ativo</h1>
+    
+    <div class="code-preview">
+<span class="comment">// 🟢 APP FICOU ATIVO</span>
+<span class="keyword">private func</span> handleActivation(from oldPhase: ScenePhase) {
+    print(<span class="string">"🟢 === APP ATIVADO ==="</span>)
+    
+    <span class="comment">// 🕰️ Calcular tempo em background</span>
+    <span class="keyword">if let</span> backgroundTime = backgroundTime {
+        <span class="keyword">let</span> timeInBackground = Date().timeIntervalSince(backgroundTime)
+        
+        <span class="comment">// 🔄 DECISÃO INTELIGENTE</span>
+        <span class="keyword">if</span> timeInBackground > 60 {
+            <span class="success">triggerFullSync()</span> <span class="comment">// Sincronização completa</span>
+        }
+    }
+    
+    <span class="comment">// 📡 RESTAURAR TODOS OS LISTENERS</span>
+    restoreAllListeners()
+    
+    <span class="comment">// ⚡ MÁXIMA PERFORMANCE</span>
+    performanceMode = .normal
+}
+    </div>
+</div>
+
+<!-- Slide 8: App Background -->
+<div class="slide monitoring-slide" id="slide8">
+    <div class="slide-number">8/12</div>
+    <div class="timing">7:30</div>
+    <h1>🔵 App no Background</h1>
+    
+    <div class="code-preview">
+<span class="comment">// 🔵 APP FOI PARA BACKGROUND</span>
+<span class="keyword">private func</span> handleBackground() {
+    print(<span class="string">"🔵 === APP EM BACKGROUND ==="</span>)
+    
+    <span class="comment">// ⏰ Marcar timestamp</span>
+    backgroundTime = Date()
+    
+    <span class="comment">// 🚨 MODO ECONOMIA CRÍTICA</span>
+    performanceMode = .critical
+    
+    <span class="comment">// 📡 PAUSAR LISTENERS NÃO-CRÍTICOS</span>
+    pauseNonCriticalListeners()
+    
+    <span class="comment">// 💾 SALVAR ESTADO CRÍTICO</span>
+    saveCurrentState()
+    
+    <span class="comment">// 🧹 LIBERAR RECURSOS DESNECESSÁRIOS</span>
+    cleanupResources()
+}
+    </div>
+    
+    <div class="highlight-box">
+        <div class="medium-text">🔋 Economia automática de até 70% da bateria!</div>
+    </div>
+</div>
+
+<!-- Slide 9: Monitoramento de Rede -->
+<div class="slide monitoring-slide" id="slide9">
+    <div class="slide-number">9/12</div>
+    <div class="timing">8:45</div>
+    <h1>📡 Monitoramento Inteligente de Rede</h1>
+    
+    <div class="code-preview">
+<span class="keyword">private func</span> setupNetworkMonitoring() {
+    networkMonitor.pathUpdateHandler = { [<span class="keyword">weak self</span>] path <span class="keyword">in</span>
+        <span class="keyword">let</span> wasConnected = <span class="keyword">self</span>?.isConnected ?? <span class="keyword">false</span>
+        <span class="keyword">self</span>?.isConnected = path.status == .satisfied
+        
+        <span class="keyword">if</span> !wasConnected && path.status == .satisfied {
+            print(<span class="string">"🌐 Conectividade restaurada"</span>)
+            <span class="keyword">self</span>?.handleConnectivityRestored()
+        }
+    }
+}
+
+<span class="comment">// 🔄 CONECTIVIDADE RESTAURADA</span>
+<span class="keyword">private func</span> handleConnectivityRestored() {
+    <span class="keyword">if</span> currentPhase == .active {
+        restoreAllListeners()
+        <span class="success">triggerFullSync()</span> <span class="comment">// Sincronização automática</span>
+    }
+}
+    </div>
+</div>
+
+<!-- Slide 10: Integração com SwiftUI -->
+<div class="slide integration-slide" id="slide10">
+    <div class="slide-number">10/12</div>
+    <div class="timing">9:30</div>
+    <h1>🔗 Integração com SwiftUI</h1>
+    
+    <div class="code-preview">
+<span class="keyword">struct</span> ContentView: View {
+    @StateObject <span class="keyword">private var</span> appStateManager = AppStateManager.shared
+    @Environment(\.scenePhase) <span class="keyword">private var</span> scenePhase
+    
+    <span class="keyword">var</span> body: <span class="keyword">some</span> View {
+        NavigationView {
+            VStack {
+                <span class="comment">// 📊 INDICADOR DE STATUS</span>
+                Text(appStateManager.performanceMode.description)
+                    .foregroundColor(.secondary)
+                
+                <span class="comment">// 📱 CONTEÚDO PRINCIPAL</span>
+                MainAppContent()
+            }
+        }
+        .onChange(of: scenePhase) { newPhase <span class="keyword">in</span>
+            <span class="comment">// 🎯 INTEGRAÇÃO CRÍTICA</span>
+            appStateManager.handleScenePhaseChange(newPhase)
+        }
+    }
+}
+    </div>
+</div>
+
+<!-- Slide 11: Antes vs Depois -->
+<div class="slide results-slide" id="slide11">
+    <div class="slide-number">11/12</div>
+    <div class="timing">10:30</div>
+    <h1>📊 Transformação Épica</h1>
+    
+    <div class="comparison-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Aspecto</th>
+                    <th>❌ Sem AppStateManager</th>
+                    <th>✅ Com AppStateManager</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>🔋 Bateria</strong></td>
+                    <td>Listeners ativos desnecessariamente</td>
+                    <td class="check">Economia automática no background</td>
+                </tr>
+                <tr>
+                    <td><strong>📡 Conectividade</strong></td>
+                    <td>Não detecta mudanças de rede</td>
+                    <td class="check">Sincronização inteligente automática</td>
+                </tr>
+                <tr>
+                    <td><strong>🎯 Performance</strong></td>
+                    <td>Performance constante (desperdício)</td>
+                    <td class="check">Modos adaptativos inteligentes</td>
+                </tr>
+                <tr>
+                    <td><strong>🔄 Gestão</strong></td>
+                    <td>Desenvolvedor gerencia manualmente</td>
+                    <td class="check">"Piloto automático" completo</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Slide 12: Resultado Final -->
+<div class="slide results-slide" id="slide12">
+    <div class="slide-number">12/12</div>
+    <div class="timing">11:30</div>
+    <h1>🚀 Seu App Agora É Inteligente!</h1>
+    
+    <ul class="feature-list benefit-list">
+        <li>App monitora estado <strong>automaticamente</strong></li>
+        <li>Listeners são removidos/restaurados <strong>inteligentemente</strong></li>
+        <li>Bateria economizada quando app em <strong>background</strong></li>
+        <li>Recursos liberados em situações <strong>críticas</strong></li>
+        <li>Sincronização inteligente baseada no <strong>tempo</strong></li>
+        <li>Monitoramento de rede <strong>automático</strong></li>
+    </ul>
+    
+    <div class="highlight-box">
+        <h2>💪 SEU APP AGORA TEM UM "PILOTO AUTOMÁTICO"!</h2>
+        <div class="medium-text">
+            🎯 <strong>Próximo:</strong> Parte 6 - Integração Completa no Xcode<br>
+            Ver todo o sistema funcionando de forma integrada!
+        </div>
+    </div>
+</div>
+
+<div class="navigation">
+    <button class="nav-btn" id="prevBtn">← Anterior</button>
+    <button class="nav-btn" id="homeBtn">🏠 Início</button>
+    <button class="nav-btn" style="background: rgba(255,255,255,0.4);">
+        <span id="slideCounter">1 / 12</span>
+    </button>
+    <button class="nav-btn" id="endBtn">🏁 Fim</button>
+    <button class="nav-btn" id="nextBtn">Próximo →</button>
+</div>
+
+<script>
+let currentSlide = 1;
+const totalSlides = 12;
+
+function goToSlide(slideNumber) {
+    // Validar número do slide
+    if (slideNumber < 1) slideNumber = 1;
+    if (slideNumber > totalSlides) slideNumber = totalSlides;
+    
+    try {
+        // Esconder todos os slides primeiro
+        const allSlides = document.querySelectorAll('.slide');
+        allSlides.forEach(slide => {
+            slide.classList.remove('active');
+        });
+        
+        // Mostrar o slide desejado
+        const targetSlide = document.getElementById(`slide${slideNumber}`);
+        if (targetSlide) {
+            targetSlide.classList.add('active');
+            currentSlide = slideNumber;
+            
+            // Atualizar contador
+            const counter = document.getElementById('slideCounter');
+            if (counter) {
+                counter.textContent = `${currentSlide} / ${totalSlides}`;
+            }
+        } else {
+            console.error('Slide não encontrado:', slideNumber);
+        }
+    } catch (error) {
+        console.error('Erro ao navegar para slide:', error);
+    }
+}
+
+// Navegação por teclado
+document.addEventListener('keydown', function(e) {
+    e.preventDefault();
+    
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+        goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+        goToSlide(currentSlide - 1);
+    } else if (e.key === 'Home') {
+        goToSlide(1);
+    } else if (e.key === 'End') {
+        goToSlide(totalSlides);
+    }
+});
+
+// Clique na tela para navegar
+document.addEventListener('click', function(e) {
+    // Se clique foi em botão de navegação, ignorar
+    if (e.target.classList.contains('nav-btn') || 
+        e.target.closest('.nav-btn') || 
+        e.target.closest('.navigation') ||
+        e.target.id === 'slideCounter') {
+        return;
+    }
+    
+    // Se clique no lado direito da tela, avançar
+    if (e.clientX > window.innerWidth / 2) {
+        goToSlide(currentSlide + 1);
+    } else {
+        // Se clique no lado esquerdo, voltar
+        goToSlide(currentSlide - 1);
+    }
+});
+
+// Configurar botões de navegação
+document.addEventListener('DOMContentLoaded', function() {
+    // Obter elementos pelos IDs
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const homeBtn = document.getElementById('homeBtn');
+    const endBtn = document.getElementById('endBtn');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide - 1);
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide + 1);
+        });
+    }
+    
+    if (homeBtn) {
+        homeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(1);
+        });
+    }
+    
+    if (endBtn) {
+        endBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(totalSlides);
+        });
+    }
+    
+    // Inicializar primeiro slide
+    goToSlide(1);
+});
+
+// Também inicializar quando window carrega (backup)
+window.addEventListener('load', function() {
+    // Garantir que o primeiro slide está ativo se nenhum outro estiver
+    const activeSlides = document.querySelectorAll('.slide.active');
+    if (activeSlides.length === 0) {
+        goToSlide(1);
+    }
+});
+
+// Função de debug para testar
+function testSlideNavigation() {
+    console.log('Testando navegação...');
+    console.log('Slide atual:', currentSlide);
+    console.log('Total de slides:', totalSlides);
+    
+    for (let i = 1; i <= totalSlides; i++) {
+        const slide = document.getElementById(`slide${i}`);
+        console.log(`Slide ${i}:`, slide ? 'existe' : 'não encontrado');
+    }
+}
+</script>
+
+</body>
+</html>
