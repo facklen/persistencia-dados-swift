@@ -107,16 +107,19 @@
         }
 
         .code-block {
-            background: rgba(0,0,0,0.3);
-            padding: 25px;
+            background: rgba(0,0,0,0.4);
+            padding: 30px;
             border-radius: 15px;
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 1.2em;
+            font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+            font-size: 1.1em;
             text-align: left;
             max-width: 95%;
             margin: 20px 0;
             border: 2px solid rgba(255,255,255,0.2);
             backdrop-filter: blur(10px);
+            white-space: pre-wrap;
+            line-height: 1.4;
+            overflow-x: auto;
         }
 
         .code-comment {
@@ -137,6 +140,10 @@
 
         .code-method {
             color: #fbbf24;
+        }
+
+        .code-type {
+            color: #a78bfa;
         }
 
         .dramatic-text {
@@ -349,8 +356,7 @@
     <div class="slide-number">5/12</div>
     <div class="timing">1:00</div>
     <h1>💻 Estrutura Base (45 linhas)</h1>
-    <div class="code-block">
-<span class="code-comment">// ✅ TRANSACTIONSERVICE - 125 linhas completas</span>
+    <div class="code-block"><span class="code-comment">// ✅ TRANSACTIONSERVICE - 125 linhas completas</span>
 <span class="code-keyword">class</span> <span class="code-class">TransactionService</span>: <span class="code-class">ObservableObject</span> {
     
     <span class="code-comment">// MARK: - 📊 Published Properties</span>
@@ -366,57 +372,63 @@
         <span class="code-method">setupAppStateObservation</span>()
         <span class="code-method">createInitialListener</span>()
     }
-}
-    </div>
+}</div>
 </div>
 
-<!-- Slide 6: Validação Dupla -->
+<!-- Slide 6: Setup de Observação -->
 <div class="slide service-slide" id="slide6">
     <div class="slide-number">6/12</div>
-    <div class="timing">4:00</div>
-    <h1>🔐 Validação Dupla</h1>
-    <div class="steps-container">
-        <div class="step-item">
-            <div class="step-number">1</div>
-            <h3>Cliente</h3>
-            <p>TransactionService valida dados antes de enviar</p>
-        </div>
-        <div class="step-item">
-            <div class="step-number">2</div>
-            <h3>Servidor</h3>
-            <p>Security Rules fazem validação final</p>
-        </div>
-        <div class="step-item">
-            <div class="step-number">3</div>
-            <h3>Resultado</h3>
-            <p>Segurança máxima contra hackers</p>
-        </div>
-    </div>
-    <div class="highlight-box">
-        <div class="medium-text">
-            Se alguém burlar o cliente,<br>
-            Security Rules <strong>bloqueiam no servidor</strong>!
-        </div>
-    </div>
+    <div class="timing">2:30</div>
+    <h1>🔗 Setup de Observação (25 linhas)</h1>
+    <div class="code-block"><span class="code-comment">// MARK: - 🔗 OBSERVAÇÃO DO APPSTATEMANAGER</span>
+<span class="code-keyword">extension</span> <span class="code-class">TransactionService</span> {
+    
+    <span class="code-keyword">private</span> <span class="code-keyword">func</span> <span class="code-method">setupAppStateObservation</span>() {
+        <span class="code-comment">// 📡 RESTAURAÇÃO AUTOMÁTICA DE LISTENERS</span>
+        <span class="code-class">NotificationCenter</span>.<span class="code-method">default</span>.<span class="code-method">addObserver</span>(
+            <span class="code-method">forName</span>: .<span class="code-method">restoreListeners</span>,
+            <span class="code-method">object</span>: <span class="code-type">nil</span>,
+            <span class="code-method">queue</span>: .<span class="code-method">main</span>
+        ) { [<span class="code-keyword">weak</span> <span class="code-keyword">self</span>] _ <span class="code-keyword">in</span>
+            <span class="code-keyword">self</span>?.<span class="code-method">handleListenerRestore</span>()
+        }
+        
+        <span class="code-comment">// 🔋 MUDANÇAS DE PERFORMANCE</span>
+        <span class="code-method">appStateManager</span>.<span class="code-method">$performanceMode</span>
+            .<span class="code-method">sink</span> { [<span class="code-keyword">weak</span> <span class="code-keyword">self</span>] <span class="code-method">mode</span> <span class="code-keyword">in</span>
+                <span class="code-keyword">self</span>?.<span class="code-method">handlePerformanceChange</span>(<span class="code-method">mode</span>)
+            }
+            .<span class="code-method">store</span>(<span class="code-method">in</span>: &<span class="code-method">cancellables</span>)
+    }
+}</div>
 </div>
 
 <!-- Slide 7: Gestão de Listeners -->
 <div class="slide listener-slide" id="slide7">
     <div class="slide-number">7/12</div>
-    <div class="timing">5:00</div>
-    <h1>📡 Gestão Inteligente de Listeners</h1>
-    <div class="big-text">
-        Listeners que se <strong>autogerenciam</strong><br>
-        baseado no estado do app
-    </div>
-    <div class="highlight-box">
-        <h2>🧠 Inteligência Automática</h2>
-        <div class="medium-text">
-            • App ativo = Listeners funcionando<br>
-            • App background = Listeners otimizados<br>
-            • Memory warning = Listeners removidos
-        </div>
-    </div>
+    <div class="timing">4:00</div>
+    <h1>📡 Gestão de Listeners (35 linhas)</h1>
+    <div class="code-block"><span class="code-comment">// MARK: - 📡 GESTÃO INTELIGENTE DE LISTENERS</span>
+<span class="code-keyword">extension</span> <span class="code-class">TransactionService</span> {
+    
+    <span class="code-keyword">private</span> <span class="code-keyword">func</span> <span class="code-method">createInitialListener</span>() {
+        <span class="code-keyword">let</span> <span class="code-method">listener</span> = <span class="code-method">db</span>.<span class="code-method">collection</span>(<span class="code-string">"users"</span>)
+            .<span class="code-method">document</span>(<span class="code-method">currentUser</span>.<span class="code-method">uid</span>)
+            .<span class="code-method">collection</span>(<span class="code-string">"transactions"</span>)
+            .<span class="code-method">order</span>(<span class="code-method">by</span>: <span class="code-string">"date"</span>, <span class="code-method">descending</span>: <span class="code-type">true</span>)
+            .<span class="code-method">limit</span>(<span class="code-method">to</span>: <span class="code-type">50</span>)
+            .<span class="code-method">addSnapshotListener</span> { [<span class="code-keyword">weak</span> <span class="code-keyword">self</span>] <span class="code-method">snapshot</span>, <span class="code-method">error</span> <span class="code-keyword">in</span>
+                <span class="code-keyword">self</span>?.<span class="code-method">handleTransactionsUpdate</span>(<span class="code-method">snapshot</span>, <span class="code-method">error</span>)
+            }
+        
+        <span class="code-comment">// 🤝 REGISTRAR NO APPSTATEMANAGER</span>
+        <span class="code-method">appStateManager</span>.<span class="code-method">registerListener</span>(
+            <span class="code-method">listener</span>,
+            <span class="code-method">id</span>: <span class="code-method">transactionsListenerID</span>,
+            <span class="code-method">isCritical</span>: <span class="code-type">false</span>
+        )
+    }
+}</div>
 </div>
 
 <!-- Slide 8: StatusPanel + Compilação -->
@@ -424,8 +436,7 @@
     <div class="slide-number">8/12</div>
     <div class="timing">6:00</div>
     <h1>📱 StatusPanel + Interface</h1>
-    <div class="code-block">
-<span class="code-comment">// ✅ STATUSPANEL - Monitoramento em tempo real</span>
+    <div class="code-block"><span class="code-comment">// ✅ STATUSPANEL - Monitoramento em tempo real</span>
 <span class="code-keyword">struct</span> <span class="code-class">StatusPanel</span>: <span class="code-class">View</span> {
     <span class="code-keyword">@EnvironmentObject</span> <span class="code-keyword">var</span> <span class="code-method">appStateManager</span>: <span class="code-class">AppStateManager</span>
     <span class="code-keyword">@EnvironmentObject</span> <span class="code-keyword">var</span> <span class="code-method">transactionService</span>: <span class="code-class">TransactionService</span>
@@ -441,11 +452,10 @@
             <span class="code-class">Text</span>(<span class="code-string">"\(appStateManager.activeListenersCount) listeners"</span>)
         }
     }
-}
-    </div>
+}</div>
 </div>
 
-<!-- Slide 9: Lifecycle Management -->
+<!-- Slide 9: Ciclo de Vida Automático -->
 <div class="slide listener-slide" id="slide9">
     <div class="slide-number">9/12</div>
     <div class="timing">6:30</div>
@@ -478,22 +488,26 @@
 <div class="slide final-slide" id="slide10">
     <div class="slide-number">10/12</div>
     <div class="timing">7:00</div>
-    <h1>📱 ContentView Final</h1>
-    <div class="code-block">
-<span class="code-comment">// ✅ CONTENTVIEW INTEGRADA</span>
+    <h1>📱 ContentView Final (87 linhas)</h1>
+    <div class="code-block"><span class="code-comment">// ✅ CONTENTVIEW INTEGRADA</span>
 <span class="code-keyword">struct</span> <span class="code-class">ContentView</span>: <span class="code-class">View</span> {
     <span class="code-keyword">@StateObject</span> <span class="code-keyword">private</span> <span class="code-keyword">var</span> <span class="code-method">appStateManager</span> = <span class="code-class">AppStateManager</span>.<span class="code-method">shared</span>
     <span class="code-keyword">@StateObject</span> <span class="code-keyword">private</span> <span class="code-keyword">var</span> <span class="code-method">transactionService</span> = <span class="code-class">TransactionService</span>()
     <span class="code-keyword">@Environment</span>(\.<span class="code-method">scenePhase</span>) <span class="code-keyword">private</span> <span class="code-keyword">var</span> <span class="code-method">scenePhase</span>
     
     <span class="code-keyword">var</span> <span class="code-method">body</span>: <span class="code-keyword">some</span> <span class="code-class">View</span> {
-        <span class="code-comment">// Interface integrada</span>
+        <span class="code-class">VStack</span> {
+            <span class="code-comment">// 📊 PAINEL DE STATUS</span>
+            <span class="code-class">StatusPanel</span>()
+                .<span class="code-method">environmentObject</span>(<span class="code-method">appStateManager</span>)
+                .<span class="code-method">environmentObject</span>(<span class="code-method">transactionService</span>)
+        }
+        .<span class="code-method">onChange</span>(<span class="code-method">of</span>: <span class="code-method">scenePhase</span>) { <span class="code-method">newPhase</span> <span class="code-keyword">in</span>
+            <span class="code-comment">// 🎯 INTEGRAÇÃO CRÍTICA</span>
+            <span class="code-method">appStateManager</span>.<span class="code-method">handleScenePhaseChange</span>(<span class="code-method">newPhase</span>)
+        }
     }
-    .<span class="code-method">onChange</span>(<span class="code-method">of</span>: <span class="code-method">scenePhase</span>) { <span class="code-method">newPhase</span> <span class="code-keyword">in</span>
-        <span class="code-method">appStateManager</span>.<span class="code-method">handleScenePhaseChange</span>(<span class="code-method">newPhase</span>)
-    }
-}
-    </div>
+}</div>
 </div>
 
 <!-- Slide 11: Sistema Completo -->
@@ -669,18 +683,6 @@ window.addEventListener('load', function() {
         goToSlide(1);
     }
 });
-
-// Função de debug para testar
-function testSlideNavigation() {
-    console.log('Testando navegação...');
-    console.log('Slide atual:', currentSlide);
-    console.log('Total de slides:', totalSlides);
-    
-    for (let i = 1; i <= totalSlides; i++) {
-        const slide = document.getElementById(`slide${i}`);
-        console.log(`Slide ${i}:`, slide ? 'existe' : 'não encontrado');
-    }
-}
 </script>
 
 </body>
