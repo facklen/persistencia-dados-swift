@@ -38,22 +38,24 @@
             position: absolute;
             top: 30px;
             right: 30px;
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.3);
             padding: 10px 15px;
             border-radius: 20px;
             font-weight: bold;
             backdrop-filter: blur(10px);
+            color: white;
         }
 
         .timing {
             position: absolute;
             top: 30px;
             left: 30px;
-            background: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.3);
             padding: 10px 15px;
             border-radius: 20px;
             font-weight: bold;
             backdrop-filter: blur(10px);
+            color: white;
         }
 
         h1 {
@@ -111,15 +113,43 @@
         }
 
         .code-block {
-            background: rgba(0,0,0,0.7);
+            background: rgba(0,0,0,0.8);
             padding: 30px;
             border-radius: 15px;
             font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
-            font-size: 1.3em;
+            font-size: 1.2em;
             text-align: left;
             max-width: 90%;
             overflow-x: auto;
-            border: 2px solid rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            white-space: pre;
+            line-height: 1.6;
+        }
+
+        .code-block .keyword {
+            color: #c678dd;
+            font-weight: bold;
+        }
+
+        .code-block .string {
+            color: #98c379;
+        }
+
+        .code-block .comment {
+            color: #7c7c7c;
+            font-style: italic;
+        }
+
+        .code-block .number {
+            color: #d19a66;
+        }
+
+        .code-block .function {
+            color: #61afef;
+        }
+
+        .code-block .type {
+            color: #e06c75;
         }
 
         .comparison-grid {
@@ -131,11 +161,11 @@
         }
 
         .comparison-item {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.15);
             padding: 30px;
             border-radius: 15px;
             backdrop-filter: blur(10px);
-            border: 2px solid rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
         }
 
         .stats-grid {
@@ -147,11 +177,12 @@
         }
 
         .stat-item {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.15);
             padding: 25px;
             border-radius: 15px;
             backdrop-filter: blur(10px);
             text-align: center;
+            border: 2px solid rgba(255,255,255,0.3);
         }
 
         .stat-number {
@@ -159,6 +190,7 @@
             font-weight: bold;
             color: #2ecc71;
             margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
         .technique-list {
@@ -171,9 +203,10 @@
         .technique-item {
             margin: 15px 0;
             padding: 15px;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.15);
             border-radius: 10px;
             border-left: 5px solid #2ecc71;
+            backdrop-filter: blur(10px);
         }
 
         .dramatic-text {
@@ -215,19 +248,28 @@
         }
 
         .problem-highlight {
-            background: rgba(231, 76, 60, 0.8);
+            background: rgba(231, 76, 60, 0.9);
             padding: 25px;
             border-radius: 15px;
             margin: 20px 0;
             border: 2px solid #e74c3c;
+            backdrop-filter: blur(10px);
         }
 
         .solution-highlight {
-            background: rgba(46, 204, 113, 0.8);
+            background: rgba(46, 204, 113, 0.9);
             padding: 25px;
             border-radius: 15px;
             margin: 20px 0;
             border: 2px solid #2ecc71;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Melhor contraste para texto em slides escuros */
+        .performance-slide .big-text,
+        .performance-slide .medium-text {
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
         }
     </style>
 </head>
@@ -256,11 +298,11 @@
     <div class="big-text">
         App com <strong>100.000 transações</strong><br>
         Filtros em tempo real<br>
-        <span style="color: #e74c3c;">Interface travando...</span>
+        <span style="color: #ffffff; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">Interface travando...</span>
     </div>
     <div class="problem-highlight">
-        <h2>❌ Problemas Típicos:</h2>
-        <div class="medium-text">
+        <h2 style="color: white;">❌ Problemas Típicos:</h2>
+        <div class="medium-text" style="color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
             • Download de dados desnecessários<br>
             • Spam de queries no Firebase<br>
             • Memory leaks com listeners<br>
@@ -289,8 +331,8 @@
         </div>
     </div>
     <div class="solution-highlight">
-        <h2>✅ Nossa Arquitetura:</h2>
-        <div class="medium-text">
+        <h2 style="color: white;">✅ Nossa Arquitetura:</h2>
+        <div class="medium-text" style="color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
             Paginação + Cache + Debounce + Monitoring
         </div>
     </div>
@@ -328,20 +370,18 @@
     <div class="slide-number">5/12</div>
     <div class="timing">2:00</div>
     <h2>💻 Query Paginada</h2>
-    <div class="code-block">
-func loadMore() async {
-    let query = db.collection("transactions")
-        .whereField("userId", isEqualTo: currentUserId)
-        .order(by: "date", descending: true)
-        <span style="color: #2ecc71;">// 🔥 MAGIC: Apenas 20 itens!</span>
-        .limit(to: 20)
+    <div class="code-block"><span class="keyword">func</span> <span class="function">loadMore</span>() <span class="keyword">async</span> {
+    <span class="keyword">let</span> query = db.collection(<span class="string">"transactions"</span>)
+        .whereField(<span class="string">"userId"</span>, isEqualTo: currentUserId)
+        .order(by: <span class="string">"date"</span>, descending: <span class="keyword">true</span>)
+        <span class="comment">// 🔥 MAGIC: Apenas 20 itens!</span>
+        .limit(to: <span class="number">20</span>)
         .start(afterDocument: lastDocument)
     
-    <span style="color: #f39c12;">// ✅ 90% menos dados transferidos</span>
-    let snapshot = try await query.getDocuments()
-    // Processar resultados...
-}
-    </div>
+    <span class="comment">// ✅ 90% menos dados transferidos</span>
+    <span class="keyword">let</span> snapshot = <span class="keyword">try await</span> query.getDocuments()
+    <span class="comment">// Processar resultados...</span>
+}</div>
 </div>
 
 <!-- Slide 6: Cache Inteligente -->
@@ -370,38 +410,36 @@ func loadMore() async {
     <div class="slide-number">7/12</div>
     <div class="timing">4:00</div>
     <h2>🗄️ Smart Cache</h2>
-    <div class="code-block">
-class SmartCacheManager {
-    private let memoryCache = NSCache&lt;NSString, AnyObject&gt;()
+    <div class="code-block"><span class="keyword">class</span> <span class="type">SmartCacheManager</span> {
+    <span class="keyword">private let</span> memoryCache = <span class="type">NSCache</span>&lt;<span class="type">NSString</span>, <span class="type">AnyObject</span>&gt;()
     
-    <span style="color: #2ecc71;">// 🚀 SPEED: Acesso instantâneo</span>
-    func getCachedTransactions(for filter: String) -> [Transaction]? {
-        return memoryCache.object(forKey: filter as NSString) as? [Transaction]
+    <span class="comment">// 🚀 SPEED: Acesso instantâneo</span>
+    <span class="keyword">func</span> <span class="function">getCachedTransactions</span>(for filter: <span class="type">String</span>) -> [<span class="type">Transaction</span>]? {
+        <span class="keyword">return</span> memoryCache.object(forKey: filter <span class="keyword">as</span> <span class="type">NSString</span>) <span class="keyword">as</span>? [<span class="type">Transaction</span>]
     }
     
-    <span style="color: #f39c12;">// 💡 SMART: Invalidação automática</span>
-    func invalidateCache(for userId: String) {
+    <span class="comment">// 💡 SMART: Invalidação automática</span>
+    <span class="keyword">func</span> <span class="function">invalidateCache</span>(for userId: <span class="type">String</span>) {
         memoryCache.removeAllObjects()
     }
-}
-    </div>
+}</div>
 </div>
 
 <!-- Slide 8: Debounce -->
 <div class="slide performance-slide" id="slide8">
     <div class="slide-number">8/12</div>
     <div class="timing">5:00</div>
-    <h1>⚡ Debounce Power</h1>
-    <div class="big-text">
+    <h1 style="color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">⚡ Debounce Power</h1>
+    <div class="big-text" style="color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
         Usuário digita "casa"...<br>
-        <span style="color: #e74c3c;">"c" → Query</span><br>
-        <span style="color: #e74c3c;">"ca" → Query</span><br>
-        <span style="color: #e74c3c;">"cas" → Query</span><br>
-        <span style="color: #e74c3c;">"casa" → Query</span>
+        <span style="color: #ffebee; text-shadow: 2px 2px 4px rgba(0,0,0,0.9);">"c" → Query</span><br>
+        <span style="color: #ffebee; text-shadow: 2px 2px 4px rgba(0,0,0,0.9);">"ca" → Query</span><br>
+        <span style="color: #ffebee; text-shadow: 2px 2px 4px rgba(0,0,0,0.9);">"cas" → Query</span><br>
+        <span style="color: #ffebee; text-shadow: 2px 2px 4px rgba(0,0,0,0.9);">"casa" → Query</span>
     </div>
-    <div class="highlight-box">
-        <h2 style="color: #2ecc71;">✅ Com Debounce:</h2>
-        <div class="medium-text">Apenas 1 query após 300ms!</div>
+    <div class="highlight-box" style="background: rgba(46, 204, 113, 0.9); border-color: #2ecc71;">
+        <h2 style="color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">✅ Com Debounce:</h2>
+        <div class="medium-text" style="color: white; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">Apenas 1 query após 300ms!</div>
     </div>
 </div>
 
@@ -410,20 +448,18 @@ class SmartCacheManager {
     <div class="slide-number">9/12</div>
     <div class="timing">5:30</div>
     <h2>🔄 Debounce Implementation</h2>
-    <div class="code-block">
-@Published var searchText = ""
+    <div class="code-block"><span class="keyword">@Published var</span> searchText = <span class="string">""</span>
 
-init() {
-    <span style="color: #2ecc71;">// 🎯 MAGIC: 300ms de paciência</span>
+<span class="function">init</span>() {
+    <span class="comment">// 🎯 MAGIC: 300ms de paciência</span>
     $searchText
-        .debounce(for: .milliseconds(300), scheduler: DispatchQueue.main)
-        .sink { [weak self] text in
-            <span style="color: #f39c12;">// ✅ Apenas 1 query por busca!</span>
-            self?.performSearch(text)
+        .debounce(for: .milliseconds(<span class="number">300</span>), scheduler: <span class="type">DispatchQueue</span>.main)
+        .sink { [<span class="keyword">weak self</span>] text <span class="keyword">in</span>
+            <span class="comment">// ✅ Apenas 1 query por busca!</span>
+            <span class="keyword">self</span>?.performSearch(text)
         }
         .store(in: &cancellables)
-}
-    </div>
+}</div>
 </div>
 
 <!-- Slide 10: Performance Monitoring -->
