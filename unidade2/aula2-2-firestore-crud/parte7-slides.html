@@ -122,16 +122,44 @@
             background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
         }
         
-        .code-block {
-            background: rgba(0,0,0,0.3);
-            padding: 20px;
-            border-radius: 10px;
-            font-family: 'Monaco', 'Menlo', monospace;
+        .code-preview {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 30px;
+            border-radius: 15px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Courier New', monospace;
+            font-size: 1.3em;
             text-align: left;
-            max-width: 80%;
-            font-size: 1.2em;
-            line-height: 1.5;
-            border: 1px solid rgba(255,255,255,0.3);
+            margin: 20px 0;
+            max-width: 90%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            white-space: pre-wrap;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .code-preview .comment {
+            color: #95a5a6;
+            font-style: italic;
+        }
+
+        .code-preview .success {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .code-preview .keyword {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .code-preview .string {
+            color: #f39c12;
+        }
+
+        .code-preview .type {
+            color: #3498db;
+            font-weight: bold;
         }
         
         .comparison-table {
@@ -156,24 +184,30 @@
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 10px;
+            gap: 20px;
+            z-index: 1000;
         }
         
         .nav-btn {
-            background: rgba(255,255,255,0.2);
-            border: none;
+            background: rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.5);
             color: white;
-            padding: 15px 25px;
+            padding: 12px 20px;
             border-radius: 25px;
-            font-weight: bold;
             cursor: pointer;
+            font-weight: bold;
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
         }
         
         .nav-btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: scale(1.05);
+            background: rgba(255,255,255,0.5);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:active {
+            background: rgba(255,255,255,0.7);
+            transform: translateY(0);
         }
         
         .emoji {
@@ -265,13 +299,18 @@
             .feature-grid {
                 grid-template-columns: 1fr;
             }
+
+            .code-preview {
+                font-size: 1em;
+                padding: 20px;
+            }
         }
     </style>
 </head>
 <body>
 
     <!-- Slide 1: Título -->
-    <div class="slide active">
+    <div class="slide active" id="slide1">
         <div class="slide-number">1/12</div>
         <div class="timing">0:00</div>
         <h1>📱 SwiftUI + Firestore</h1>
@@ -287,7 +326,7 @@
     </div>
 
     <!-- Slide 2: O Problema -->
-    <div class="slide">
+    <div class="slide" id="slide2">
         <div class="slide-number">2/12</div>
         <div class="timing">0:30</div>
         <h2>🤔 O Grande Desafio</h2>
@@ -314,7 +353,7 @@
     </div>
 
     <!-- Slide 3: MVVM Pattern -->
-    <div class="slide mvvm-slide">
+    <div class="slide mvvm-slide" id="slide3">
         <div class="slide-number">3/12</div>
         <div class="timing">1:00</div>
         <h2>🏗️ MVVM Reativo</h2>
@@ -338,18 +377,18 @@
     </div>
 
     <!-- Slide 4: @Published Magic -->
-    <div class="slide reactive-slide">
+    <div class="slide reactive-slide" id="slide4">
         <div class="slide-number">4/12</div>
         <div class="timing">1:30</div>
         <h2>✨ A Mágica do @Published</h2>
-        <div class="code-block">
-@Published var transactions: [Transaction] = []
-@Published var isLoading = false
-@Published var errorMessage: String?
+        <div class="code-preview">
+<span class="keyword">@Published</span> <span class="keyword">var</span> transactions: [<span class="type">Transaction</span>] = []
+<span class="keyword">@Published</span> <span class="keyword">var</span> isLoading = <span class="keyword">false</span>
+<span class="keyword">@Published</span> <span class="keyword">var</span> errorMessage: <span class="type">String</span>?
 
-// ✨ SwiftUI reage automaticamente!
-var currentBalance: Double {
-    transactions.reduce(0) { $0 + $1.amount }
+<span class="comment">// ✨ SwiftUI reage automaticamente!</span>
+<span class="keyword">var</span> currentBalance: <span class="type">Double</span> {
+    transactions.reduce(<span class="string">0</span>) { $0 + $1.amount }
 }
         </div>
         <div class="medium-text" style="margin-top: 30px;">
@@ -358,24 +397,24 @@ var currentBalance: Double {
     </div>
 
     <!-- Slide 5: ViewModel Complete -->
-    <div class="slide swiftui-slide">
+    <div class="slide swiftui-slide" id="slide5">
         <div class="slide-number">5/12</div>
         <div class="timing">2:00</div>
         <h2>🎭 ViewModel Profissional</h2>
-        <div class="code-block">
-@MainActor
-class FinanceManagerViewModel: ObservableObject {
-    @Published var transactions: [Transaction] = []
-    @Published var isLoading = false
-    @Published var errorMessage: String?
+        <div class="code-preview">
+<span class="keyword">@MainActor</span>
+<span class="keyword">class</span> <span class="type">FinanceManagerViewModel</span>: <span class="type">ObservableObject</span> {
+    <span class="keyword">@Published</span> <span class="keyword">var</span> transactions: [<span class="type">Transaction</span>] = []
+    <span class="keyword">@Published</span> <span class="keyword">var</span> isLoading = <span class="keyword">false</span>
+    <span class="keyword">@Published</span> <span class="keyword">var</span> errorMessage: <span class="type">String</span>?
     
-    private let transactionService = TransactionService()
+    <span class="keyword">private</span> <span class="keyword">let</span> transactionService = <span class="type">TransactionService</span>()
     
-    func startListening() {
-        transactionService.observeTransactions { [weak self] result in
-            DispatchQueue.main.async {
-                self?.transactions = result
-                // ✅ UI atualiza automaticamente!
+    <span class="keyword">func</span> startListening() {
+        transactionService.observeTransactions { [<span class="keyword">weak</span> <span class="keyword">self</span>] result <span class="keyword">in</span>
+            <span class="type">DispatchQueue</span>.main.async {
+                <span class="keyword">self</span>?.transactions = result
+                <span class="comment">// ✅ UI atualiza automaticamente!</span>
             }
         }
     }
@@ -384,7 +423,7 @@ class FinanceManagerViewModel: ObservableObject {
     </div>
 
     <!-- Slide 6: SwiftUI Interface -->
-    <div class="slide">
+    <div class="slide" id="slide6">
         <div class="slide-number">6/12</div>
         <div class="timing">3:00</div>
         <h2>📱 Interface SwiftUI</h2>
@@ -409,7 +448,7 @@ class FinanceManagerViewModel: ObservableObject {
     </div>
 
     <!-- Slide 7: Real-time Integration -->
-    <div class="slide firestore-slide">
+    <div class="slide firestore-slide" id="slide7">
         <div class="slide-number">7/12</div>
         <div class="timing">4:00</div>
         <h2>🔥 Tempo Real Integrado</h2>
@@ -427,7 +466,7 @@ class FinanceManagerViewModel: ObservableObject {
     </div>
 
     <!-- Slide 8: Data Flow -->
-    <div class="slide integration-slide">
+    <div class="slide integration-slide" id="slide8">
         <div class="slide-number">8/12</div>
         <div class="timing">4:30</div>
         <h2>🌊 Fluxo de Dados</h2>
@@ -451,25 +490,25 @@ class FinanceManagerViewModel: ObservableObject {
     </div>
 
     <!-- Slide 9: Complete Implementation -->
-    <div class="slide">
+    <div class="slide" id="slide9">
         <div class="slide-number">9/12</div>
         <div class="timing">5:00</div>
         <h2>🏗️ Implementação Completa</h2>
-        <div class="code-block">
-struct FinanceDashboard: View {
-    @StateObject private var viewModel = FinanceManagerViewModel()
+        <div class="code-preview">
+<span class="keyword">struct</span> <span class="type">FinanceDashboard</span>: <span class="type">View</span> {
+    <span class="keyword">@StateObject</span> <span class="keyword">private</span> <span class="keyword">var</span> viewModel = <span class="type">FinanceManagerViewModel</span>()
     
-    var body: some View {
-        NavigationView {
-            Group {
-                if viewModel.isLoading {
-                    LoadingView()
-                } else if let error = viewModel.errorMessage {
-                    ErrorView(message: error)
-                } else if viewModel.transactions.isEmpty {
-                    EmptyStateView()
-                } else {
-                    TransactionList(transactions: viewModel.transactions)
+    <span class="keyword">var</span> body: <span class="keyword">some</span> <span class="type">View</span> {
+        <span class="type">NavigationView</span> {
+            <span class="type">Group</span> {
+                <span class="keyword">if</span> viewModel.isLoading {
+                    <span class="type">LoadingView</span>()
+                } <span class="keyword">else</span> <span class="keyword">if</span> <span class="keyword">let</span> error = viewModel.errorMessage {
+                    <span class="type">ErrorView</span>(message: error)
+                } <span class="keyword">else</span> <span class="keyword">if</span> viewModel.transactions.isEmpty {
+                    <span class="type">EmptyStateView</span>()
+                } <span class="keyword">else</span> {
+                    <span class="type">TransactionList</span>(transactions: viewModel.transactions)
                 }
             }
         }
@@ -480,7 +519,7 @@ struct FinanceDashboard: View {
     </div>
 
     <!-- Slide 10: Visual States -->
-    <div class="slide reactive-slide">
+    <div class="slide reactive-slide" id="slide10">
         <div class="slide-number">10/12</div>
         <div class="timing">5:30</div>
         <h2>🎨 Estados Visuais</h2>
@@ -508,7 +547,7 @@ struct FinanceDashboard: View {
     </div>
 
     <!-- Slide 11: Testing & Validation -->
-    <div class="slide mvvm-slide">
+    <div class="slide mvvm-slide" id="slide11">
         <div class="slide-number">11/12</div>
         <div class="timing">6:00</div>
         <h2>🧪 Testando a Integração</h2>
@@ -534,7 +573,7 @@ struct FinanceDashboard: View {
     </div>
 
     <!-- Slide 12: Success! -->
-    <div class="slide">
+    <div class="slide" id="slide12">
         <div class="slide-number">12/12</div>
         <div class="timing">6:30</div>
         <h1>🎉 Missão Cumprida!</h1>
@@ -569,55 +608,129 @@ struct FinanceDashboard: View {
 
     <!-- Navigation -->
     <div class="navigation">
-        <button class="nav-btn" onclick="previousSlide()">⬅️ Anterior</button>
-        <span id="slideIndicator" class="nav-btn" style="cursor: default;">1 / 12</span>
-        <button class="nav-btn" onclick="nextSlide()">Próximo ➡️</button>
+        <button class="nav-btn" id="prevBtn">← Anterior</button>
+        <button class="nav-btn" id="homeBtn">🏠 Início</button>
+        <button class="nav-btn" style="background: rgba(255,255,255,0.4);">
+            <span id="slideCounter">1 / 12</span>
+        </button>
+        <button class="nav-btn" id="endBtn">🏁 Fim</button>
+        <button class="nav-btn" id="nextBtn">Próximo →</button>
     </div>
 
     <script>
-        let currentSlide = 0;
-        const slides = document.querySelectorAll('.slide');
-        const totalSlides = slides.length;
+        let currentSlide = 1;
+        const totalSlides = 12;
 
-        function showSlide(n) {
-            slides[currentSlide].classList.remove('active');
-            currentSlide = (n + totalSlides) % totalSlides;
-            slides[currentSlide].classList.add('active');
-            document.getElementById('slideIndicator').textContent = `${currentSlide + 1} / ${totalSlides}`;
+        function goToSlide(slideNumber) {
+            // Validar número do slide
+            if (slideNumber < 1) slideNumber = 1;
+            if (slideNumber > totalSlides) slideNumber = totalSlides;
             
-            // Update timing display
-            const timings = ['0:00', '0:30', '1:00', '1:30', '2:00', '3:00', '4:00', '4:30', '5:00', '5:30', '6:00', '6:30'];
-            const timingElement = document.querySelector('.slide.active .timing');
-            if (timingElement && timings[currentSlide]) {
-                timingElement.textContent = timings[currentSlide];
+            try {
+                // Esconder todos os slides primeiro
+                const allSlides = document.querySelectorAll('.slide');
+                allSlides.forEach(slide => {
+                    slide.classList.remove('active');
+                });
+                
+                // Mostrar o slide desejado
+                const targetSlide = document.getElementById(`slide${slideNumber}`);
+                if (targetSlide) {
+                    targetSlide.classList.add('active');
+                    currentSlide = slideNumber;
+                    
+                    // Atualizar contador
+                    const counter = document.getElementById('slideCounter');
+                    if (counter) {
+                        counter.textContent = `${currentSlide} / ${totalSlides}`;
+                    }
+                } else {
+                    console.error('Slide não encontrado:', slideNumber);
+                }
+            } catch (error) {
+                console.error('Erro ao navegar para slide:', error);
             }
         }
 
-        function nextSlide() {
-            showSlide(currentSlide + 1);
-        }
-
-        function previousSlide() {
-            showSlide(currentSlide - 1);
-        }
-
-        // Keyboard navigation
+        // Navegação por teclado
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'ArrowRight' || e.key === ' ') {
-                nextSlide();
-            } else if (e.key === 'ArrowLeft') {
-                previousSlide();
+            e.preventDefault();
+            
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+                goToSlide(currentSlide + 1);
+            } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+                goToSlide(currentSlide - 1);
+            } else if (e.key === 'Home') {
+                goToSlide(1);
+            } else if (e.key === 'End') {
+                goToSlide(totalSlides);
             }
         });
 
-        // Click anywhere to advance
+        // Clique na tela para navegar
         document.addEventListener('click', function(e) {
-            if (!e.target.classList.contains('nav-btn')) {
-                nextSlide();
+            // Se clique foi em botão de navegação ou dentro da área de navegação, ignorar
+            if (e.target.classList.contains('nav-btn') || 
+                e.target.closest('.nav-btn') || 
+                e.target.closest('.navigation') ||
+                e.target.id === 'slideCounter') {
+                return;
+            }
+            
+            // Se clique no lado direito da tela, avançar
+            if (e.clientX > window.innerWidth / 2) {
+                goToSlide(currentSlide + 1);
+            } else {
+                // Se clique no lado esquerdo, voltar
+                goToSlide(currentSlide - 1);
             }
         });
 
-        // Touch/swipe support for mobile
+        // Configurar botões de navegação
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configurar botões usando IDs
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const homeBtn = document.getElementById('homeBtn');
+            const endBtn = document.getElementById('endBtn');
+            
+            if (prevBtn) {
+                prevBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    goToSlide(currentSlide - 1);
+                });
+            }
+            
+            if (nextBtn) {
+                nextBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    goToSlide(currentSlide + 1);
+                });
+            }
+            
+            if (homeBtn) {
+                homeBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    goToSlide(1);
+                });
+            }
+            
+            if (endBtn) {
+                endBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    goToSlide(totalSlides);
+                });
+            }
+            
+            // Inicializar primeiro slide
+            goToSlide(1);
+        });
+
+        // Touch/swipe support para mobile
         let startX = null;
         
         document.addEventListener('touchstart', function(e) {
@@ -629,19 +742,16 @@ struct FinanceDashboard: View {
                 let endX = e.changedTouches[0].clientX;
                 let diffX = startX - endX;
                 
-                if (Math.abs(diffX) > 50) { // minimum swipe distance
+                if (Math.abs(diffX) > 50) { // distância mínima do swipe
                     if (diffX > 0) {
-                        nextSlide(); // swipe left - next slide
+                        goToSlide(currentSlide + 1); // swipe left - próximo slide
                     } else {
-                        previousSlide(); // swipe right - previous slide
+                        goToSlide(currentSlide - 1); // swipe right - slide anterior
                     }
                 }
                 startX = null;
             }
         });
-
-        // Initialize
-        showSlide(0);
     </script>
 
 </body>
