@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demonstração e Testes Práticos - Aula 2.4 Parte 7</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .slide {
+            display: none;
+            height: 100vh;
+            padding: 40px;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow-y: auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide-number {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .timing {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        h1 {
+            font-size: 4em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .big-text {
+            font-size: 2.2em;
+            line-height: 1.4;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .medium-text {
+            font-size: 1.8em;
+            line-height: 1.5;
+            margin-bottom: 25px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .highlight-box {
+            background: rgba(255,255,255,0.15);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            margin: 20px 0;
+            max-width: 90%;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .test-slide {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        }
+        
+        .security-slide {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+        }
+        
+        .performance-slide {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+        
+        .critical-slide {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+        
+        .logs-slide {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+        }
+
+        .checklist-slide {
+            background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%);
+        }
+
+        .code-demo {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 25px;
+            border-radius: 15px;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Courier New', monospace;
+            font-size: 1.2em;
+            text-align: left;
+            margin: 20px 0;
+            max-width: 85%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            white-space: pre-wrap;
+            line-height: 1.6;
+            overflow-x: auto;
+        }
+
+        .code-demo .comment {
+            color: #95a5a6;
+            font-style: italic;
+        }
+
+        .code-demo .success {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+
+        .code-demo .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .code-demo .warning {
+            color: #f39c12;
+            font-weight: bold;
+        }
+
+        .test-scenario {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 15px 0;
+            border-left: 5px solid #fff;
+            text-align: left;
+        }
+
+        .test-scenario h3 {
+            color: #fff;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .test-scenario p {
+            color: #f8f9fa;
+            font-size: 1.1em;
+            line-height: 1.5;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .metric-card {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .metric-card h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .metric-card p {
+            font-size: 1.1em;
+            color: #f8f9fa;
+            line-height: 1.4;
+        }
+
+        .validation-checklist {
+            text-align: left;
+            max-width: 800px;
+        }
+
+        .validation-checklist .item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #27ae60;
+            font-size: 1.2em;
+        }
+
+        .validation-checklist .item.security {
+            border-left-color: #e74c3c;
+        }
+
+        .validation-checklist .item.performance {
+            border-left-color: #f39c12;
+        }
+
+        .validation-checklist .item.connectivity {
+            border-left-color: #3498db;
+        }
+
+        .validation-checklist .item.ux {
+            border-left-color: #9b59b6;
+        }
+
+        @media (max-width: 768px) {
+            .slide {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2.5em;
+            }
+            
+            .big-text {
+                font-size: 1.6em;
+            }
+            
+            .medium-text {
+                font-size: 1.3em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Título -->
+<div class="slide active" id="slide1">
+    <div class="slide-number">1/12</div>
+    <div class="timing">0:00</div>
+    <h1>🧪 Demonstração e Testes Práticos</h1>
+    <div class="big-text">
+        Validação total do sistema:<br>
+        <strong>Segurança</strong> · <strong>Performance</strong> · <strong>Debugging</strong>
+    </div>
+    <div class="highlight-box">
+        <h2>🎯 É hora do test drive final!</h2>
+        <div class="medium-text">Todo componente será testado na prática</div>
+    </div>
+</div>
+
+<!-- Slide 2: Visão Geral dos Testes -->
+<div class="slide test-slide" id="slide2">
+    <div class="slide-number">2/12</div>
+    <div class="timing">0:30</div>
+    <h1>🎯 Roteiro de Validação</h1>
+    <div class="highlight-box">
+        <h2>🧪 3 Testes Fundamentais</h2>
+        <div class="big-text">
+            <strong>1️⃣ Security Rules</strong> protegendo dados<br>
+            <strong>2️⃣ Otimização automática</strong> de recursos<br>
+            <strong>3️⃣ Resposta a situações críticas</strong>
+        </div>
+    </div>
+    <div class="medium-text">
+        + <strong>Interpretação profissional de logs</strong> 📊
+    </div>
+</div>
+
+<!-- Slide 3: Teste 1 - Security Rules -->
+<div class="slide security-slide" id="slide3">
+    <div class="slide-number">3/12</div>
+    <div class="timing">1:00</div>
+    <h1>🔒 Teste 1: Security Rules em Ação</h1>
+    <div class="test-scenario">
+        <h3>📋 Cenário: Validação dupla funcionando</h3>
+        <p>Vamos criar uma transação válida e uma inválida para ver a proteção automática</p>
+    </div>
+    <div class="code-demo">
+<span class="comment">// ✅ DADOS: "Almoço no restaurante", R$ 45,50</span>
+<span class="success">🔍 "VALIDAÇÃO DO CLIENTE"</span>
+<span class="success">✅ "Despesa com valor negativo correto"</span>
+<span class="success">🔒 "Security Rules confirmaram dados corretos"</span>
+
+<span class="comment">// ❌ DADOS: "", R$ 0 (inválidos)</span>
+<span class="error">❌ "Descrição vazia"</span>
+<span class="error">🚨 "Erro: Descrição não pode estar vazia"</span></div>
+</div>
+
+<!-- Slide 4: Demonstração Security Rules -->
+<div class="slide security-slide" id="slide4">
+    <div class="slide-number">4/12</div>
+    <div class="timing">2:30</div>
+    <h1>🛡️ Proteção em Camadas</h1>
+    <div class="highlight-box">
+        <h2>🔍 O que estamos validando:</h2>
+        <div class="big-text">
+            ✅ Cliente valida para <strong>UX rápida</strong><br>
+            ✅ Servidor valida para <strong>segurança real</strong><br>
+            ✅ Tentativas de hack são <strong>bloqueadas automaticamente</strong>
+        </div>
+    </div>
+    <div class="medium-text">
+        <strong>Resultado:</strong> Sistema à prova de manipulação! 🛡️
+    </div>
+</div>
+
+<!-- Slide 5: Teste 2 - Otimização Automática -->
+<div class="slide performance-slide" id="slide5">
+    <div class="slide-number">5/12</div>
+    <div class="timing">4:00</div>
+    <h1>⚡ Teste 2: Economia Automática</h1>
+    <div class="test-scenario">
+        <h3>📋 Cenário: App indo para background</h3>
+        <p>Simularemos mudanças no ciclo de vida para ver otimizações automáticas</p>
+    </div>
+    <div class="code-demo">
+<span class="comment">// 🔵 APP VAI PARA BACKGROUND</span>
+<span class="warning">🔵 "APP EM BACKGROUND"</span>
+<span class="warning">🔋 "Modo economia crítica ativado"</span>
+<span class="warning">🧹 "REMOVENDO LISTENERS NÃO-CRÍTICOS"</span>
+
+<span class="comment">// 🟢 APP VOLTA PARA FOREGROUND</span>
+<span class="success">🟢 "APP ATIVADO"</span>
+<span class="success">📡 "RESTAURANDO TODOS OS LISTENERS"</span></div>
+</div>
+
+<!-- Slide 6: Economia de Recursos -->
+<div class="slide performance-slide" id="slide6">
+    <div class="slide-number">6/12</div>
+    <div class="timing">5:30</div>
+    <h1>🔋 Economia de Recursos</h1>
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <h3>📉 Consumo de Bateria</h3>
+            <p><strong>~60% redução</strong> com listeners pausados</p>
+        </div>
+        <div class="metric-card">
+            <h3>🧠 Uso de Memória</h3>
+            <p><strong>~20MB liberados</strong> em limpeza preventiva</p>
+        </div>
+        <div class="metric-card">
+            <h3>📡 Conectividade</h3>
+            <p><strong>Sincronização inteligente</strong> baseada no tempo</p>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 7: Teste 3 - Situações Críticas -->
+<div class="slide critical-slide" id="slide7">
+    <div class="slide-number">7/12</div>
+    <div class="timing">7:00</div>
+    <h1>🚨 Teste 3: Memory Warning</h1>
+    <div class="test-scenario">
+        <h3>📋 Cenário: Pressão extrema de memória</h3>
+        <p>Simular memory warning para ver como o sistema se protege</p>
+    </div>
+    <div class="code-demo">
+<span class="comment">// 🚨 MEMORY WARNING DETECTADO</span>
+<span class="error">🚨 "AVISO DE MEMÓRIA BAIXA"</span>
+<span class="error">🔋 "Sistema reportou pressão crítica!"</span>
+<span class="warning">🔄 "Mudando para modo crítico temporário"</span>
+<span class="warning">🧹 "LIMPEZA DE EMERGÊNCIA"</span>
+
+<span class="comment">// ✅ RECUPERAÇÃO AUTOMÁTICA</span>
+<span class="success">🔄 "Modo de performance restaurado: normal"</span>
+<span class="success">✅ "Sistema estabilizado"</span></div>
+</div>
+
+<!-- Slide 8: Interpretação de Logs -->
+<div class="slide logs-slide" id="slide8">
+    <div class="slide-number">8/12</div>
+    <div class="timing">8:30</div>
+    <h1>🔍 Interpretando Logs Profissionalmente</h1>
+    <div class="highlight-box">
+        <h2>📚 5 Categorias Essenciais</h2>
+        <div class="big-text">
+            🚀 <strong>Inicialização</strong> - Setup dos componentes<br>
+            📡 <strong>Listeners</strong> - Gestão de conexões<br>
+            💾 <strong>Dados</strong> - Operações CRUD<br>
+            ⚡ <strong>Otimizações</strong> - Economia de recursos<br>
+            🔒 <strong>Segurança</strong> - Validações e proteções
+        </div>
+    </div>
+</div>
+
+<!-- Slide 9: Padrões de Logs -->
+<div class="slide logs-slide" id="slide9">
+    <div class="slide-number">9/12</div>
+    <div class="timing">9:30</div>
+    <h1>📖 Lendo a História dos Logs</h1>
+    <div class="highlight-box">
+        <h2>✅ Sequência Saudável</h2>
+        <div class="medium-text">
+            🚀 Inicialização → 📡 Listeners → 💾 Dados → ✅ Sucesso
+        </div>
+    </div>
+    <div class="highlight-box">
+        <h2>❌ Sequência Problemática</h2>
+        <div class="medium-text">
+            🚀 Inicialização → ❌ Erro → 🚨 Fallback → ⚠️ Degradação
+        </div>
+    </div>
+    <div class="big-text">
+        💡 <strong>Dica:</strong> Logs são cronológicos - conte a história!
+    </div>
+</div>
+
+<!-- Slide 10: Checklist de Validação -->
+<div class="slide checklist-slide" id="slide10">
+    <div class="slide-number">10/12</div>
+    <div class="timing">10:30</div>
+    <h1>✅ Checklist de Validação Final</h1>
+    <div class="validation-checklist">
+        <div class="item security">
+            <strong>🔒 Segurança:</strong> Security Rules bloqueiam acesso entre usuários
+        </div>
+        <div class="item performance">
+            <strong>⚡ Performance:</strong> Listeners removidos automaticamente em background
+        </div>
+        <div class="item connectivity">
+            <strong>🔄 Conectividade:</strong> App funciona offline com sincronização automática
+        </div>
+        <div class="item ux">
+            <strong>📱 UX:</strong> Interface responde imediatamente às ações
+        </div>
+        <div class="item">
+            <strong>🧪 Debugging:</strong> Logs educativos facilitam identificação de problemas
+        </div>
+    </div>
+</div>
+
+<!-- Slide 11: Sistema Validado -->
+<div class="slide" id="slide11">
+    <div class="slide-number">11/12</div>
+    <div class="timing">11:30</div>
+    <h1>💪 Sistema Totalmente Validado!</h1>
+    <div class="highlight-box">
+        <h2>🎉 Parabéns! Você criou:</h2>
+        <div class="big-text">
+            ✅ Sistema <strong>seguro</strong> com proteção dupla<br>
+            ✅ Performance <strong>otimizada</strong> automaticamente<br>
+            ✅ Debugging <strong>profissional</strong> com logs educativos<br>
+            ✅ Experiência de usuário <strong>impecável</strong>
+        </div>
+    </div>
+    <div class="medium-text">
+        🚀 Pronto para <strong>produção profissional</strong>!
+    </div>
+</div>
+
+<!-- Slide 12: Próximos Passos -->
+<div class="slide" id="slide12">
+    <div class="slide-number">12/12</div>
+    <div class="timing">12:00</div>
+    <h1>🚀 Próximos Passos</h1>
+    <div class="highlight-box">
+        <h2>🎯 Parte 8: Consolidação</h2>
+        <div class="big-text">
+            📋 <strong>Exercícios Práticos</strong><br>
+            🔧 <strong>Troubleshooting</strong><br>
+            📊 <strong>Otimizações Avançadas</strong>
+        </div>
+    </div>
+    <div class="medium-text">
+        ✨ <strong>Meta:</strong> Consolidar conhecimento com desafios práticos!
+    </div>
+</div>
+
+<div class="navigation">
+    <button class="nav-btn" id="prevBtn">← Anterior</button>
+    <button class="nav-btn" id="homeBtn">🏠 Início</button>
+    <button class="nav-btn" style="background: rgba(255,255,255,0.4);">
+        <span id="slideCounter">1 / 12</span>
+    </button>
+    <button class="nav-btn" id="endBtn">🏁 Fim</button>
+    <button class="nav-btn" id="nextBtn">Próximo →</button>
+</div>
+
+<script>
+let currentSlide = 1;
+const totalSlides = 12;
+
+function goToSlide(slideNumber) {
+    // Validar número do slide
+    if (slideNumber < 1) slideNumber = 1;
+    if (slideNumber > totalSlides) slideNumber = totalSlides;
+    
+    try {
+        // Esconder todos os slides primeiro
+        const allSlides = document.querySelectorAll('.slide');
+        allSlides.forEach(slide => {
+            slide.classList.remove('active');
+        });
+        
+        // Mostrar o slide desejado
+        const targetSlide = document.getElementById(`slide${slideNumber}`);
+        if (targetSlide) {
+            targetSlide.classList.add('active');
+            currentSlide = slideNumber;
+            
+            // Atualizar contador
+            const counter = document.getElementById('slideCounter');
+            if (counter) {
+                counter.textContent = `${currentSlide} / ${totalSlides}`;
+            }
+        } else {
+            console.error('Slide não encontrado:', slideNumber);
+        }
+    } catch (error) {
+        console.error('Erro ao navegar para slide:', error);
+    }
+}
+
+// Navegação por teclado
+document.addEventListener('keydown', function(e) {
+    e.preventDefault();
+    
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+        goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+        goToSlide(currentSlide - 1);
+    } else if (e.key === 'Home') {
+        goToSlide(1);
+    } else if (e.key === 'End') {
+        goToSlide(totalSlides);
+    }
+});
+
+// Clique na tela para navegar
+document.addEventListener('click', function(e) {
+    // Se clique foi em botão de navegação ou dentro da área de navegação, ignorar
+    if (e.target.classList.contains('nav-btn') || 
+        e.target.closest('.nav-btn') || 
+        e.target.closest('.navigation') ||
+        e.target.id === 'slideCounter') {
+        return;
+    }
+    
+    // Se clique no lado direito da tela, avançar
+    if (e.clientX > window.innerWidth / 2) {
+        goToSlide(currentSlide + 1);
+    } else {
+        // Se clique no lado esquerdo, voltar
+        goToSlide(currentSlide - 1);
+    }
+});
+
+// Configurar botões de navegação
+document.addEventListener('DOMContentLoaded', function() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const homeBtn = document.getElementById('homeBtn');
+    const endBtn = document.getElementById('endBtn');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide - 1);
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide + 1);
+        });
+    }
+    
+    if (homeBtn) {
+        homeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(1);
+        });
+    }
+    
+    if (endBtn) {
+        endBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(totalSlides);
+        });
+    }
+    
+    // Inicializar primeiro slide
+    goToSlide(1);
+});
+
+// Também inicializar quando window carrega (backup)
+window.addEventListener('load', function() {
+    // Garantir que o primeiro slide está ativo se nenhum outro estiver
+    const activeSlides = document.querySelectorAll('.slide.active');
+    if (activeSlides.length === 0) {
+        goToSlide(1);
+    }
+});
+</script>
+
+</body>
+</html>
