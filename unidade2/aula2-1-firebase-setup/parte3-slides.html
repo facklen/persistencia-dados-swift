@@ -471,52 +471,54 @@
         </div>
     </div>
 
-    <!-- Slide 7: AppDelegate - Imports -->
+    <!-- Slide 7: App Struct - Imports -->
     <div class="slide" id="slide7">
-        <h2>Configuração no AppDelegate</h2>
-        <h3>Paso 1: Imports necessários</h3>
+        <h2>Configuração no App Struct</h2>
+        <h3>Passo 1: Imports necessários</h3>
         
         <div class="code-block">
-            <pre><span class="keyword">import</span> UIKit
+            <pre><span class="keyword">import</span> SwiftUI
 <span class="keyword">import</span> Firebase
 
-<span class="comment">// 🔥 Firebase é a importação principal</span>
-<span class="comment">// Outros imports específicos virão nas próximas aulas</span>
+<span class="comment">// 🔥 Firebase é o import principal</span>
+<span class="comment">// SwiftUI moderno usa App struct, não AppDelegate</span>
 
-<span class="keyword">class</span> AppDelegate: UIResponder, UIApplicationDelegate {
-    
-    <span class="keyword">var</span> window: UIWindow?
+<span class="keyword">@main</span>
+<span class="keyword">struct</span> FinancasAppApp: App {
     
     <span class="comment">// 📱 Aqui vem a configuração...</span>
 }</pre>
         </div>
 
         <div class="highlight-box">
-            <p><strong>💡 Dica:</strong> O import Firebase dá acesso a todos os serviços básicos</p>
+            <p><strong>💡 Dica:</strong> Em projetos SwiftUI modernos, configuramos Firebase no App struct</p>
         </div>
     </div>
 
-    <!-- Slide 8: AppDelegate - Configuração -->
+    <!-- Slide 8: App Struct - Init -->
     <div class="slide" id="slide8">
-        <h2>AppDelegate: Método Principal</h2>
+        <h2>App Struct: Método init()</h2>
         
         <div class="code-block">
-            <pre><span class="keyword">func</span> application(
-    _ application: UIApplication,
-    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
-) -> Bool {
+            <pre><span class="keyword">@main</span>
+<span class="keyword">struct</span> FinancasAppApp: App {
     
-    <span class="comment">// 🔥 LINHA MAIS IMPORTANTE</span>
-    configureFirebase()
+    <span class="keyword">init</span>() {
+        <span class="comment">// 🔥 CONFIGURAÇÃO DO FIREBASE</span>
+        configureFirebase()
+    }
     
-    
-    <span class="keyword">return</span> <span class="success">true</span>
+    <span class="keyword">var</span> body: <span class="keyword">some</span> Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
 }</pre>
         </div>
 
         <div class="highlight-box">
-            <h3>🎯 A Ordem Importa!</h3>
-            <p>Firebase deve ser configurado <strong>ANTES</strong> de qualquer outra configuração</p>
+            <h3>🎯 Muito Mais Simples!</h3>
+            <p>App struct é mais <strong>moderno</strong> e <strong>limpo</strong> que AppDelegate</p>
         </div>
     </div>
 
@@ -593,18 +595,18 @@
                 <p><strong>Solução:</strong> File > Packages > Reset Package Caches</p>
             </div>
             <div class="card">
-                <h3 style="color: #e74c3c;">❌ Build Failed</h3>
-                <p><strong>Solução:</strong> Verificar iOS deployment target (mín. 11.0)</p>
+                <h3 style="color: #e74c3c;">❌ Cannot find 'FirebaseApp'</h3>
+                <p><strong>Solução:</strong> Verificar import Firebase e produtos SPM selecionados</p>
             </div>
             <div class="card">
-                <h3 style="color: #3498db;">🔍 Plist Not Found</h3>
-                <p><strong>Solução:</strong> Verificar target membership do arquivo</p>
+                <h3 style="color: #3498db;">🔍 Logs não aparecem</h3>
+                <p><strong>Solução:</strong> Verificar se GoogleService-Info.plist está no projeto</p>
             </div>
         </div>
 
         <div class="highlight-box">
-            <h3>🐛 Debug Rápido</h3>
-            <p>Product > Clean Build Folder, depois Build novamente</p>
+            <h3>💡 Dica Importante</h3>
+            <p><strong>SwiftUI moderno</strong> usa App struct, não AppDelegate. Import <strong>Firebase</strong> é obrigatório!</p>
         </div>
     </div>
 
@@ -619,8 +621,8 @@
                 <p>SPM configurado<br>Dependências corretas<br>Build funcionando</p>
             </div>
             <div class="card">
-                <h3 style="color: #3498db;">✅ AppDelegate</h3>
-                <p>Firebase.configure()<br>Logs educativos<br>Verificações</p>
+                <h3 style="color: #3498db;">✅ App Struct</h3>
+                <p>Firebase.configure()<br>Logs educativos<br>Abordagem moderna</p>
             </div>
             <div class="card">
                 <h3 style="color: #9b59b6;">✅ Conexão</h3>
