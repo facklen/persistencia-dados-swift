@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aula 2.4 - Parte 8: Exercícios e Troubleshooting</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+            color: white;
+        }
+
+        .slide {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            padding: 60px 80px;
+            text-align: center;
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            animation: slideIn 0.8s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-number {
+            position: absolute;
+            top: 30px;
+            left: 40px;
+            background: rgba(0,0,0,0.4);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+        }
+
+        .timing {
+            position: absolute;
+            top: 30px;
+            right: 40px;
+            background: rgba(0,0,0,0.4);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            font-size: 3.5em;
+            margin-bottom: 30px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 2.5em;
+            margin-bottom: 25px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        h3 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            color: #f1c40f;
+        }
+
+        .big-text {
+            font-size: 1.8em;
+            line-height: 1.4;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .medium-text {
+            font-size: 1.4em;
+            line-height: 1.5;
+            margin-bottom: 25px;
+            opacity: 0.9;
+        }
+
+        .highlight-box {
+            background: rgba(255,255,255,0.15);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+            margin: 30px 0;
+            max-width: 900px;
+        }
+
+        .code-block {
+            background: rgba(0,0,0,0.7);
+            padding: 30px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            line-height: 1.6;
+            text-align: left;
+            margin: 25px 0;
+            border-left: 5px solid #f39c12;
+            backdrop-filter: blur(10px);
+            white-space: pre-wrap;
+            overflow-x: auto;
+            max-width: 1000px;
+        }
+
+        .code-comment { color: #95a5a6; }
+        .code-keyword { color: #3498db; }
+        .code-string { color: #e67e22; }
+        .code-success { color: #2ecc71; }
+        .code-error { color: #e74c3c; }
+        .code-warning { color: #f39c12; }
+
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            max-width: 1000px;
+            margin: 30px 0;
+        }
+
+        .setup-card {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .exercise-card {
+            background: rgba(231, 76, 60, 0.2);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 2px solid #e74c3c;
+            margin: 20px 0;
+            max-width: 900px;
+        }
+
+        .steps-list {
+            text-align: left;
+            font-size: 1.2em;
+            line-height: 1.8;
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .steps-list ol {
+            margin-left: 20px;
+        }
+
+        .steps-list li {
+            margin-bottom: 10px;
+        }
+
+        .checkpoint {
+            background: rgba(46, 204, 113, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #27ae60;
+            margin: 25px 0;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .troubleshooting-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            max-width: 1000px;
+            margin: 30px 0;
+        }
+
+        .problem-card {
+            background: rgba(231, 76, 60, 0.2);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #e74c3c;
+        }
+
+        .solution-card {
+            background: rgba(46, 204, 113, 0.2);
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #27ae60;
+        }
+
+        .assessment-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            max-width: 1000px;
+            margin: 30px 0;
+        }
+
+        .assessment-card {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+        }
+
+        .assessment-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.2);
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            background: rgba(255,255,255,0.3);
+            border: 2px solid rgba(255,255,255,0.5);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255,255,255,0.5);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:active {
+            background: rgba(255,255,255,0.7);
+            transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .slide {
+                padding: 40px 20px;
+            }
+
+            h1 {
+                font-size: 2.5em;
+            }
+
+            .big-text {
+                font-size: 1.4em;
+            }
+
+            .setup-grid,
+            .troubleshooting-grid,
+            .assessment-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .navigation {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .nav-btn {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Slide 1: Título -->
+<div class="slide active" id="slide1">
+    <div class="slide-number">1/15</div>
+    <div class="timing">0:00</div>
+    <h1>🔥 Aula 2.4 - Parte 8</h1>
+    <div class="big-text">Exercícios e Troubleshooting</div>
+    <div class="highlight-box">
+        <h2>💪 Consolidação Através da Prática</h2>
+        <div class="medium-text">Validando competências com exercícios reais</div>
+    </div>
+    <div class="medium-text">
+        🎯 <strong>Duração:</strong> 9 minutos de prática intensiva<br>
+        ⚡ <strong>Foco:</strong> Implementação guiada e troubleshooting
+    </div>
+</div>
+
+<!-- Slide 2: Objetivos -->
+<div class="slide" id="slide2">
+    <div class="slide-number">2/15</div>
+    <div class="timing">1:30</div>
+    <h1>🎯 Objetivos de Aprendizagem</h1>
+    <div class="setup-grid">
+        <div class="setup-card">
+            <h3>Competências Técnicas</h3>
+            <div class="medium-text">
+                ✅ <strong>Resolver</strong> exercícios práticos reais<br>
+                ✅ <strong>Diagnosticar</strong> problemas sistemicamente
+            </div>
+        </div>
+        <div class="setup-card">
+            <h3>Competências Profissionais</h3>
+            <div class="medium-text">
+                ✅ <strong>Aplicar</strong> metodologia de troubleshooting<br>
+                ✅ <strong>Validar</strong> domínio via autoavaliação
+            </div>
+        </div>
+    </div>
+    <div class="highlight-box">
+        <h3>🎯 Meta Final</h3>
+        <div class="medium-text">Certificar domínio completo através de prática intensa</div>
+    </div>
+</div>
+
+<!-- Slide 3: Setup Técnico -->
+<div class="slide" id="slide3">
+    <div class="slide-number">3/15</div>
+    <div class="timing">2:00</div>
+    <h1>🛠️ Setup Técnico Obrigatório</h1>
+    <div class="setup-grid">
+        <div class="setup-card">
+            <h3>Ambiente Preparado</h3>
+            <div class="steps-list">
+                <ul>
+                    <li><strong>Xcode 15.0+</strong> com projeto FinanceApp</li>
+                    <li><strong>Firebase Console:</strong> project-finance-app</li>
+                    <li><strong>Simulador</strong> iPhone 15 Pro funcionando</li>
+                    <li><strong>AppStateManager</strong> implementado (Parte 5)</li>
+                </ul>
+            </div>
+        </div>
+        <div class="setup-card">
+            <h3>Dados de Teste</h3>
+            <div class="code-block"><span class="code-comment">// Usuário de teste pré-criado:</span>
+<span class="code-keyword">UID:</span> <span class="code-string">"user123testdemo"</span>
+<span class="code-keyword">Email:</span> <span class="code-string">"teste@financeapp.com"</span>
+<span class="code-keyword">Password:</span> <span class="code-string">"123456"</span></div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 4: Exercício 1 - Firebase Rules -->
+<div class="slide" id="slide4">
+    <div class="slide-number">4/15</div>
+    <div class="timing">2:15</div>
+    <h1>🔰 Exercício 1: Firebase Rules</h1>
+    <div class="big-text">Implementação guiada específica (2:15-3:30)</div>
+    
+    <div class="exercise-card">
+        <h3>📋 Setup Exato: Firebase Console</h3>
+        <div class="steps-list">
+            <ol>
+                <li><strong>Navegar:</strong> project-finance-app → Firestore → Rules → Simulator</li>
+                <li><strong>Configurar:</strong> Operation: create, Authenticated: YES</li>
+                <li><strong>Location:</strong> /users/user123testdemo/transactions/trans001</li>
+                <li><strong>UID:</strong> user123testdemo</li>
+            </ol>
+        </div>
+    </div>
+    
+    <div class="code-block"><span class="code-comment">// REQUEST DATA EXATO A INSERIR:</span>
+{
+  <span class="code-string">"amount"</span>: <span class="code-success">-25.50</span>,
+  <span class="code-string">"description"</span>: <span class="code-string">"Café da manhã"</span>,
+  <span class="code-string">"categoryId"</span>: <span class="code-string">"food"</span>,
+  <span class="code-string">"type"</span>: <span class="code-string">"expense"</span>,
+  <span class="code-string">"userId"</span>: <span class="code-string">"user123testdemo"</span>,
+  <span class="code-string">"createdAt"</span>: <span class="code-string">"2024-01-15T08:30:00Z"</span>
+}
+
+<span class="code-comment">// TESTE 1: Executar → ESPERADO: ✅ ALLOW</span>
+<span class="code-comment">// TESTE 2: Alterar UID para "hacker999" → ESPERADO: ❌ DENY</span></div>
+    
+    <div class="checkpoint">✅ Checkpoint: Ambos testes com resultados corretos</div>
+</div>
+
+<!-- Slide 5: Exercício 2 - AppStateManager -->
+<div class="slide" id="slide5">
+    <div class="slide-number">5/15</div>
+    <div class="timing">4:15</div>
+    <h1>🟡 Exercício 2: AppStateManager</h1>
+    <div class="big-text">Testando otimização na prática (4:15-5:00)</div>
+    
+    <div class="exercise-card">
+        <h3>🎯 Ações Físicas Específicas</h3>
+        <div class="steps-list">
+            <ol>
+                <li><strong>Command+Tab:</strong> Voltar para Xcode</li>
+                <li><strong>Verificar:</strong> App rodando no simulador</li>
+                <li><strong>Command+Shift+H:</strong> Simular background</li>
+                <li><strong>Alt+Tab:</strong> Activity Monitor para ver CPU</li>
+                <li><strong>Click app:</strong> Voltar para foreground</li>
+            </ol>
+        </div>
+    </div>
+    
+    <div class="troubleshooting-grid">
+        <div class="problem-card">
+            <h4>📊 Logs Background</h4>
+            <div class="code-block"><span class="code-warning">🔵</span> <span class="code-string">"APP EM BACKGROUND"</span>
+<span class="code-warning">🧹</span> <span class="code-string">"REMOVENDO LISTENERS NÃO-CRÍTICOS"</span>
+<span class="code-warning">📡</span> <span class="code-string">"Listener pausado: transactions_listener"</span>
+<span class="code-warning">⚡</span> <span class="code-string">"Economia de bateria ativada"</span></div>
+        </div>
+        <div class="solution-card">
+            <h4>📊 Logs Foreground</h4>
+            <div class="code-block"><span class="code-success">🟢</span> <span class="code-string">"APP ATIVO"</span>
+<span class="code-success">🔄</span> <span class="code-string">"RESTAURANDO LISTENERS"</span>
+<span class="code-success">📡</span> <span class="code-string">"Listener reativado: transactions_listener"</span>
+<span class="code-success">🔋</span> <span class="code-string">"Sincronização completa"</span></div>
+        </div>
+    </div>
+    
+    <div class="checkpoint">✅ Checkpoint: Activity Monitor mostra CPU reduzido</div>
+</div>
+
+<!-- Slide 6: Exercício 3 - Código Completo -->
+<div class="slide" id="slide6">
+    <div class="slide-number">6/15</div>
+    <div class="timing">5:40</div>
+    <h1>🔴 Exercício 3: Código Completo</h1>
+    <div class="big-text">Implementação linha por linha (5:40-5:55)</div>
+    
+    <div class="exercise-card">
+        <h3>📂 Arquivo: TransactionService.swift</h3>
+        <div class="medium-text">Adicionar método de teste no final da classe</div>
+    </div>
+    
+    <div class="code-block"><span class="code-comment">// DIGITAR EXATAMENTE este método:</span>
+
+<span class="code-keyword">func</span> <span class="code-success">testCompleteIntegration</span>() <span class="code-keyword">async</span> {
+    <span class="code-comment">// ✅ VALIDAÇÃO CLIENT-SIDE</span>
+    <span class="code-keyword">let</span> transaction = <span class="code-success">FinancialTransaction</span>(
+        amount: <span class="code-warning">-25.50</span>,
+        description: <span class="code-string">"Café da manhã"</span>,
+        categoryId: <span class="code-string">"food"</span>,
+        date: <span class="code-success">Date</span>(),
+        userId: <span class="code-success">Auth</span>.<span class="code-keyword">auth</span>().<span class="code-success">currentUser</span>?.<span class="code-success">uid</span> ?? <span class="code-string">""</span>
+    )
+    
+    <span class="code-comment">// ✅ LOGS EDUCATIVOS</span>
+    <span class="code-keyword">print</span>(<span class="code-string">"📊 Dados sendo enviados:"</span>)
+    <span class="code-keyword">print</span>(<span class="code-string">"💰 Amount: \(transaction.amount)"</span>)
+    <span class="code-keyword">print</span>(<span class="code-string">"👤 UserID: '\(transaction.userId)'"</span>)
+    
+    <span class="code-comment">// ✅ SALVAMENTO COM SECURITY RULES</span>
+    <span class="code-keyword">do</span> {
+        <span class="code-keyword">try await</span> <span class="code-success">saveTransaction</span>(transaction)
+        <span class="code-keyword">print</span>(<span class="code-success">"✅ Transação salva - Sistema completo!"</span>)
+    } <span class="code-keyword">catch</span> {
+        <span class="code-keyword">print</span>(<span class="code-error">"❌ Erro: \(error.localizedDescription)"</span>)
+    }
+}</div>
+    
+    <div class="checkpoint">✅ Checkpoint: Executar método e verificar logs</div>
+</div>
+
+<!-- Slide 7: Troubleshooting Sistemático -->
+<div class="slide" id="slide7">
+    <div class="slide-number">7/15</div>
+    <div class="timing">6:00</div>
+    <h1>🔧 Troubleshooting Sistemático</h1>
+    <div class="big-text">Metodologia para resolver problemas</div>
+    
+    <div class="highlight-box">
+        <h2>🚨 Problemas Mais Comuns</h2>
+        <div class="medium-text">Diagnóstico e solução passo a passo</div>
+    </div>
+    
+    <div class="troubleshooting-grid">
+        <div class="problem-card">
+            <h3>🚨 Problema 1</h3>
+            <h4>"Permission Denied" Inesperado</h4>
+            <div class="medium-text">
+                <strong>Sintoma:</strong> App funcionava ontem, hoje falha<br><br>
+                <strong>Metodologia:</strong><br>
+                1. Verificar autenticação<br>
+                2. Validar Security Rules<br>
+                3. Conferir estrutura dados
+            </div>
+        </div>
+        <div class="solution-card">
+            <h3>⚡ Problema 2</h3>
+            <h4>Listeners Não Otimizados</h4>
+            <div class="medium-text">
+                <strong>Sintoma:</strong> App não economiza bateria<br><br>
+                <strong>Solução:</strong><br>
+                1. Verificar registro no AppStateManager<br>
+                2. Confirmar mudanças de estado<br>
+                3. Analisar logs de ciclo de vida
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 8: Problema 1 Detalhado -->
+<div class="slide" id="slide8">
+    <div class="slide-number">8/15</div>
+    <div class="timing">6:30</div>
+    <h1>🚨 Permission Denied</h1>
+    <div class="big-text">Diagnóstico sistemático do problema</div>
+    
+    <div class="exercise-card">
+        <h3>Sintoma:</h3>
+        <div class="medium-text">"❌ Erro: FirestoreErrorCode.permissionDenied" - App funcionava ontem, hoje falha</div>
+    </div>
+    
+    <div class="setup-grid">
+        <div class="setup-card">
+            <h3>1️⃣ Verificar Auth</h3>
+            <div class="code-block"><span class="code-keyword">if let</span> user = <span class="code-success">Auth</span>.<span class="code-keyword">auth</span>().<span class="code-success">currentUser</span> {
+    <span class="code-keyword">print</span>(<span class="code-success">"✅ Usuário: \(user.uid)"</span>)
+} <span class="code-keyword">else</span> {
+    <span class="code-keyword">print</span>(<span class="code-error">"❌ Não autenticado"</span>)
+}</div>
+        </div>
+        <div class="setup-card">
+            <h3>2️⃣ Testar Rules</h3>
+            <div class="medium-text">
+                Firebase Console → Rules → Simulator<br><br>
+                Use dados exatos que estão falhando
+            </div>
+        </div>
+    </div>
+    
+    <div class="highlight-box">
+        <h3>🎯 Causas Mais Comuns</h3>
+        <div class="medium-text">
+            1. Usuário foi deslogado automaticamente (token expirou)<br>
+            2. Security Rules foram modificadas acidentalmente<br>
+            3. Dados estão faltando campos obrigatórios
+        </div>
+    </div>
+</div>
+
+<!-- Slide 9: Problema 2 Detalhado -->
+<div class="slide" id="slide9">
+    <div class="slide-number">9/15</div>
+    <div class="timing">7:00</div>
+    <h1>⚡ Listeners Não Otimizados</h1>
+    <div class="big-text">Diagnosticando problemas de ciclo de vida</div>
+    
+    <div class="exercise-card">
+        <h3>Sintoma:</h3>
+        <div class="medium-text">"📡 Listeners continuam ativos em background" - App não economiza bateria</div>
+    </div>
+    
+    <div class="troubleshooting-grid">
+        <div class="problem-card">
+            <h4>❌ Problema</h4>
+            <div class="code-block"><span class="code-comment">// Listener não registrado corretamente</span>
+<span class="code-error">// ❌ ERRADO:</span>
+firestore.<span class="code-success">collection</span>(<span class="code-string">"transactions"</span>)
+    .<span class="code-success">addSnapshotListener</span> { ... }
+
+<span class="code-comment">// Não está sendo gerenciado!</span></div>
+        </div>
+        <div class="solution-card">
+            <h4>✅ Solução</h4>
+            <div class="code-block"><span class="code-comment">// Registrar no AppStateManager</span>
+<span class="code-success">// ✅ CORRETO:</span>
+appStateManager.<span class="code-success">registerListener</span>(
+    listener,
+    id: <span class="code-string">"transactions_listener"</span>,
+    isCritical: <span class="code-error">false</span>  <span class="code-comment">← IMPORTANTE!</span>
+)</div>
+        </div>
+    </div>
+    
+    <div class="highlight-box">
+        <h3>🔍 Como Verificar se Está Funcionando:</h3>
+        <div class="code-block"><span class="code-comment">// Ao ir para background, você DEVE ver:</span>
+<span class="code-warning">🔵</span> <span class="code-string">"APP EM BACKGROUND"</span>
+<span class="code-warning">🧹</span> <span class="code-string">"REMOVENDO LISTENERS NÃO-CRÍTICOS"</span>
+<span class="code-warning">📡</span> <span class="code-string">"Listener pausado: transactions_listener"</span>
+
+<span class="code-comment">// NÃO APARECE? Problema na implementação!</span></div>
+    </div>
+</div>
+
+<!-- Slide 10: Autoavaliação -->
+<div class="slide" id="slide10">
+    <div class="slide-number">10/15</div>
+    <div class="timing">7:30</div>
+    <h1>📊 Autoavaliação</h1>
+    <div class="big-text">Validando seu domínio das competências</div>
+    
+    <div class="highlight-box">
+        <h2>📋 Checklist de Competências</h2>
+        <div class="medium-text">Marque apenas itens que você domina completamente</div>
+    </div>
+    
+    <div class="steps-list">
+        <ul>
+            <li>☐ Consegui resolver todos os exercícios práticos sem consultar</li>
+            <li>☐ Identifiquei e corrigi problemas usando metodologia sistemática</li>
+            <li>☐ Security Rules estão funcionando corretamente no simulador</li>
+            <li>☐ AppStateManager está otimizando recursos como esperado</li>
+            <li>☐ Entendo completamente logs e mensagens de debug</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Slide 11: Resultados Autoavaliação -->
+<div class="slide" id="slide11">
+    <div class="slide-number">11/15</div>
+    <div class="timing">8:00</div>
+    <h1>🎯 Interpretando Resultados</h1>
+    <div class="big-text">Como usar sua autoavaliação</div>
+    
+    <div class="assessment-grid">
+        <div class="assessment-card" style="border-color: #27ae60;">
+            <div style="font-size: 3em; margin-bottom: 15px;">✅</div>
+            <h3 style="color: #27ae60;">5-5 "Sim"</h3>
+            <div class="medium-text"><strong>Domínio Completo</strong></div>
+            <div style="font-size: 0.9em; opacity: 0.8;">Pronto para próxima parte! Parabéns pelo excelente desempenho.</div>
+        </div>
+        
+        <div class="assessment-card" style="border-color: #f39c12;">
+            <div style="font-size: 3em; margin-bottom: 15px;">⚠️</div>
+            <h3 style="color: #e67e22;">3-4 "Sim"</h3>
+            <div class="medium-text"><strong>Quase Lá</strong></div>
+            <div style="font-size: 0.9em; opacity: 0.8;">Revise pontos específicos que ainda não domina completamente.</div>
+        </div>
+        
+        <div class="assessment-card" style="border-color: #e74c3c;">
+            <div style="font-size: 3em; margin-bottom: 15px;">❌</div>
+            <h3 style="color: #c0392b;">0-2 "Sim"</h3>
+            <div class="medium-text"><strong>Precisa Revisar</strong></div>
+            <div style="font-size: 0.9em; opacity: 0.8;">Revise toda a implementação antes de continuar.</div>
+        </div>
+    </div>
+    
+    <div class="highlight-box">
+        <h3>💡 Dica Profissional</h3>
+        <div class="medium-text">SEJA HONESTO na autoavaliação. Precisão ajuda você a crescer!</div>
+        <div style="font-size: 0.9em; opacity: 0.8; margin-top: 10px;">Profissionais de sucesso sabem exatamente suas forças e pontos de melhoria.</div>
+    </div>
+</div>
+
+<!-- Slide 12: Próximos Passos -->
+<div class="slide" id="slide12">
+    <div class="slide-number">12/15</div>
+    <div class="timing">8:30</div>
+    <h1>🚀 Próximos Passos</h1>
+    <div class="big-text">Preparação para a parte final</div>
+    
+    <div class="highlight-box">
+        <h2>🌟 Parte 9 (Final)</h2>
+        <div class="medium-text">Consolidação completa e preparação profissional</div>
+    </div>
+    
+    <div class="setup-grid">
+        <div class="setup-card">
+            <div style="font-size: 3em; margin-bottom: 15px;">📚</div>
+            <h3>Resumo Completo</h3>
+            <div class="medium-text">Recapitulação de todos os conceitos da jornada épica</div>
+        </div>
+        <div class="setup-card">
+            <div style="font-size: 3em; margin-bottom: 15px;">🎯</div>
+            <h3>Próximos Passos</h3>
+            <div class="medium-text">Como aplicar este conhecimento em projetos reais</div>
+        </div>
+    </div>
+    
+    <div class="setup-grid">
+        <div class="setup-card">
+            <div style="font-size: 3em; margin-bottom: 15px;">💼</div>
+            <h3>Valor Profissional</h3>
+            <div class="medium-text">Como isso impacta sua carreira como desenvolvedor</div>
+        </div>
+        <div class="setup-card">
+            <div style="font-size: 3em; margin-bottom: 15px;">🎯</div>
+            <h3>Meta da Parte 9</h3>
+            <div class="medium-text">Consolidar todo o aprendizado e preparar para aplicação profissional!</div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 13: Conquistas -->
+<div class="slide" id="slide13">
+    <div class="slide-number">13/15</div>
+    <div class="timing">8:50</div>
+    <h1>🎊 Parabéns!</h1>
+    <div class="big-text">Você consolidou o conhecimento através da prática</div>
+    
+    <div class="highlight-box">
+        <h2>✨ Conquista Desbloqueada!</h2>
+        <div class="medium-text">Parte 8: Exercícios e Troubleshooting</div>
+    </div>
+    
+    <div class="troubleshooting-grid">
+        <div class="solution-card">
+            <h3>✅ O Que Você Dominou</h3>
+            <div class="steps-list">
+                <ul>
+                    <li>Resolução de exercícios práticos complexos</li>
+                    <li>Metodologia sistemática de troubleshooting</li>
+                    <li>Validação de Security Rules no simulador</li>
+                    <li>Diagnóstico de problemas de ciclo de vida</li>
+                    <li>Autoavaliação precisa de competências</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="problem-card">
+            <h3>🎯 Impacto Profissional</h3>
+            <div class="steps-list">
+                <ul>
+                    <li>Capacidade de resolver problemas complexos</li>
+                    <li>Confiança para debugging sistemático</li>
+                    <li>Competência validada através da prática</li>
+                    <li>Preparação para desafios reais</li>
+                    <li>Mindset de melhoria contínua</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Slide 14: Call to Action -->
+<div class="slide" id="slide14">
+    <div class="slide-number">14/15</div>
+    <div class="timing">8:55</div>
+    <h1>🌟 Continue a Jornada!</h1>
+    <div class="big-text">Próximo destino: Parte 9 Final</div>
+    
+    <div class="highlight-box">
+        <h2>🚀 O Que Te Espera na Parte 9</h2>
+        <div class="setup-grid">
+            <div class="setup-card">
+                <h3>📚 Resumo Épico</h3>
+                <div class="medium-text">Toda a jornada da Aula 2.4 consolidada</div>
+            </div>
+            <div class="setup-card">
+                <h3>💼 Preparação Profissional</h3>
+                <div class="medium-text">Como aplicar em projetos reais</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="medium-text">
+        🎯 <strong>Você está quase no fim!</strong><br>
+        Completar a Parte 9 te certifica como expert em integração iOS + Firebase
+    </div>
+</div>
+
+<!-- Slide 15: Final -->
+<div class="slide" id="slide15">
+    <div class="slide-number">15/15</div>
+    <div class="timing">9:00</div>
+    <h1>🎬 Fim da Parte 8</h1>
+    <div class="big-text">Exercícios e troubleshooting dominados!</div>
+    
+    <div class="highlight-box">
+        <h2>✨ Sistema Completo Validado</h2>
+        <div class="medium-text">
+            ✅ Security Rules testadas e funcionando<br>
+            ✅ AppStateManager otimizando recursos<br>
+            ✅ Metodologia de troubleshooting aplicada<br>
+            ✅ Competências validadas através da prática
+        </div>
+    </div>
+    
+    <div class="big-text">
+        🚀 <strong>Continue para a Parte 9!</strong><br>
+        <span class="medium-text">Resumo completo e próximos passos para sua carreira</span>
+    </div>
+</div>
+
+<!-- Navegação -->
+<div class="navigation">
+    <button class="nav-btn" id="prevBtn">← Anterior</button>
+    <button class="nav-btn" id="homeBtn">🏠 Início</button>
+    <button class="nav-btn" style="background: rgba(255,255,255,0.4);">
+        <span id="slideCounter">1 / 15</span>
+    </button>
+    <button class="nav-btn" id="endBtn">🏁 Fim</button>
+    <button class="nav-btn" id="nextBtn">Próximo →</button>
+</div>
+
+<script>
+let currentSlide = 1;
+const totalSlides = 15;
+
+function goToSlide(slideNumber) {
+    // Validar número do slide
+    if (slideNumber < 1) slideNumber = 1;
+    if (slideNumber > totalSlides) slideNumber = totalSlides;
+    
+    try {
+        // Esconder todos os slides primeiro
+        const allSlides = document.querySelectorAll('.slide');
+        allSlides.forEach(slide => {
+            slide.classList.remove('active');
+        });
+        
+        // Mostrar o slide desejado
+        const targetSlide = document.getElementById(`slide${slideNumber}`);
+        if (targetSlide) {
+            targetSlide.classList.add('active');
+            currentSlide = slideNumber;
+            
+            // Atualizar contador
+            const counter = document.getElementById('slideCounter');
+            if (counter) {
+                counter.textContent = `${currentSlide} / ${totalSlides}`;
+            }
+        } else {
+            console.error('Slide não encontrado:', slideNumber);
+        }
+    } catch (error) {
+        console.error('Erro ao navegar para slide:', error);
+    }
+}
+
+// Navegação por teclado
+document.addEventListener('keydown', function(e) {
+    e.preventDefault();
+    
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
+        goToSlide(currentSlide + 1);
+    } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
+        goToSlide(currentSlide - 1);
+    } else if (e.key === 'Home') {
+        goToSlide(1);
+    } else if (e.key === 'End') {
+        goToSlide(totalSlides);
+    }
+});
+
+// Clique na tela para navegar
+document.addEventListener('click', function(e) {
+    // Se clique foi em botão de navegação ou dentro da área de navegação, ignorar
+    if (e.target.classList.contains('nav-btn') || 
+        e.target.closest('.nav-btn') || 
+        e.target.closest('.navigation') ||
+        e.target.id === 'slideCounter') {
+        return;
+    }
+    
+    // Se clique no lado direito da tela, avançar
+    if (e.clientX > window.innerWidth / 2) {
+        goToSlide(currentSlide + 1);
+    } else {
+        // Se clique no lado esquerdo, voltar
+        goToSlide(currentSlide - 1);
+    }
+});
+
+// Configurar botões de navegação
+document.addEventListener('DOMContentLoaded', function() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const homeBtn = document.getElementById('homeBtn');
+    const endBtn = document.getElementById('endBtn');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide - 1);
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(currentSlide + 1);
+        });
+    }
+    
+    if (homeBtn) {
+        homeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(1);
+        });
+    }
+    
+    if (endBtn) {
+        endBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            goToSlide(totalSlides);
+        });
+    }
+    
+    // Inicializar primeiro slide
+    goToSlide(1);
+});
+
+// Backup de inicialização
+window.addEventListener('load', function() {
+    const activeSlides = document.querySelectorAll('.slide.active');
+    if (activeSlides.length === 0) {
+        goToSlide(1);
+    }
+});
+</script>
+
+</body>
+</html>
