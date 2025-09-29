@@ -312,7 +312,7 @@
 
 <!-- Slide 1: Título -->
 <div class="slide security-slide active" id="slide1">
-    <div class="slide-number">1/12</div>
+    <div class="slide-number">1/13</div>
     <div class="timing">0:00</div>
     <h1>🔐 Parte 4</h1>
     <div class="big-text dramatic-text">
@@ -325,47 +325,73 @@
 
 <!-- Slide 2: O Grande Problema -->
 <div class="slide security-slide" id="slide2">
-    <div class="slide-number">2/12</div>
+    <div class="slide-number">2/13</div>
     <div class="timing">0:30</div>
-    <h1>⚠️ O Firebase Está Desprotegido!</h1>
+    <h1>⚠️ Vamos Criar o Firestore Database!</h1>
     <div class="big-text">
-        <strong>Modo de teste</strong> = <br>
-        <span style="color: #f1c40f;">Qualquer um pode ler/escrever!</span>
+        Nas partes anteriores configuramos o Firebase SDK,<br>
+        mas ainda <strong>não criamos o banco de dados</strong>
     </div>
     <div class="highlight-box">
         <div class="medium-text">
-            👤 Hacker pode acessar TODOS os dados<br>
-            🗑️ Pode deletar TUDO sem permissão<br>
-            💰 Pode gerar custos infinitos
+            🗄️ Hoje vamos criar o Firestore Database<br>
+            🔐 Configurar Security Rules iniciais<br>
+            ⚠️ E entender os riscos do modo de teste
         </div>
     </div>
 </div>
 
-<!-- Slide 3: Security Rules Básicas -->
+<!-- Slide 3: Criação do Database -->
 <div class="slide security-slide" id="slide3">
-    <div class="slide-number">3/12</div>
-    <div class="timing">1:30</div>
-    <h1>🛡️ Security Rules: A Primeira Defesa</h1>
+    <div class="slide-number">3/13</div>
+    <div class="timing">1:00</div>
+    <h1>🗄️ Criando o Firestore Database</h1>
+    <div class="big-text">
+        <strong>Passo a Passo no Console:</strong>
+    </div>
+    <div class="step-list">
+        <ul>
+            <li>Criação → Firestore Database</li>
+            <li>Clicar "Criar banco de dados"</li>
+            <li>Escolher localização: us-central1</li>
+            <li>Modo de segurança: <strong>Teste</strong> (temporário)</li>
+            <li>Aguardar criação (10-15 segundos)</li>
+        </ul>
+    </div>
+    <div class="highlight-box">
+        <div class="medium-text">⚠️ Modo teste = Acesso público por 30 dias!</div>
+    </div>
+</div>
+
+<!-- Slide 4: Security Rules Geradas -->
+<div class="slide security-slide" id="slide4">
+    <div class="slide-number">4/13</div>
+    <div class="timing">2:00</div>
+    <h1>🛡️ Security Rules Geradas Automaticamente</h1>
     <div class="code-preview">
 <span class="comment">// ⚠️ REGRA TEMPORÁRIA: Permite tudo por 30 dias</span>
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /{document=**} {
-      <span class="error">allow</span> read, write: <span class="warning">if</span> request.time < timestamp.date(2024, 9, 17);
+      <span class="error">allow</span> read, write: <span class="warning">if</span> request.time < timestamp.date(2024, 12, 31);
     }
   }
 }</div>
     <div class="highlight-box">
-        <div class="medium-text">✅ OK para desenvolvimento<br>❌ NUNCA usar em produção</div>
+        <div class="medium-text">
+            📍 match /{document=**} = QUALQUER documento<br>
+            ⚠️ allow read, write = QUALQUER operação<br>
+            ⏰ Expira automaticamente
+        </div>
     </div>
 </div>
 
-<!-- Slide 4: Security Rules de Produção -->
-<div class="slide security-slide" id="slide4">
-    <div class="slide-number">4/12</div>
-    <div class="timing">3:00</div>
-    <h1>🔒 Como Ficarão as Regras Reais</h1>
+<!-- Slide 5: Security Rules de Produção -->
+<div class="slide security-slide" id="slide5">
+    <div class="slide-number">5/13</div>
+    <div class="timing">2:50</div>
+    <h1>🔒 Como Ficarão as Regras Profissionais</h1>
     <div class="code-preview">
 <span class="comment">// 👤 Transações: apenas o dono pode acessar</span>
 match /transactions/{transactionId} {
@@ -378,13 +404,15 @@ match /users/{userId} {
   <span class="success">allow</span> read, write: <span class="warning">if</span> request.auth != null 
     && request.auth.uid == userId;
 }</div>
-
+    <div class="highlight-box">
+        <div class="medium-text">🎯 Na Aula 2.2: Implementaremos regras seguras!</div>
+    </div>
 </div>
 
-<!-- Slide 5: Ambientes - O Problema -->
-<div class="slide environment-slide" id="slide5">
-    <div class="slide-number">5/12</div>
-    <div class="timing">4:00</div>
+<!-- Slide 6: Ambientes - O Problema -->
+<div class="slide environment-slide" id="slide6">
+    <div class="slide-number">6/13</div>
+    <div class="timing">3:20</div>
     <h1>🌍 Por Que Separar Ambientes?</h1>
     <div class="big-text">
         <strong>Problema:</strong> Misturar desenvolvimento<br>com dados reais de usuários
@@ -398,10 +426,10 @@ match /users/{userId} {
     </div>
 </div>
 
-<!-- Slide 6: Estratégia de Ambientes -->
-<div class="slide environment-slide" id="slide6">
-    <div class="slide-number">6/12</div>
-    <div class="timing">5:00</div>
+<!-- Slide 7: Estratégia de Ambientes -->
+<div class="slide environment-slide" id="slide7">
+    <div class="slide-number">7/13</div>
+    <div class="timing">3:50</div>
     <h1>🏗️ Estratégia Profissional</h1>
     <div class="comparison-table">
         <table>
@@ -437,10 +465,10 @@ match /users/{userId} {
     </div>
 </div>
 
-<!-- Slide 7: Implementação EnvironmentConfig com SwiftUI -->
-<div class="slide environment-slide" id="slide7">
-    <div class="slide-number">7/12</div>
-    <div class="timing">3:30</div>
+<!-- Slide 8: Implementação EnvironmentConfig com SwiftUI -->
+<div class="slide environment-slide" id="slide8">
+    <div class="slide-number">8/13</div>
+    <div class="timing">4:35</div>
     <h1>💻 IMPLEMENTANDO: EnvironmentConfig.swift</h1>
     <div class="code-preview">
 <span class="comment">// 🏗️ CONFIGURAÇÃO PROFISSIONAL DE AMBIENTES</span>
@@ -472,10 +500,10 @@ match /users/{userId} {
     </div>
 </div>
 
-<!-- Slide 8: Monitoramento no Console -->
-<div class="slide monitoring-slide" id="slide8">
-    <div class="slide-number">8/12</div>
-    <div class="timing">7:30</div>
+<!-- Slide 9: Monitoramento no Console -->
+<div class="slide monitoring-slide" id="slide9">
+    <div class="slide-number">9/13</div>
+    <div class="timing">5:20</div>
     <h1>📊 Monitoramento Profissional</h1>
     <div class="icon-grid">
         <div class="icon-item">
@@ -499,10 +527,10 @@ match /users/{userId} {
     </div>
 </div>
 
-<!-- Slide 9: Primeiro Teste - Setup -->
-<div class="slide testing-slide" id="slide9">
-    <div class="slide-number">9/12</div>
-    <div class="timing">8:30</div>
+<!-- Slide 10: Primeiro Teste - Setup -->
+<div class="slide testing-slide" id="slide10">
+    <div class="slide-number">10/13</div>
+    <div class="timing">6:35</div>
     <h1>🧪 Primeiro Teste Real</h1>
     <div class="big-text">
         Vamos testar a conectividade<br>
@@ -517,10 +545,10 @@ match /users/{userId} {
     </div>
 </div>
 
-<!-- Slide 10: Implementação FirebaseTestManager -->
-<div class="slide testing-slide" id="slide10">
-    <div class="slide-number">10/12</div>
-    <div class="timing">5:30</div>
+<!-- Slide 11: Implementação FirebaseTestManager -->
+<div class="slide testing-slide" id="slide11">
+    <div class="slide-number">11/13</div>
+    <div class="timing">7:20</div>
     <h1>💻 IMPLEMENTANDO: FirebaseTestManager.swift</h1>
     <div class="code-preview">
 <span class="keyword">class</span> <span class="type">FirebaseTestManager</span> {
@@ -548,10 +576,10 @@ match /users/{userId} {
     </div>
 </div>
 
-<!-- Slide 11: Tratamento de Erros -->
-<div class="slide testing-slide" id="slide11">
-    <div class="slide-number">11/12</div>
-    <div class="timing">9:30</div>
+<!-- Slide 12: Tratamento de Erros -->
+<div class="slide testing-slide" id="slide12">
+    <div class="slide-number">12/13</div>
+    <div class="timing">8:05</div>
     <h1>🚨 Tratamento de Erros Específicos</h1>
     <div class="code-preview">
 <span class="keyword">private func</span> handleConnectionError(<span class="keyword">_</span> error: <span class="type">Error</span>) {
@@ -572,7 +600,7 @@ match /users/{userId} {
 
 <!-- Slide 12: Conquistas e Próximos Passos -->
 <div class="slide completion-slide" id="slide12">
-    <div class="slide-number">12/12</div>
+    <div class="slide-number">13/13</div>
     <div class="timing">10:00</div>
     <h1>🏆 Parabéns! Firebase Master!</h1>
     <div class="step-list">
@@ -584,8 +612,8 @@ match /users/{userId} {
         </ul>
     </div>
     <div class="highlight-box">
-        <h2>🔜 Próximo: Firestore - Operações CRUD Básicas</h2>
-        <div class="medium-text">Modelagem de dados NoSQL, implementação completa de Create/Read/Update/Delete, service layer profissional e queries otimizadas.</div>
+        <h2>🔜 Próximo: Firebase Authentication</h2>
+        <div class="medium-text">Sistema completo de login e usuários!</div>
     </div>
 </div>
 
@@ -601,7 +629,7 @@ match /users/{userId} {
 
 <script>
 let currentSlide = 1;
-const totalSlides = 12;
+const totalSlides = 13;
 
 function goToSlide(slideNumber) {
     // Validar número do slide
