@@ -439,7 +439,7 @@ match /users/{userId} {
     </div>
 </div>
 
-<!-- Slide 7: Implementação EnvironmentConfig -->
+<!-- Slide 7: Implementação EnvironmentConfig com SwiftUI -->
 <div class="slide environment-slide" id="slide7">
     <div class="slide-number">7/12</div>
     <div class="timing">3:30</div>
@@ -470,7 +470,7 @@ match /users/{userId} {
     }
 }</div>
     <div class="highlight-box">
-        <div class="medium-text">📝 Vamos implementar este arquivo completo!</div>
+        <div class="medium-text">📝 30 linhas de configuração enterprise com SwiftUI!</div>
     </div>
 </div>
 
@@ -519,23 +519,35 @@ match /users/{userId} {
     </div>
 </div>
 
-<!-- Slide 10: Teste - Implementação -->
+<!-- Slide 10: Implementação FirebaseTestManager -->
 <div class="slide testing-slide" id="slide10">
     <div class="slide-number">10/12</div>
-    <div class="timing">9:00</div>
-    <h1>💻 Implementação do Teste</h1>
+    <div class="timing">5:30</div>
+    <h1>💻 IMPLEMENTANDO: FirebaseTestManager.swift</h1>
     <div class="code-preview">
-<span class="keyword">func</span> testFirestoreConnection() {
-    <span class="comment">// 🎯 Dados de teste estruturados</span>
-    <span class="keyword">let</span> testData = [
-        "message": <span class="string">"Firebase conectado com sucesso!"</span>,
-        "timestamp": FieldValue.serverTimestamp(),
-        "testId": UUID().uuidString
-    ] <span class="keyword">as</span> [<span class="type">String</span> : <span class="type">Any</span>]
+<span class="keyword">class</span> <span class="type">FirebaseTestManager</span> {
+    <span class="keyword">private let</span> db = Firestore.firestore()
     
-    <span class="comment">// ✅ CREATE: Adicionar documento</span>
-    db.collection(<span class="string">"connection_tests"</span>).addDocument(data: testData)
+    <span class="comment">// 🎯 TESTE PRINCIPAL: Create → Read → Delete</span>
+    <span class="keyword">func</span> executeCompleteTest() {
+        print(<span class="string">"🚀 Iniciando teste completo Firebase..."</span>)
+        testCreateDocument()
+    }
+    
+    <span class="comment">// ✅ TESTE 1: Criação de documento</span>
+    <span class="keyword">private func</span> testCreateDocument() {
+        <span class="keyword">let</span> testData = [
+            <span class="string">"message"</span>: <span class="string">"Firebase conectado com sucesso!"</span>,
+            <span class="string">"timestamp"</span>: FieldValue.serverTimestamp(),
+            <span class="string">"testId"</span>: UUID().uuidString
+        ] <span class="keyword">as</span> [<span class="type">String</span> : <span class="type">Any</span>]
+        
+        db.collection(<span class="string">"connection_tests"</span>).addDocument(data: testData)
+    }
 }</div>
+    <div class="highlight-box">
+        <div class="medium-text">📝 80 linhas de código completo serão implementadas!</div>
+    </div>
 </div>
 
 <!-- Slide 11: Tratamento de Erros -->
