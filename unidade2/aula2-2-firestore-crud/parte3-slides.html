@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aula 2.2 Parte 3: Configuração Avançada do Firestore</title>
+    <title>Aula 2.2 Parte 3: Configuração e Setup Inicial</title>
     <style>
         * {
             margin: 0;
@@ -307,7 +307,7 @@
 <div class="slide title-slide active" id="slide1">
     <div class="slide-number">1/12</div>
     <div class="timing">0:00</div>
-    <h1>⚙️ Configuração Avançada do Firestore</h1>
+    <h1>⚙️ Configuração e Setup Inicial</h1>
     <div class="big-text">
         Da configuração básica para a <strong>performance profissional</strong>!
     </div>
@@ -317,54 +317,48 @@
     </div>
 </div>
 
-<!-- Slide 2: Problema Atual -->
+<!-- Slide 2: O Que Já Temos -->
 <div class="slide setup-slide" id="slide2">
     <div class="slide-number">2/12</div>
     <div class="timing">0:30</div>
-    <h1>🤔 O Problema Atual</h1>
-    <div class="big-text">
-        Sua configuração básica da Aula 2.1 <strong>funciona</strong>...<br>
-        Mas não está <strong>otimizada para produção</strong>!
+    <h1>✅ O Que Já Temos (Aula 2.1)</h1>
+    <div class="icon-grid">
+        <div class="icon-item">
+            <div class="icon">🔥</div>
+            <h3>Firebase Básico</h3>
+            <p>GoogleService-Info.plist • FirebaseApp.configure()</p>
+        </div>
+        <div class="icon-item">
+            <div class="icon">🗝️</div>
+            <h3>EnvironmentConfig</h3>
+            <p>Sistema de ambientes dev/staging/prod</p>
+        </div>
+        <div class="icon-item">
+            <div class="icon">🧪</div>
+            <h3>FirebaseTestManager</h3>
+            <p>Testes de conectividade funcionando</p>
+        </div>
     </div>
-    <div class="comparison-grid">
-        <div class="comparison-item before">
-            <h3>🔥 Configuração Básica</h3>
-            <ul style="font-size: 1.1em; line-height: 1.6;">
-                <li>✅ Firebase funciona</li>
-                <li>❌ Um ambiente só</li>
-                <li>❌ Cache padrão</li>
-                <li>❌ Sem validação</li>
-                <li>❌ Debug limitado</li>
-            </ul>
-        </div>
-        <div class="comparison-item after">
-            <h3>⚡ Configuração Avançada</h3>
-            <ul style="font-size: 1.1em; line-height: 1.6;">
-                <li>✅ Firebase otimizado</li>
-                <li>✅ Dev/Staging/Prod</li>
-                <li>✅ Cache inteligente</li>
-                <li>✅ Validação automática</li>
-                <li>✅ Debug profissional</li>
-            </ul>
-        </div>
+    <div class="highlight-box">
+        <h2>🎯 Agora vamos EXPANDIR para configuração profissional!</h2>
     </div>
 </div>
 
-<!-- Slide 3: Pré-requisitos -->
+<!-- Slide 3: O Que Vamos Adicionar -->
 <div class="slide validation-slide" id="slide3">
     <div class="slide-number">3/12</div>
     <div class="timing">1:00</div>
-    <h1>⚠️ Pré-requisitos Obrigatórios</h1>
+    <h1>🚀 O Que Vamos Adicionar</h1>
     <div class="checklist">
-        <li>Firebase projeto configurado no console</li>
-        <li>GoogleService-Info.plist instalado</li>
-        <li>Firebase SDK via Swift Package Manager</li>
-        <li>FirebaseApp.configure() funcionando</li>
-        <li>Consegue salvar dados no Firebase Console</li>
+        <li>Expandir EnvironmentConfig com configurações Firestore</li>
+        <li>Criar FirestoreConfiguration (classe nova)</li>
+        <li>Criar ConfigurationValidator (validação automática)</li>
+        <li>Expandir configureFirebase() existente</li>
+        <li>Integrar validação no app</li>
     </div>
     <div class="highlight-box">
-        <h2>🧪 Se não tem isso funcionando...</h2>
-        <div class="medium-text">Volte para a Aula 2.1 primeiro!</div>
+        <h2>⚡ Aproveitando o código que já funciona!</h2>
+        <div class="medium-text">Configuração básica → Configuração profissional</div>
     </div>
 </div>
 
@@ -396,91 +390,89 @@
     </div>
 </div>
 
-<!-- Slide 5: Criando AppEnvironment.swift -->
+<!-- Slide 5: Expandir EnvironmentConfig -->
 <div class="slide environment-slide" id="slide5">
     <div class="slide-number">5/12</div>
     <div class="timing">0:30</div>
-    <h1>💻 1. Criando AppEnvironment.swift</h1>
+    <h1>💻 1. Expandir EnvironmentConfig.swift</h1>
     <div class="big-text">
-        <strong>File → New → Swift File</strong><br>
-        Nome: <strong>AppEnvironment</strong>
+        <strong>Abrir arquivo existente</strong><br>
+        Adicionar configurações Firestore
     </div>
     <div class="code-preview">
-<span class="comment">// ✅ DETECÇÃO AUTOMÁTICA DE AMBIENTE</span>
-<span class="keyword">enum</span> <span class="type">AppEnvironment</span> {
-    <span class="keyword">case</span> development, staging, production
+<span class="comment">// ✅ JÁ EXISTE</span>
+<span class="keyword">struct</span> <span class="type">EnvironmentConfig</span> {
+    <span class="keyword">static</span> <span class="keyword">var</span> projectId: <span class="type">String</span> { ... }
     
-    <span class="keyword">static</span> <span class="keyword">var</span> <span class="success">current</span>: <span class="type">AppEnvironment</span> {
-        #<span class="keyword">if</span> DEBUG
-        <span class="keyword">return</span> .development
-        #<span class="keyword">else</span>
-        <span class="keyword">return</span> .production
-        #<span class="keyword">endif</span>
+    <span class="comment">// ⚡ ADICIONAR NOVO:</span>
+    <span class="keyword">static</span> <span class="keyword">var</span> <span class="success">firestoreSettings</span>: <span class="type">FirestoreSettings</span> {
+        <span class="keyword">let</span> settings = <span class="type">FirestoreSettings</span>()
+        <span class="comment">// Cache por ambiente: dev 100MB, prod 50MB</span>
+        <span class="keyword">return</span> settings
     }
 }
     </div>
     <div class="highlight-box">
-        <h2>📝 90 linhas de código profissional!</h2>
+        <h2>📝 ~70 linhas adicionadas ao arquivo existente!</h2>
     </div>
 </div>
 
 <!-- Slide 6: FirestoreConfiguration.swift -->
 <div class="slide config-slide" id="slide6">
     <div class="slide-number">6/12</div>
-    <div class="timing">2:15</div>
-    <h1>💻 2. Criando FirestoreConfiguration.swift</h1>
+    <div class="timing">2:00</div>
+    <h1>💻 2. Criar FirestoreConfiguration.swift</h1>
     <div class="big-text">
         <strong>File → New → Swift File</strong><br>
         Nome: <strong>FirestoreConfiguration</strong>
     </div>
     <div class="code-preview">
-<span class="comment">// 🏛️ CONFIGURAÇÃO CENTRALIZADA</span>
+<span class="comment">// 🏛️ NOVA CLASSE</span>
 <span class="keyword">class</span> <span class="type">FirestoreConfiguration</span> {
     
-    <span class="keyword">static</span> <span class="keyword">func</span> <span class="success">configure</span>() {
+    <span class="keyword">static</span> <span class="keyword">func</span> <span class="success">configureAdvanced</span>() {
         <span class="keyword">let</span> db = <span class="type">Firestore</span>.<span class="success">firestore</span>()
-        <span class="keyword">let</span> environment = <span class="type">AppEnvironment</span>.<span class="success">current</span>
         
-        <span class="comment">// 🎯 APLICAR CONFIGURAÇÕES</span>
-        db.<span class="success">settings</span> = environment.<span class="success">firestoreSettings</span>
+        <span class="comment">// 🎯 Aplicar settings do EnvironmentConfig</span>
+        db.<span class="success">settings</span> = <span class="type">EnvironmentConfig</span>.<span class="success">firestoreSettings</span>
         
         <span class="success">print</span>(<span class="string">"✅ Firestore configurado!"</span>)
     }
 }
     </div>
     <div class="highlight-box">
-        <h2>📝 140 linhas de configuração profissional!</h2>
+        <h2>📝 ~60 linhas de configuração centralizada!</h2>
     </div>
 </div>
 
 <!-- Slide 7: ConfigurationValidator.swift -->
 <div class="slide validation-slide" id="slide7">
     <div class="slide-number">7/12</div>
-    <div class="timing">4:00</div>
-    <h1>💻 3. Criando ConfigurationValidator.swift</h1>
+    <div class="timing">3:30</div>
+    <h1>💻 3. Criar ConfigurationValidator.swift</h1>
     <div class="big-text">
         <strong>File → New → Swift File</strong><br>
         Nome: <strong>ConfigurationValidator</strong>
     </div>
     <div class="code-preview">
-<span class="comment">// 🧪 VALIDAÇÃO AUTOMÁTICA</span>
+<span class="comment">// 🧪 NOVA CLASSE DE VALIDAÇÃO</span>
 <span class="keyword">class</span> <span class="type">ConfigurationValidator</span> {
     
     <span class="keyword">static</span> <span class="keyword">func</span> <span class="success">validateSetup</span>() <span class="keyword">async</span> {
-        <span class="success">print</span>(<span class="string">"🧪 Validando configuração..."</span>)
+        <span class="success">print</span>(<span class="string">"🧪 Validando..."</span>)
         
-        <span class="comment">// ✅ Testar conexão</span>
-        <span class="keyword">await</span> <span class="success">testFirestoreConnection</span>()
+        <span class="comment">// ✅ Testa conexão</span>
+        <span class="keyword">await</span> <span class="success">testConnection</span>()
         
-        <span class="comment">// ✅ Validar settings</span>
-        <span class="success">validateAppliedSettings</span>()
+        <span class="comment">// ✅ Valida settings</span>
+        <span class="success">validateSettings</span>()
         
-        <span class="success">print</span>(<span class="string">"✅ Configuração validada!"</span>)
+        <span class="success">print</span>(<span class="string">"✅ Validado!"</span>)
     }
 }
     </div>
     <div class="highlight-box">
-        <h2>📝 130 linhas de validação automática!</h2>
+        <h2>📝 ~110 linhas de validação automática!</h2>
     </div>
 </div>
 
@@ -543,38 +535,33 @@
     </div>
 </div>
 
-<!-- Slide 10: Integração App Principal -->
+<!-- Slide 10: Expandir FinancasAppApp.swift -->
 <div class="slide demo-slide" id="slide10">
     <div class="slide-number">10/12</div>
-    <div class="timing">5:30</div>
-    <h1>💻 4. Integração no App Principal</h1>
+    <div class="timing">5:00</div>
+    <h1>💻 4. Expandir configureFirebase()</h1>
     <div class="big-text">
-        Modificar <strong>@main struct</strong>
+        Modificar método <strong>existente</strong> em<br>
+        <strong>FinancasAppApp.swift</strong>
     </div>
     <div class="code-preview">
-<span class="comment">// 🚀 INTEGRAÇÃO COMPLETA</span>
-@<span class="keyword">main</span>
-<span class="keyword">struct</span> <span class="type">FirestoreAdvancedApp</span>: <span class="type">App</span> {
+<span class="keyword">private</span> <span class="keyword">func</span> <span class="success">configureFirebase</span>() {
+    <span class="comment">// ✅ JÁ EXISTE (Aula 2.1)</span>
+    <span class="type">FirebaseApp</span>.<span class="success">configure</span>()
     
-    <span class="keyword">init</span>() {
-        <span class="success">configureFirebase</span>()
-    }
-    
-    <span class="keyword">var</span> body: <span class="keyword">some</span> <span class="type">Scene</span> {
-        <span class="type">WindowGroup</span> {
-            <span class="type">ContentView</span>()
-                .<span class="success">onAppear</span> {
-                    <span class="type">Task</span> {
-                        <span class="keyword">await</span> <span class="type">ConfigurationValidator</span>.<span class="success">validateSetup</span>()
-                    }
-                }
-        }
-    }
+    <span class="comment">// ⚡ ADICIONAR NOVO (Aula 2.2)</span>
+    <span class="type">FirestoreConfiguration</span>.<span class="success">configureAdvanced</span>()
 }
+
+<span class="comment">// ⚡ ADICIONAR NO body:</span>
+<span class="type">ContentView</span>()
+    .<span class="success">task</span> {
+        <span class="keyword">await</span> <span class="type">ConfigurationValidator</span>.<span class="success">validateSetup</span>()
+    }
     </div>
     <div class="highlight-box">
-        <h2>⚡ Cmd+B → Cmd+R</h2>
-        <div class="medium-text">Compilar e rodar!</div>
+        <h2>⚡ Expandindo código que já funciona!</h2>
+        <div class="medium-text">Básico + Avançado = Profissional</div>
     </div>
 </div>
 
