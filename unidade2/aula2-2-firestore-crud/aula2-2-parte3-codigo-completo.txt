@@ -1,0 +1,457 @@
+================================================================================
+AULA 2.2 - PARTE 3: CONFIGURAÇÃO E SETUP INICIAL
+CÓDIGO COMPLETO DE TODOS OS ARQUIVOS
+================================================================================
+
+Este arquivo contém o código completo de todos os arquivos modificados ou
+criados nesta aula. Use como referência durante a implementação.
+
+================================================================================
+
+
+================================================================================
+1. EnvironmentConfig.swift - EXPANDIDO
+================================================================================
+Status: ARQUIVO EXISTENTE DA AULA 2.1 - ADICIONAR CÓDIGO NO FINAL
+Linhas adicionadas: ~70 linhas
+================================================================================
+
+//
+//  EnvironmentConfig.swift
+//  FinancasApp
+//
+//  Created by Diógenes Reis on 29/09/25.
+//
+
+import Foundation
+import FirebaseFirestore  // ✅ ADICIONAR ESTE IMPORT
+
+// 🗝️ CONFIGURAÇÃO PROFISSIONAL DE AMBIENTES
+enum Environment {
+    case development, staging, production
+
+    static var current: Environment {
+        #if DEBUG
+        return .development
+        #elseif STAGING
+        return .staging
+        #else
+        return .production
+        #endif
+    }
+}
+
+
+struct EnvironmentConfig {
+    static var projectId: String {
+        switch Environment.current {
+        case .development: return "financas-app-dev"
+        case .staging: return "financas-app-staging"
+        case .production: return "financas-app-prod"
+        }
+    }
+    
+    // ========================================================================
+    // ✅ ADICIONAR TODO O CÓDIGO ABAIXO (NOVO NA AULA 2.2 PARTE 3)
+    // ========================================================================
+    
+    // ⚙️ CONFIGURAÇÕES ESPECÍFICAS DO FIRESTORE
+    static var firestoreSettings: FirestoreSettings {
+        let settings = FirestoreSettings()
+        
+        switch Environment.current {
+        case .development:
+            // 💾 DESENVOLVIMENTO: Cache agressivo para velocidade
+            settings.cacheSizeBytes = 100_000_000 // 100MB
+            settings.isPersistenceEnabled = true
+            print("   📝 Cache: 100MB (Development)")
+            
+        case .staging:
+            // 🧪 STAGING: Configuração híbrida
+            settings.cacheSizeBytes = 75_000_000 // 75MB
+            settings.isPersistenceEnabled = true
+            print("   📝 Cache: 75MB (Staging)")
+            
+        case .production:
+            // 🚀 PRODUÇÃO: Otimizado para bateria
+            settings.cacheSizeBytes = 50_000_000 // 50MB
+            settings.isPersistenceEnabled = true
+            print("   📝 Cache: 50MB (Production)")
+        }
+        
+        // 🛡️ SEGURANÇA: SSL sempre ativo
+        settings.isSSLEnabled = true
+        
+        return settings
+    }
+    
+    // 📊 DEBUG LOGGING POR AMBIENTE
+    static var debugLogging: Bool {
+        switch Environment.current {
+        case .development, .staging:
+            return true
+        case .production:
+            return false
+        }
+    }
+    
+    // 📱 NOME DO AMBIENTE PARA EXIBIÇÃO
+    static var environmentName: String {
+        switch Environment.current {
+        case .development:
+            return "🔧 Development"
+        case .staging:
+            return "🧪 Staging"
+        case .production:
+            return "🚀 Production"
+        }
+    }
+}
+
+
+================================================================================
+2. FirestoreConfiguration.swift - NOVO
+================================================================================
+Status: CRIAR NOVO ARQUIVO
+Linhas totais: ~60 linhas
+================================================================================
+
+//
+//  FirestoreConfiguration.swift
+//  FinancasApp
+//
+//  Created by [Seu Nome] on [Data]
+//
+
+import Foundation
+import FirebaseCore
+import FirebaseFirestore
+
+// MARK: - ⚙️ Configuração Centralizada do Firestore
+/*
+ 📝 CLASSE DE CONFIGURAÇÃO AVANÇADA
+ 
+ 🎯 Expande a configuração básica da Aula 2.1 com:
+ • Cache offline otimizado por ambiente
+ • Logging inteligente
+ • Validação de settings aplicados
+ */
+class FirestoreConfiguration {
+    
+    // 🎯 CONFIGURAÇÃO AVANÇADA (CHAMADA APÓS FirebaseApp.configure())
+    static func configureAdvanced() {
+        let db = Firestore.firestore()
+        
+        print("⚙️ Aplicando configurações avançadas Firestore...")
+        print("📊 Ambiente: \(EnvironmentConfig.environmentName)")
+        
+        // 📊 APLICAR SETTINGS DO AMBIENTE
+        db.settings = EnvironmentConfig.firestoreSettings
+        
+        // 🎯 CONFIGURAR LOGGING
+        configureLogging()
+        
+        // ✅ CONFIRMAR CONFIGURAÇÃO
+        logConfigurationStatus(db: db)
+    }
+    
+    // 📝 CONFIGURAÇÃO DE LOGGING
+    private static func configureLogging() {
+        if EnvironmentConfig.debugLogging {
+            print("   📝 Debug logging: HABILITADO")
+            
+            // 🔍 Firebase internal logging (só desenvolvimento)
+            if Environment.current == .development {
+                FirebaseConfiguration.shared.setLoggerLevel(.debug)
+            }
+        } else {
+            print("   🔇 Debug logging: DESABILITADO (Produção)")
+            FirebaseConfiguration.shared.setLoggerLevel(.error)
+        }
+    }
+    
+    // 📊 LOG DO STATUS DA CONFIGURAÇÃO
+    private static func logConfigurationStatus(db: Firestore) {
+        let settings = db.settings
+        
+        print("✅ Configuração avançada aplicada:")
+        print("   • Cache offline: \(settings.isPersistenceEnabled ? "ATIVO" : "INATIVO")")
+        print("   • Tamanho cache: \(settings.cacheSizeBytes / 1_000_000)MB")
+        print("   • SSL: \(settings.isSSLEnabled ? "ATIVO" : "INATIVO")")
+        print("   • Ambiente: \(EnvironmentConfig.environmentName)")
+    }
+}
+
+
+================================================================================
+3. ConfigurationValidator.swift - NOVO
+================================================================================
+Status: CRIAR NOVO ARQUIVO
+Linhas totais: ~110 linhas
+================================================================================
+
+//
+//  ConfigurationValidator.swift
+//  FinancasApp
+//
+//  Created by [Seu Nome] on [Data]
+//
+
+import Foundation
+import FirebaseFirestore
+
+// MARK: - 🧪 Validador Automático de Configuração
+/*
+ 📝 VALIDA A CONFIGURAÇÃO DO FIREBASE
+ 
+ 🎯 Testa automaticamente:
+ • Conexão com Firestore
+ • Settings aplicados corretamente
+ • Operação básica funcionando
+ */
+class ConfigurationValidator {
+    
+    // 🧪 RESULTADO DA VALIDAÇÃO
+    struct ValidationResult {
+        let isValid: Bool
+        let message: String
+    }
+    
+    // 🔍 VALIDAÇÃO COMPLETA
+    static func validateSetup() async -> ValidationResult {
+        print("\n🧪 Validando configuração avançada...")
+        
+        // ✅ 1. TESTAR CONEXÃO
+        let connectionOK = await testConnection()
+        if !connectionOK {
+            return ValidationResult(
+                isValid: false,
+                message: "❌ Falha na conexão com Firestore"
+            )
+        }
+        
+        // ✅ 2. VALIDAR SETTINGS
+        let settingsOK = validateSettings()
+        if !settingsOK {
+            return ValidationResult(
+                isValid: false,
+                message: "⚠️ Configurações não aplicadas corretamente"
+            )
+        }
+        
+        // ✅ 3. TESTAR OPERAÇÃO
+        let operationOK = await testOperation()
+        if !operationOK {
+            return ValidationResult(
+                isValid: false,
+                message: "❌ Falha no teste de operação"
+            )
+        }
+        
+        print("✅ Validação completa: SUCESSO!\n")
+        return ValidationResult(
+            isValid: true,
+            message: "🎉 Configuração avançada validada!"
+        )
+    }
+    
+    // 🔗 TESTE DE CONEXÃO
+    private static func testConnection() async -> Bool {
+        do {
+            let db = Firestore.firestore()
+            print("   🔗 Testando conexão...")
+            
+            // Operação mínima para validar conectividade
+            _ = try await db.collection("config_validation")
+                .document("test")
+                .getDocument()
+            
+            print("   ✅ Conexão OK")
+            return true
+        } catch {
+            print("   ❌ Erro de conexão: \(error.localizedDescription)")
+            return false
+        }
+    }
+    
+    // ⚙️ VALIDAÇÃO DE SETTINGS
+    private static func validateSettings() -> Bool {
+        let db = Firestore.firestore()
+        let settings = db.settings
+        
+        print("   ⚙️ Validando settings aplicados...")
+        
+        // Verificar configurações críticas
+        guard settings.isSSLEnabled else {
+            print("   ❌ SSL não está habilitado")
+            return false
+        }
+        
+        guard settings.isPersistenceEnabled else {
+            print("   ⚠️ Cache offline não está habilitado")
+            return false
+        }
+        
+        print("   ✅ Settings validados")
+        return true
+    }
+    
+    // 💾 TESTE DE OPERAÇÃO
+    private static func testOperation() async -> Bool {
+        do {
+            let db = Firestore.firestore()
+            print("   💾 Testando operação de escrita...")
+            
+            let testData: [String: Any] = [
+                "validated": true,
+                "timestamp": Timestamp(),
+                "environment": EnvironmentConfig.environmentName
+            ]
+            
+            try await db.collection("config_validation")
+                .document("test")
+                .setData(testData)
+            
+            print("   ✅ Operação OK")
+            return true
+        } catch {
+            print("   ❌ Erro na operação: \(error.localizedDescription)")
+            return false
+        }
+    }
+}
+
+
+================================================================================
+4. FinancasAppApp.swift - MODIFICADO
+================================================================================
+Status: ARQUIVO EXISTENTE - MODIFICAR MÉTODO configureFirebase() E BODY
+Modificações: ~15 linhas modificadas/adicionadas
+================================================================================
+
+//
+//  FinancasAppApp.swift
+//  FinancasApp
+//
+//  Created by Diógenes Reis on 24/09/25.
+//
+
+import SwiftUI
+import Firebase
+
+@main
+struct FinancasAppApp: App {
+    
+    init() {
+        // 🔥 CONFIGURAÇÃO DO FIREBASE
+        configureFirebase()
+    }
+    
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .task {
+                    // ========================================
+                    // ✅ ADICIONAR ESTE BLOCO .task (NOVO)
+                    // ========================================
+                    // 🧪 VALIDAÇÃO AUTOMÁTICA
+                    print("🧪 Executando validação automática...")
+                    let result = await ConfigurationValidator.validateSetup()
+                    
+                    if result.isValid {
+                        print("🎉 App pronto para uso!")
+                    } else {
+                        print("⚠️ \(result.message)")
+                    }
+                }
+        }
+    }
+    
+    // ========================================================================
+    // ✅ SUBSTITUIR TODO O MÉTODO configureFirebase() PELO CÓDIGO ABAIXO
+    // ========================================================================
+    private func configureFirebase() {
+        print("🔥 Iniciando configuração do Firebase...")
+        print("📊 Ambiente detectado: \(EnvironmentConfig.environmentName)")
+        
+        // 📋 Verificar arquivo de configuração
+        guard let path = Bundle.main.path(
+            forResource: "GoogleService-Info",
+            ofType: "plist"
+        ) else {
+            print("❌ GoogleService-Info.plist não encontrado!")
+            fatalError("Firebase config missing")
+        }
+        
+        print("✅ Arquivo encontrado")
+        
+        // 🚀 1. CONFIGURAÇÃO BASE (Aula 2.1)
+        FirebaseApp.configure()
+        print("✅ Firebase App inicializado")
+        
+        // ⚙️ 2. CONFIGURAÇÃO AVANÇADA (Aula 2.2 - NOVO!)
+        FirestoreConfiguration.configureAdvanced()
+        print("✅ Firestore otimizado para \(EnvironmentConfig.environmentName)")
+        
+        print("🎉 Configuração completa finalizada!\n")
+    }
+}
+
+
+================================================================================
+RESUMO DAS MODIFICAÇÕES
+================================================================================
+
+✏️ ARQUIVOS EXPANDIDOS (Aula 2.1 → Aula 2.2):
+   • EnvironmentConfig.swift
+     - Adicionar import FirebaseFirestore
+     - Adicionar ~70 linhas de configurações Firestore
+   
+   • FinancasAppApp.swift
+     - Modificar método configureFirebase() (adicionar configuração avançada)
+     - Adicionar bloco .task no body (validação automática)
+
+✨ ARQUIVOS NOVOS (Aula 2.2 Parte 3):
+   • FirestoreConfiguration.swift (~60 linhas)
+   • ConfigurationValidator.swift (~110 linhas)
+
+✅ ARQUIVOS MANTIDOS SEM ALTERAÇÃO:
+   • ContentView.swift
+   • FirebaseTestManager.swift
+   • GoogleService-Info.plist
+
+================================================================================
+LOGS ESPERADOS NO CONSOLE APÓS IMPLEMENTAÇÃO
+================================================================================
+
+🔥 Iniciando configuração do Firebase...
+📊 Ambiente detectado: 🔧 Development
+✅ Arquivo encontrado
+✅ Firebase App inicializado
+⚙️ Aplicando configurações avançadas Firestore...
+📊 Ambiente: 🔧 Development
+   📝 Cache: 100MB (Development)
+   📝 Debug logging: HABILITADO
+✅ Configuração avançada aplicada:
+   • Cache offline: ATIVO
+   • Tamanho cache: 100MB
+   • SSL: ATIVO
+   • Ambiente: 🔧 Development
+✅ Firestore otimizado para 🔧 Development
+🎉 Configuração completa finalizada!
+
+🧪 Executando validação automática...
+🧪 Validando configuração avançada...
+   🔗 Testando conexão...
+   ✅ Conexão OK
+   ⚙️ Validando settings aplicados...
+   ✅ Settings validados
+   💾 Testando operação de escrita...
+   ✅ Operação OK
+✅ Validação completa: SUCESSO!
+
+🎉 App pronto para uso!
+
+================================================================================
+FIM DO CÓDIGO COMPLETO
+================================================================================
