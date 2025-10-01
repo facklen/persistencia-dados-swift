@@ -407,7 +407,8 @@
     <span class="comment">// ⚡ ADICIONAR NOVO:</span>
     <span class="keyword">static</span> <span class="keyword">var</span> <span class="success">firestoreSettings</span>: <span class="type">FirestoreSettings</span> {
         <span class="keyword">let</span> settings = <span class="type">FirestoreSettings</span>()
-        <span class="comment">// Cache por ambiente: dev 100MB, prod 50MB</span>
+        <span class="comment">// Cache por ambiente</span>
+        settings.<span class="success">cacheSettings</span> = <span class="type">MemoryCacheSettings</span>()
         <span class="keyword">return</span> settings
     }
 }
