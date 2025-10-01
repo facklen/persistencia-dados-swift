@@ -325,8 +325,8 @@ class ConfigurationValidator {
 ================================================================================
 4. FinancasAppApp.swift - MODIFICADO
 ================================================================================
-Status: ARQUIVO EXISTENTE - MODIFICAR MÉTODO configureFirebase() E BODY
-Modificações: ~15 linhas modificadas/adicionadas
+Status: ARQUIVO EXISTENTE - MODIFICAR APENAS O MÉTODO configureFirebase()
+Modificações: ~10 linhas no método configureFirebase()
 ================================================================================
 
 //
@@ -350,20 +350,6 @@ struct FinancasAppApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .task {
-                    // ========================================
-                    // ✅ ADICIONAR ESTE BLOCO .task (NOVO)
-                    // ========================================
-                    // 🧪 VALIDAÇÃO AUTOMÁTICA
-                    print("🧪 Executando validação automática...")
-                    let result = await ConfigurationValidator.validateSetup()
-                    
-                    if result.isValid {
-                        print("🎉 App pronto para uso!")
-                    } else {
-                        print("⚠️ \(result.message)")
-                    }
-                }
         }
     }
     
@@ -399,6 +385,92 @@ struct FinancasAppApp: App {
 
 
 ================================================================================
+5. ContentView.swift - MODIFICADO
+================================================================================
+Status: ARQUIVO EXISTENTE - ADICIONAR .task NO BODY
+Modificações: ~10 linhas adicionadas ao body
+================================================================================
+
+//
+//  ContentView.swift
+//  FinancasApp
+//
+//  Created by Diógenes Reis on 24/09/25.
+//
+
+import SwiftUI
+
+struct ContentView: View {
+    var body: some View {
+        VStack(spacing: 20) {
+            // Cabeçalho
+            VStack(spacing: 10) {
+                Image(systemName: "dollarsign.circle.fill")
+                    .font(.system(size: 80))
+                    .foregroundColor(.blue)
+                
+                Text("Finanças App")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                
+                Text("Seu controle financeiro pessoal")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+            }
+            .padding(.top, 50)
+            
+            Spacer()
+            
+            // Botão de teste Firebase
+            Button(action: {
+                let testManager = FirebaseTestManager()
+                testManager.executeCompleteTest()
+            }) {
+                HStack {
+                    Image(systemName: "flame.fill")
+                        .foregroundColor(.orange)
+                    Text("Testar Conectividade Firebase")
+                        .fontWeight(.semibold)
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.blue.opacity(0.1))
+                .cornerRadius(10)
+            }
+            .padding(.horizontal)
+            
+            // Informação adicional
+            Text("Clique no botão para testar a conexão com o Firebase")
+                .font(.caption)
+                .foregroundColor(.gray)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            
+            Spacer()
+        }
+        // ========================================================================
+        // ✅ ADICIONAR TODO O BLOCO .task ABAIXO (NOVO NA AULA 2.2 PARTE 3)
+        // ========================================================================
+        .task {
+            // 🧪 VALIDAÇÃO AUTOMÁTICA DA CONFIGURAÇÃO
+            print("🧪 Executando validação automática...")
+            let result = await ConfigurationValidator.validateSetup()
+            
+            if result.isValid {
+                print("🎉 App pronto para uso!")
+            } else {
+                print("⚠️ \(result.message)")
+            }
+        }
+    }
+}
+
+#Preview {
+    ContentView()
+}
+
+
+================================================================================
 RESUMO DAS MODIFICAÇÕES
 ================================================================================
 
@@ -409,6 +481,8 @@ RESUMO DAS MODIFICAÇÕES
    
    • FinancasAppApp.swift
      - Modificar método configureFirebase() (adicionar configuração avançada)
+   
+   • ContentView.swift
      - Adicionar bloco .task no body (validação automática)
 
 ✨ ARQUIVOS NOVOS (Aula 2.2 Parte 3):
@@ -416,7 +490,6 @@ RESUMO DAS MODIFICAÇÕES
    • ConfigurationValidator.swift (~110 linhas)
 
 ✅ ARQUIVOS MANTIDOS SEM ALTERAÇÃO:
-   • ContentView.swift
    • FirebaseTestManager.swift
    • GoogleService-Info.plist
 
