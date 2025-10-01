@@ -67,16 +67,12 @@ struct EnvironmentConfig {
             
         case .staging:
             // 🧪 STAGING: Configuração híbrida
-            settings.cacheSettings = PersistentCacheSettings(
-                sizeBytes: 75_000_000  // ✅ 75MB em bytes
-            )
+            settings.cacheSettings = PersistentCacheSettings()
             print("   📝 Cache: Persistent (Staging)")
             
         case .production:
             // 🚀 PRODUÇÃO: Otimizado para bateria e armazenamento
-            settings.cacheSettings = PersistentCacheSettings(
-                sizeBytes: 50_000_000  // ✅ 50MB em bytes
-            )
+            settings.cacheSettings = PersistentCacheSettings()
             print("   📝 Cache: Persistent (Production)")
         }
         
@@ -296,11 +292,9 @@ class ConfigurationValidator {
             return false
         }
         
-        // Verificar se cache está configurado
-        if settings.cacheSettings == nil {
-            print("   ⚠️ Cache não está configurado")
-            return false
-        }
+        // Verificar se cache está configurado corretamente
+        // (cacheSettings sempre existe, não precisa verificar nil)
+        print("   ✅ Cache configurado: \(type(of: settings.cacheSettings))")
         
         print("   ✅ Settings validados")
         return true
@@ -527,6 +521,7 @@ LOGS ESPERADOS NO CONSOLE APÓS IMPLEMENTAÇÃO
    🔗 Testando conexão...
    ✅ Conexão OK
    ⚙️ Validando settings aplicados...
+   ✅ Cache configurado: MemoryCacheSettings
    ✅ Settings validados
    💾 Testando operação de escrita...
    ✅ Operação OK
