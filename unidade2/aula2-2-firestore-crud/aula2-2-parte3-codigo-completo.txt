@@ -67,12 +67,16 @@ struct EnvironmentConfig {
             
         case .staging:
             // 🧪 STAGING: Configuração híbrida
-            settings.cacheSettings = PersistentCacheSettings()
+            settings.cacheSettings = PersistentCacheSettings(
+                sizeBytes: 75_000_000  // ✅ 75MB em bytes
+            )
             print("   📝 Cache: Persistent (Staging)")
             
         case .production:
             // 🚀 PRODUÇÃO: Otimizado para bateria e armazenamento
-            settings.cacheSettings = PersistentCacheSettings()
+            settings.cacheSettings = PersistentCacheSettings(
+                sizeBytes: 50_000_000  // ✅ 50MB em bytes
+            )
             print("   📝 Cache: Persistent (Production)")
         }
         
