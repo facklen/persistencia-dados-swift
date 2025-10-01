@@ -62,21 +62,18 @@ struct EnvironmentConfig {
         switch Environment.current {
         case .development:
             // 💾 DESENVOLVIMENTO: Cache agressivo para velocidade
-            settings.cacheSizeBytes = 100_000_000 // 100MB
-            settings.isPersistenceEnabled = true
-            print("   📝 Cache: 100MB (Development)")
+            settings.cacheSettings = MemoryCacheSettings()
+            print("   📝 Cache: Memory (Development)")
             
         case .staging:
             // 🧪 STAGING: Configuração híbrida
-            settings.cacheSizeBytes = 75_000_000 // 75MB
-            settings.isPersistenceEnabled = true
-            print("   📝 Cache: 75MB (Staging)")
+            settings.cacheSettings = PersistentCacheSettings()
+            print("   📝 Cache: Persistent (Staging)")
             
         case .production:
-            // 🚀 PRODUÇÃO: Otimizado para bateria
-            settings.cacheSizeBytes = 50_000_000 // 50MB
-            settings.isPersistenceEnabled = true
-            print("   📝 Cache: 50MB (Production)")
+            // 🚀 PRODUÇÃO: Otimizado para bateria e armazenamento
+            settings.cacheSettings = PersistentCacheSettings()
+            print("   📝 Cache: Persistent (Production)")
         }
         
         // 🛡️ SEGURANÇA: SSL sempre ativo
@@ -175,8 +172,16 @@ class FirestoreConfiguration {
         let settings = db.settings
         
         print("✅ Configuração avançada aplicada:")
-        print("   • Cache offline: \(settings.isPersistenceEnabled ? "ATIVO" : "INATIVO")")
-        print("   • Tamanho cache: \(settings.cacheSizeBytes / 1_000_000)MB")
+        
+        // Verificar tipo de cache configurado
+        if settings.cacheSettings is MemoryCacheSettings {
+            print("   • Cache: Memory (apenas em memória)")
+        } else if settings.cacheSettings is PersistentCacheSettings {
+            print("   • Cache: Persistent (disco + memória)")
+        } else {
+            print("   • Cache: Padrão")
+        }
+        
         print("   • SSL: \(settings.isSSLEnabled ? "ATIVO" : "INATIVO")")
         print("   • Ambiente: \(EnvironmentConfig.environmentName)")
     }
@@ -287,8 +292,9 @@ class ConfigurationValidator {
             return false
         }
         
-        guard settings.isPersistenceEnabled else {
-            print("   ⚠️ Cache offline não está habilitado")
+        // Verificar se cache está configurado
+        if settings.cacheSettings == nil {
+            print("   ⚠️ Cache não está configurado")
             return false
         }
         
@@ -503,11 +509,10 @@ LOGS ESPERADOS NO CONSOLE APÓS IMPLEMENTAÇÃO
 ✅ Firebase App inicializado
 ⚙️ Aplicando configurações avançadas Firestore...
 📊 Ambiente: 🔧 Development
-   📝 Cache: 100MB (Development)
+   📝 Cache: Memory (Development)
    📝 Debug logging: HABILITADO
 ✅ Configuração avançada aplicada:
-   • Cache offline: ATIVO
-   • Tamanho cache: 100MB
+   • Cache: Memory (apenas em memória)
    • SSL: ATIVO
    • Ambiente: 🔧 Development
 ✅ Firestore otimizado para 🔧 Development
