@@ -1,0 +1,1032 @@
+================================================================================
+AULA 2.2 - PARTE 4: SERVICE LAYER PROFISSIONAL
+CÓDIGO COMPLETO DE TODOS OS ARQUIVOS
+================================================================================
+
+Este arquivo contém o código completo de todos os arquivos modificados ou
+criados nesta aula. Use como referência durante a implementação.
+
+
+================================================================================
+
+
+================================================================================
+A. Transaction.swift 
+================================================================================
+Status: CRIAR na pasta Models/
+Linhas totais: ~40 linhas
+Usado por: TransactionService e BadTransactionView
+================================================================================
+
+//
+//  Transaction.swift
+//  FinancasApp
+//
+//  Created by Diógenes Reis on 29/09/25.
+//
+
+import Foundation
+import FirebaseFirestore
+
+// MARK: - 💰 Modelo de Transação
+struct Transaction: Identifiable, Codable {
+    @DocumentID var id: String?
+    var amount: Double
+    var description: String
+    var type: TransactionType
+    var date: Date
+    var userId: String
+    
+    enum TransactionType: String, Codable, CaseIterable {
+        case income = "income"
+        case expense = "expense"
+        
+        var displayName: String {
+            switch self {
+            case .income: return "Receita"
+            case .expense: return "Despesa"
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .income: return "arrow.down.circle.fill"
+            case .expense: return "arrow.up.circle.fill"
+            }
+        }
+    }
+    
+    // Inicializador para criar novas transações
+    init(amount: Double, description: String, type: TransactionType, userId: String) {
+        self.amount = amount
+        self.description = description
+        self.type = type
+        self.date = Date()
+        self.userId = userId
+    }
+}
+
+
+================================================================================
+B. BadTransactionView.swift 
+================================================================================
+Status: CRIAR ANTES DA AULA na pasta Views/
+Linhas totais: ~95 linhas
+Usado para: Demonstrar código espaguete (problema)
+================================================================================
+
+//
+//  BadTransactionView.swift
+//  FinancasApp
+//
+//  Created by Diógenes Reis on 29/09/25.
+//
+
+import SwiftUI
+import FirebaseFirestore
+
+// ❌ EXEMPLO DE CÓDIGO RUIM - NÃO USAR EM PRODUÇÃO
+// Este código serve apenas para demonstração do problema
+
+struct BadTransactionView: View {
+    @State private var transactions: [Transaction] = []
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                if isLoading {
+                    ProgressView("Carregando...")
+                } else if let error = errorMessage {
+                    VStack(spacing: 20) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 60))
+                            .foregroundColor(.red)
+                        Text("Erro ao carregar")
+                            .font(.headline)
+                        Text(error)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding()
+                } else if transactions.isEmpty {
+                    VStack(spacing: 20) {
+                        Image(systemName: "doc.text")
+                            .font(.system(size: 60))
+                            .foregroundColor(.gray)
+                        Text("Nenhuma transação")
+                            .font(.headline)
+                        Text("Adicione transações no Firebase Console")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding()
+                } else {
+                    List(transactions) { transaction in
+                        HStack {
+                            // Ícone
+                            Image(systemName: transaction.type.icon)
+                                .foregroundColor(transaction.type == .income ? .green : .red)
+                                .font(.title2)
+                            
+                            // Descrição
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(transaction.description)
+                                    .font(.headline)
+                                Text(transaction.date, style: .date)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            // Valor
+                            Text("R$ \(transaction.amount, specifier: "%.2f")")
+                                .font(.headline)
+                                .foregroundColor(transaction.type == .income ? .green : .red)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+            }
+            .navigationTitle("Código Espaguete 🍝")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: loadTransactions) {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                }
+            }
+            .onAppear {
+                loadTransactions()
+            }
+        }
+    }
+    
+    // ❌ PROBLEMA: View fazendo TUDO
+    // - Conecta diretamente no Firestore
+    // - Faz parsing manual
+    // - Trata erros de forma básica
+    // - Lógica de negócio misturada com UI
+    // - Impossível de testar isoladamente
+    // - Código duplicado em outras telas
+    private func loadTransactions() {
+        isLoading = true
+        errorMessage = nil
+        
+        let db = Firestore.firestore()
+        
+        // 😱 Conexão direta sem abstração
+        db.collection("transactions").getDocuments { snapshot, error in
+            DispatchQueue.main.async {
+                self.isLoading = false
+                
+                if let error = error {
+                    // ❌ Error handling básico
+                    self.errorMessage = "Erro: \(error.localizedDescription)"
+                    print("❌ Erro ao carregar: \(error)")
+                    return
+                }
+                
+                guard let documents = snapshot?.documents else {
+                    self.errorMessage = "Nenhum documento encontrado"
+                    return
+                }
+                
+                // 😱 Parsing manual propenso a erros
+                var loadedTransactions: [Transaction] = []
+                for document in documents {
+                    do {
+                        let transaction = try document.data(as: Transaction.self)
+                        loadedTransactions.append(transaction)
+                    } catch {
+                        print("❌ Erro ao decodificar: \(error)")
+                    }
+                }
+                
+                self.transactions = loadedTransactions
+                print("📊 Transações carregadas: \(loadedTransactions.count)")
+            }
+        }
+    }
+}
+
+#Preview {
+    BadTransactionView()
+}
+
+
+================================================================================
+0. ORGANIZAÇÃO DA ESTRUTURA (INÍCIO DA AULA - 0:00 a 0:45)
+================================================================================
+AÇÃO: Criar Groups no Xcode e organizar arquivos existentes
+Tempo: 45 segundos
+================================================================================
+
+📁 ESTRUTURA DE GROUPS A CRIAR NO XCODE:
+
+FinancasApp/
+├── App/                          ← NEW GROUP
+│   └── FinancasAppApp.swift     ← MOVER PARA CÁ
+├── Views/                        ← NEW GROUP
+│   ├── ContentView.swift        ← MOVER PARA CÁ
+│   └── BadTransactionView.swift ← MOVER PARA CÁ
+├── Models/                       ← NEW GROUP
+│   └── Transaction.swift        ← JÁ ESTÁ AQUI
+├── Services/                     ← NEW GROUP (vazio - criar arquivos na aula)
+├── Configuration/                ← NEW GROUP
+│   ├── EnvironmentConfig.swift        ← MOVER PARA CÁ
+│   ├── FirestoreConfiguration.swift   ← MOVER PARA CÁ
+│   └── ConfigurationValidator.swift   ← MOVER PARA CÁ
+├── Managers/                     ← NEW GROUP
+│   └── FirebaseTestManager.swift ← MOVER PARA CÁ
+└── Resources/                    ← NEW GROUP
+    ├── Assets.xcassets          ← MOVER PARA CÁ
+    └── GoogleService-Info.plist ← MOVER PARA CÁ
+
+PASSOS NO XCODE:
+1. Right-click no grupo FinancasApp
+2. New Group → "App" (repetir para todas as pastas acima)
+3. Arrastar arquivos para os grupos corretos
+4. Resultado: Projeto organizado profissionalmente!
+
+💡 RAZÃO PEDAGÓGICA:
+Demonstra que arquitetura profissional começa com organização visual.
+Coerente com a mensagem da aula sobre "Service Layer Profissional".
+
+
+================================================================================
+1. FirestoreError.swift - NOVO
+================================================================================
+Status: CRIAR NOVO ARQUIVO na pasta Services/
+Linhas totais: ~45 linhas
+Timing: 1:30 - 2:15 (45 segundos de implementação)
+================================================================================
+
+//
+//  FirestoreError.swift
+//  FinancasApp
+//
+//  Created by [Seu Nome] on [Data]
+//
+
+import Foundation
+
+// MARK: - 🛡️ Sistema de Erros Profissional
+/*
+ 📝 ERROS CUSTOMIZADOS DO FIRESTORE
+ 
+ 🎯 Por que criar erros customizados:
+ • Mensagens específicas e amigáveis ao usuário
+ • Diferentes tipos de tratamento por tipo de erro
+ • Logs detalhados para debugging
+ • Facilita identificação de problemas em produção
+ */
+enum FirestoreError: LocalizedError {
+    case documentNotFound
+    case invalidData
+    case networkError(Error)
+    case permissionDenied
+    case quotaExceeded
+    case unknown(Error)
+    
+    // 📱 MENSAGENS AMIGÁVEIS PARA O USUÁRIO
+    var errorDescription: String? {
+        switch self {
+        case .documentNotFound:
+            return "Documento não encontrado. Verifique se os dados existem."
+        case .invalidData:
+            return "Dados inválidos. Formato não suportado."
+        case .networkError(let error):
+            return "Erro de conexão: \(error.localizedDescription)"
+        case .permissionDenied:
+            return "Acesso negado. Verifique suas permissões."
+        case .quotaExceeded:
+            return "Limite de uso excedido. Tente novamente mais tarde."
+        case .unknown(let error):
+            return "Erro desconhecido: \(error.localizedDescription)"
+        }
+    }
+}
+
+
+================================================================================
+2. FirestoreService.swift - NOVO
+================================================================================
+Status: CRIAR NOVO ARQUIVO na pasta Services/
+Linhas totais: ~120 linhas
+Timing: 2:15 - 3:30 (75 segundos de implementação)
+================================================================================
+
+//
+//  FirestoreService.swift
+//  FinancasApp
+//
+//  Created by [Seu Nome] on [Data]
+//
+
+import Foundation
+import FirebaseFirestore
+
+// MARK: - 🔧 Service Genérico do Firestore
+/*
+ 📝 SERVICE LAYER BASE - REUTILIZÁVEL
+ 
+ 🎯 Este service é genérico e funciona com QUALQUER modelo Codable:
+ • Transaction, User, Product, Category, etc.
+ • Uma base sólida para todos os outros services
+ • Centraliza comunicação com Firestore
+ • Facilita manutenção e testes
+ */
+class FirestoreService {
+    private let db = Firestore.firestore()
+    
+    // MARK: - 📥 Buscar Documentos (Generic GET)
+    /*
+     📝 MÉTODO GENÉRICO DE LEITURA
+     
+     🎯 Funcionalidades:
+     • Funciona com qualquer tipo Codable
+     • Suporta ordenação e limite
+     • Logs educativos para debugging
+     • Error handling robusto
+     
+     💡 Exemplo de uso:
+     let transactions = try await getDocuments(
+         from: "transactions",
+         type: Transaction.self,
+         limit: 10,
+         orderBy: "date",
+         descending: true
+     )
+     */
+    func getDocuments<T: Codable>(
+        from collection: String,
+        type: T.Type,
+        limit: Int? = nil,
+        orderBy field: String? = nil,
+        descending: Bool = false
+    ) async throws -> [T] {
+        print("🔍 FirestoreService: Buscando documentos de \(collection)")
+        
+        do {
+            var query: Query = db.collection(collection)
+            
+            // 📊 Aplicar ordenação se especificada
+            if let orderField = field {
+                query = query.order(by: orderField, descending: descending)
+                print("   📊 Ordenando por: \(orderField) (desc: \(descending))")
+            }
+            
+            // 🔢 Aplicar limite se especificado
+            if let limitCount = limit {
+                query = query.limit(to: limitCount)
+                print("   🔢 Limite: \(limitCount) documentos")
+            }
+            
+            // 🌐 Executar query
+            let snapshot = try await query.getDocuments()
+            
+            // 🔄 Decodificar documentos
+            let documents = snapshot.documents.compactMap { document -> T? in
+                do {
+                    let decoded = try document.data(as: type)
+                    print("   ✅ Documento decodificado: \(document.documentID)")
+                    return decoded
+                } catch {
+                    print("   ❌ Erro ao decodificar documento \(document.documentID): \(error)")
+                    return nil
+                }
+            }
+            
+            print("📊 Total de documentos carregados: \(documents.count)")
+            return documents
+            
+        } catch {
+            print("💥 Erro no FirestoreService: \(error)")
+            throw mapFirebaseError(error)
+        }
+    }
+    
+    // MARK: - 💾 Salvar Documento (Generic CREATE/UPDATE)
+    /*
+     📝 MÉTODO GENÉRICO DE ESCRITA
+     
+     🎯 Funcionalidades:
+     • Cria ou atualiza documentos
+     • Auto-gera ID se não fornecido
+     • Retorna o ID do documento salvo
+     • Logs para tracking
+     */
+    func saveDocument<T: Codable>(
+        _ document: T,
+        to collection: String,
+        documentId: String? = nil
+    ) async throws -> String {
+        print("💾 FirestoreService: Salvando documento em \(collection)")
+        
+        do {
+            let ref: DocumentReference
+            
+            if let id = documentId {
+                ref = db.collection(collection).document(id)
+                print("   📝 Atualizando documento existente: \(id)")
+            } else {
+                ref = db.collection(collection).document()
+                print("   ✨ Criando novo documento com ID: \(ref.documentID)")
+            }
+            
+            try ref.setData(from: document)
+            
+            print("✅ Documento salvo com sucesso: \(ref.documentID)")
+            return ref.documentID
+            
+        } catch {
+            print("💥 Erro ao salvar documento: \(error)")
+            throw mapFirebaseError(error)
+        }
+    }
+    
+    // MARK: - 🗑️ Deletar Documento (Generic DELETE)
+    func deleteDocument(from collection: String, documentId: String) async throws {
+        print("🗑️ FirestoreService: Deletando documento \(documentId)")
+        
+        do {
+            try await db.collection(collection).document(documentId).delete()
+            print("✅ Documento deletado com sucesso")
+        } catch {
+            print("💥 Erro ao deletar: \(error)")
+            throw mapFirebaseError(error)
+        }
+    }
+    
+    // MARK: - 🔄 Mapeamento de Erros
+    /*
+     📝 TRADUÇÃO DE ERROS DO FIREBASE
+     
+     🎯 Converte erros genéricos do Firebase em erros específicos
+     do nosso app, com mensagens amigáveis.
+     */
+    private func mapFirebaseError(_ error: Error) -> FirestoreError {
+        if let firestoreError = error as? FirestoreErrorCode {
+            switch firestoreError.code {
+            case .notFound:
+                return .documentNotFound
+            case .permissionDenied:
+                return .permissionDenied
+            case .resourceExhausted:
+                return .quotaExceeded
+            default:
+                return .networkError(error)
+            }
+        }
+        return .unknown(error)
+    }
+}
+
+
+================================================================================
+3. TransactionService.swift - NOVO
+================================================================================
+Status: CRIAR NOVO ARQUIVO na pasta Services/
+Linhas totais: ~90 linhas
+Timing: 3:30 - 4:30 (60 segundos de implementação)
+================================================================================
+
+//
+//  TransactionService.swift
+//  FinancasApp
+//
+//  Created by [Seu Nome] on [Data]
+//
+
+import Foundation
+
+// MARK: - 💼 Service Especializado de Transações
+/*
+ 📝 SERVICE COM REGRAS DE NEGÓCIO ESPECÍFICAS
+ 
+ 🎯 Por que criar service especializado:
+ • Encapsula regras de negócio de transações
+ • Usa o FirestoreService genérico como base
+ • Valida dados antes de salvar
+ • Aplica filtros de negócio ao carregar
+ • Facilita testes de lógica de negócio
+ */
+class TransactionService {
+    private let firestoreService = FirestoreService()
+    
+    // MARK: - ➕ Criar Transação
+    /*
+     📝 CRIAÇÃO COM VALIDAÇÃO DE NEGÓCIO
+     
+     🎯 Processo:
+     1. Valida dados da transação
+     2. Adiciona userId à transação
+     3. Salva no path hierárquico correto
+     4. Retorna ID do documento criado
+     */
+    func createTransaction(_ transaction: Transaction, for userId: String) async throws -> String {
+        print("🏭 TransactionService: Criando transação para user \(userId)")
+        
+        // ✅ VALIDAÇÕES DE NEGÓCIO
+        guard isValidTransaction(transaction) else {
+            print("❌ Transação inválida - não passou nas validações")
+            throw FirestoreError.invalidData
+        }
+        
+        // 📝 Adicionar userId à transação
+        var transactionWithUser = transaction
+        transactionWithUser.userId = userId
+        
+        // 🗂️ Path hierárquico NoSQL
+        let collectionPath = "users/\(userId)/transactions"
+        print("   📂 Path: \(collectionPath)")
+        
+        // 💾 Delegar para service genérico
+        let documentId = try await firestoreService.saveDocument(
+            transactionWithUser,
+            to: collectionPath
+        )
+        
+        print("✅ Transação criada com sucesso: \(documentId)")
+        return documentId
+    }
+    
+    // MARK: - 📋 Buscar Transações do Usuário
+    /*
+     📝 BUSCA COM FILTROS DE NEGÓCIO
+     
+     🎯 Processo:
+     1. Busca documentos do usuário
+     2. Ordena por data (mais recentes primeiro)
+     3. Limita quantidade de resultados
+     4. Aplica validações de negócio
+     5. Retorna apenas transações válidas
+     */
+    func getUserTransactions(userId: String, limit: Int = 50) async throws -> [Transaction] {
+        print("📋 TransactionService: Buscando transações do usuário \(userId)")
+        
+        // 🗂️ Path hierárquico
+        let collectionPath = "users/\(userId)/transactions"
+        
+        // 📥 Buscar usando service genérico
+        let transactions = try await firestoreService.getDocuments(
+            from: collectionPath,
+            type: Transaction.self,
+            limit: limit,
+            orderBy: "date",
+            descending: true
+        )
+        
+        // ✅ Aplicar filtros de negócio
+        let validTransactions = transactions.filter { isValidTransaction($0) }
+        
+        print("✅ Transações válidas carregadas: \(validTransactions.count)")
+        return validTransactions
+    }
+    
+    // MARK: - 🎯 Regras de Negócio
+    /*
+     📝 VALIDAÇÕES ESPECÍFICAS DE TRANSAÇÕES
+     
+     🎯 Regras aplicadas:
+     • Valor deve ser positivo
+     • Descrição não pode estar vazia
+     • Adicione mais regras conforme necessário
+     */
+    private func isValidTransaction(_ transaction: Transaction) -> Bool {
+        // 💰 Validar valor
+        let isValidAmount = transaction.amount > 0
+        
+        // 📝 Validar descrição
+        let isValidDescription = !transaction.description.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        ).isEmpty
+        
+        // 📊 Logs para debugging
+        if !isValidAmount {
+            print("⚠️ Transação inválida: valor deve ser positivo")
+        }
+        
+        if !isValidDescription {
+            print("⚠️ Transação inválida: descrição não pode estar vazia")
+        }
+        
+        return isValidAmount && isValidDescription
+    }
+    
+    // MARK: - 🗑️ Deletar Transação
+    func deleteTransaction(transactionId: String, userId: String) async throws {
+        print("🗑️ TransactionService: Deletando transação \(transactionId)")
+        
+        let collectionPath = "users/\(userId)/transactions"
+        
+        try await firestoreService.deleteDocument(
+            from: collectionPath,
+            documentId: transactionId
+        )
+        
+        print("✅ Transação deletada")
+    }
+}
+
+
+================================================================================
+4. ContentView.swift - MODIFICADO
+================================================================================
+Status: ARQUIVO EXISTENTE - MODIFICAR método do botão Service Layer
+Modificações: Habilitar botão e adicionar teste do TransactionService
+Timing: 4:30 - 5:30 (60 segundos de implementação)
+================================================================================
+
+//
+//  ContentView.swift
+//  FinancasApp
+//
+//  Created by Diógenes Reis on 24/09/25.
+//
+
+import SwiftUI
+
+struct ContentView: View {
+    // ========================================================================
+    // ✅ ADICIONAR ESTADOS PARA TESTE DO SERVICE LAYER
+    // ========================================================================
+    @State private var isTestingService = false
+    @State private var serviceTestResult: String = ""
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 30) {
+                // Cabeçalho
+                VStack(spacing: 10) {
+                    Image(systemName: "building.columns.fill")
+                        .font(.system(size: 80))
+                        .foregroundColor(.blue)
+                    
+                    Text("🏛️ Service Layer Demo")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                    
+                    Text("Arquitetura Profissional")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                }
+                .padding(.top, 50)
+                
+                // Demonstração do Problema
+                VStack(spacing: 15) {
+                    Text("Demonstração")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    
+                    NavigationLink(destination: BadTransactionView()) {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.red)
+                            Text("Ver Código Espaguete 🍝")
+                                .fontWeight(.semibold)
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(10)
+                    }
+                    
+                    Text("❌ View fazendo tudo - NÃO fazer!")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal)
+                
+                Divider()
+                    .padding(.horizontal)
+                
+                // ================================================================
+                // ✅ MODIFICAR ESTA SEÇÃO COMPLETA - Solução Profissional
+                // ================================================================
+                VStack(spacing: 15) {
+                    Text("Service Layer Implementado! 🎉")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    
+                    Button(action: testServiceLayer) {
+                        HStack {
+                            if isTestingService {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle())
+                            } else {
+                                Image(systemName: "checkmark.shield.fill")
+                                    .foregroundColor(.green)
+                            }
+                            Text(isTestingService ? "Testando..." : "Testar Service Layer")
+                                .fontWeight(.semibold)
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.green.opacity(0.1))
+                        .cornerRadius(10)
+                    }
+                    .disabled(isTestingService)
+                    
+                    if !serviceTestResult.isEmpty {
+                        Text(serviceTestResult)
+                            .font(.caption)
+                            .foregroundColor(.green)
+                            .multilineTextAlignment(.center)
+                    } else {
+                        Text("✅ Arquitetura elegante e testável")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(.horizontal)
+                
+                Spacer()
+                
+                // Informação de ambiente
+                Text(EnvironmentConfig.environmentName)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.bottom)
+            }
+            .navigationBarHidden(true)
+        }
+        .task {
+            // 🧪 Validação automática da configuração
+            print("🧪 Executando validação automática...")
+            let result = await ConfigurationValidator.validateSetup()
+            
+            if result.isValid {
+                print("🎉 App pronto para uso!")
+            } else {
+                print("⚠️ \(result.message)")
+            }
+        }
+    }
+    
+    // ========================================================================
+    // ✅ ADICIONAR TODO ESTE MÉTODO NOVO
+    // ========================================================================
+    // MARK: - 🧪 Teste do Service Layer
+    /*
+     📝 DEMONSTRAÇÃO PRÁTICA DO SERVICE LAYER
+     
+     🎯 Testa:
+     • Criação de transação usando TransactionService
+     • Busca de transações do usuário
+     • Logs educativos no console
+     • Error handling robusto
+     */
+    private func testServiceLayer() {
+        isTestingService = true
+        serviceTestResult = ""
+        
+        Task {
+            do {
+                let transactionService = TransactionService()
+                
+                // 📝 Criar transação de teste
+                let newTransaction = Transaction(
+                    amount: 50.00,
+                    description: "Teste Service Layer",
+                    type: .income,
+                    userId: "demo_user"
+                )
+                
+                print("📝 Criando transação de teste...")
+                let transactionId = try await transactionService.createTransaction(
+                    newTransaction,
+                    for: "demo_user"
+                )
+                
+                print("✅ Transação criada: \(transactionId)")
+                
+                // 📋 Buscar transações
+                print("📋 Buscando transações...")
+                let transactions = try await transactionService.getUserTransactions(
+                    userId: "demo_user"
+                )
+                
+                print("✅ Transações carregadas: \(transactions.count)")
+                
+                // ✅ Atualizar UI
+                await MainActor.run {
+                    serviceTestResult = "✅ Service Layer funcionando! \(transactions.count) transações carregadas."
+                    isTestingService = false
+                }
+                
+            } catch {
+                print("❌ Erro no teste: \(error)")
+                
+                await MainActor.run {
+                    serviceTestResult = "❌ Erro: \(error.localizedDescription)"
+                    isTestingService = false
+                }
+            }
+        }
+    }
+}
+
+#Preview {
+    ContentView()
+}
+
+
+================================================================================
+RESUMO DAS MODIFICAÇÕES - AULA 2.2 PARTE 4
+================================================================================
+
+🗂️ ORGANIZAÇÃO (Início da aula - 0:00 a 0:45):
+   • Criar 7 Groups no Xcode: App, Views, Models, Services, Configuration, 
+     Managers, Resources
+   • Mover arquivos existentes para groups corretos
+   • Resultado: Estrutura profissional e organizada
+
+✨ ARQUIVOS NOVOS (Criados na Parte 4):
+   • Models/Transaction.swift
+   • Services/FirestoreError.swift (~45 linhas)
+   • Services/FirestoreService.swift (~120 linhas)
+   • Services/TransactionService.swift (~90 linhas)
+
+✏️ ARQUIVOS MODIFICADOS (Da Parte 3 para Parte 4):
+   • Views/ContentView.swift
+     - Adicionar estados: isTestingService, serviceTestResult
+     - Modificar seção do botão Service Layer (habilitar)
+     - Adicionar método testServiceLayer() completo
+
+✅ ARQUIVOS MANTIDOS SEM ALTERAÇÃO:
+   • App/FinancasAppApp.swift
+   • Views/BadTransactionView.swift
+   • Configuration/EnvironmentConfig.swift
+   • Configuration/FirestoreConfiguration.swift
+   • Configuration/ConfigurationValidator.swift
+   • Managers/FirebaseTestManager.swift
+   • Resources/GoogleService-Info.plist
+
+
+================================================================================
+ESTRUTURA FINAL DO PROJETO APÓS PARTE 4
+================================================================================
+
+FinancasApp/
+├── FinancasApp/
+│   ├── App/
+│   │   └── FinancasAppApp.swift ✅
+│   │
+│   ├── Views/
+│   │   ├── ContentView.swift ✅ (modificado)
+│   │   └── BadTransactionView.swift ✅
+│   │
+│   ├── Models/
+│   │   └── Transaction.swift ✅
+│   │
+│   ├── Services/ ⭐ ARQUIVOS CRIADOS NESTA AULA
+│   │   ├── FirestoreError.swift ✅ NOVO
+│   │   ├── FirestoreService.swift ✅ NOVO
+│   │   └── TransactionService.swift ✅ NOVO
+│   │
+│   ├── Configuration/
+│   │   ├── EnvironmentConfig.swift ✅
+│   │   ├── FirestoreConfiguration.swift ✅
+│   │   └── ConfigurationValidator.swift ✅
+│   │
+│   ├── Managers/
+│   │   └── FirebaseTestManager.swift ✅
+│   │
+│   └── Resources/
+│       ├── Assets.xcassets ✅
+│       └── GoogleService-Info.plist ✅
+
+💡 NOTA: A estrutura em pastas/groups foi criada NO INÍCIO da aula (0:00-0:45)
+como parte do ensino de arquitetura profissional.
+
+
+================================================================================
+LOGS ESPERADOS NO CONSOLE APÓS IMPLEMENTAÇÃO
+================================================================================
+
+🔥 Iniciando configuração do Firebase...
+📊 Ambiente detectado: 🔧 Development
+✅ Arquivo encontrado
+✅ Firebase App inicializado
+⚙️ Aplicando configurações avançadas Firestore...
+📊 Ambiente: 🔧 Development
+   📁 Cache: 100MB (Development)
+   📝 Debug logging: HABILITADO
+✅ Configuração avançada aplicada:
+   • Cache offline: ATIVO
+   • Tamanho cache: 100MB
+   • SSL: ATIVO
+   • Ambiente: 🔧 Development
+✅ Firestore otimizado para 🔧 Development
+🎉 Configuração completa finalizada!
+
+🧪 Executando validação automática...
+🧪 Validando configuração avançada...
+   🔗 Testando conexão...
+   ✅ Conexão OK
+   ⚙️ Validando settings aplicados...
+   ✅ Settings validados
+   💾 Testando operação de escrita...
+   ✅ Operação OK
+✅ Validação completa: SUCESSO!
+🎉 App pronto para uso!
+
+[Ao clicar em "Testar Service Layer"]
+
+📝 Criando transação de teste...
+🏭 TransactionService: Criando transação para user demo_user
+   📂 Path: users/demo_user/transactions
+💾 FirestoreService: Salvando documento em users/demo_user/transactions
+   ✨ Criando novo documento com ID: ABC123XYZ
+✅ Documento salvo com sucesso: ABC123XYZ
+✅ Transação criada com sucesso: ABC123XYZ
+✅ Transação criada: ABC123XYZ
+
+📋 Buscando transações...
+📋 TransactionService: Buscando transações do usuário demo_user
+🔍 FirestoreService: Buscando documentos de users/demo_user/transactions
+   📊 Ordenando por: date (desc: true)
+   🔢 Limite: 50 documentos
+   ✅ Documento decodificado: ABC123XYZ
+📊 Total de documentos carregados: 1
+✅ Transações válidas carregadas: 1
+✅ Transações carregadas: 1
+
+
+================================================================================
+COMPARAÇÃO: ANTES (Código Espaguete) vs DEPOIS (Service Layer)
+================================================================================
+
+❌ ANTES (BadTransactionView):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• View fazendo TUDO
+• Conexão direta com Firestore na View
+• Error handling básico e genérico
+• Parsing manual propenso a erros
+• Lógica de negócio misturada com UI
+• Impossível de testar isoladamente
+• Código duplicado em múltiplas telas
+• Difícil de manter e evoluir
+
+✅ DEPOIS (Service Layer):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• View focada apenas em UI
+• FirestoreService genérico reutilizável
+• TransactionService com regras de negócio
+• Error handling robusto e específico
+• Separação clara de responsabilidades
+• Fácil de testar (mocks simples)
+• Código reutilizado entre telas
+• Fácil de manter e escalar
+
+Aspecto              | Código Espaguete  | Service Layer
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Organização          | Tudo misturado    | Cada classe uma função
+Testabilidade        | Difícil           | Fácil e rápido
+Reutilização         | Código duplicado  | Services compartilhados
+Manutenção           | Quebra tudo       | Mudanças localizadas
+Error Handling       | Try/catch básico  | Sistema robusto
+Performance          | Não otimizada     | Cache inteligente
+Code Review          | Rejeitado         | Aprovado
+Nível Desenvolvedor  | Junior            | Sênior
+
+
+================================================================================
+CONCEITOS-CHAVE IMPLEMENTADOS NA PARTE 4
+================================================================================
+
+🏗️ ARQUITETURA:
+   ✅ Service Layer Pattern
+   ✅ Separation of Concerns
+   ✅ Single Responsibility Principle
+   ✅ Generic Programming com Swift
+
+💡 BOAS PRÁTICAS:
+   ✅ Error handling customizado
+   ✅ Logging educativo detalhado
+   ✅ Validações de negócio centralizadas
+   ✅ Código auto-documentado
+
+🧪 TESTABILIDADE:
+   ✅ Services isolados e injetáveis
+   ✅ Fácil criação de mocks
+   ✅ Lógica de negócio testável
+
+🎯 QUALIDADE:
+   ✅ Reutilização máxima de código
+   ✅ Manutenção facilitada
+   ✅ Escalabilidade garantida
+   ✅ Padrões da indústria aplicados
+
+
+
+================================================================================
+FIM DO CÓDIGO COMPLETO - AULA 2.2 PARTE 4
+================================================================================
