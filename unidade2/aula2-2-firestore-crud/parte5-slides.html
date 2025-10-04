@@ -185,21 +185,21 @@
 <div class="slide education-slide" id="slide2">
     <div class="slide-number">2/14</div>
     <div class="timing">0:30</div>
-    <h1>🤔 O Problema da Parte 4</h1>
+    <h1>🤔 Status do CRUD</h1>
     <div class="highlight-box" style="text-align: left; max-width: 80%;">
-        <h2>✅ O que JÁ temos:</h2>
+        <h2>✅ O que JÁ temos (Parte 4):</h2>
         <ul style="font-size: 1.8em; line-height: 2; list-style: none;">
-            <li>✅ createTransaction implementado</li>
-            <li>✅ getUserTransactions implementado</li>
-            <li>✅ Teste básico funcionando</li>
+            <li>✅ CREATE (sem validação)</li>
+            <li>✅ READ (não explicado)</li>
+            <li>✅ DELETE hard (permanente)</li>
         </ul>
         
-        <h2 style="margin-top: 30px;">❌ O que FALTA:</h2>
+        <h2 style="margin-top: 30px;">🎯 O que vamos fazer:</h2>
         <ul style="font-size: 1.8em; line-height: 2; list-style: none;">
-            <li>❌ Explicação profunda dos conceitos</li>
-            <li>❌ UPDATE não existe</li>
-            <li>❌ DELETE não existe</li>
-            <li>❌ Interface de teste completa</li>
+            <li>📚 Explicar conceitos profundamente</li>
+            <li>✅ Adicionar validações</li>
+            <li>➕ Implementar UPDATE (novo!)</li>
+            <li>🏷️ Melhorar DELETE (soft delete)</li>
         </ul>
     </div>
 </div>
@@ -348,20 +348,20 @@ Transaction(
 <div class="slide delete-slide" id="slide10">
     <div class="slide-number">10/14</div>
     <div class="timing">7:30</div>
-    <h1>🗑️ DELETE: Duas Estratégias</h1>
+    <h1>🗑️ DELETE: Melhorando</h1>
     <div class="highlight-box" style="text-align: left; max-width: 80%;">
-        <h2 style="color: #28a745;">🏷️ Soft Delete (Recomendado):</h2>
+        <h2>❌ Atual (Parte 4):</h2>
         <ul style="font-size: 1.6em; line-height: 1.8; list-style: none;">
-            <li>✅ Marca como deletado</li>
-            <li>✅ Permite recuperação</li>
-            <li>✅ Auditoria completa</li>
+            <li>💥 Só hard delete (permanente)</li>
+            <li>🚫 Sem auditoria</li>
+            <li>⚠️ Sem recuperação</li>
         </ul>
         
-        <h2 style="margin-top: 30px; color: #dc3545;">💥 Hard Delete (Permanente):</h2>
+        <h2 style="margin-top: 30px; color: #28a745;">✅ Vamos adicionar:</h2>
         <ul style="font-size: 1.6em; line-height: 1.8; list-style: none;">
-            <li>❌ Remove fisicamente</li>
-            <li>❌ Sem volta!</li>
-            <li>✅ LGPD/GDPR compliance</li>
+            <li>🏷️ Soft delete (marcação)</li>
+            <li>📋 Auditoria completa</li>
+            <li>↩️ Recuperação possível</li>
         </ul>
     </div>
 </div>
@@ -431,10 +431,10 @@ Transaction(
     <div class="timing">11:45</div>
     <h1>🎉 CRUD Completo Dominado!</h1>
     <div class="big-text">
-        ✅ CREATE <strong>explicado</strong><br>
+        ✅ CREATE <strong>+ validações</strong><br>
         ✅ READ <strong>explicado</strong><br>
         ✅ UPDATE <strong>implementado</strong><br>
-        ✅ DELETE <strong>implementado</strong><br>
+        ✅ DELETE <strong>+ soft delete</strong><br>
         ✅ Interface <strong>funcionando</strong>
     </div>
     <div class="highlight-box">
