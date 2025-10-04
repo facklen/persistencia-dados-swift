@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parte 5: CRUD Explicado e Expandido - Slides Interativos</title>
+    <title>Parte 5: Operações CRUD Explicadas - Slides Interativos</title>
     <style>
         * {
             margin: 0;
@@ -89,52 +89,53 @@
             border: 2px solid rgba(255,255,255,0.3);
             backdrop-filter: blur(10px);
         }
-        
-        .education-slide {
-            background: linear-gradient(135deg, #ffc107 0%, #ff6f00 100%);
-        }
-        
-        .create-slide {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-        }
-        
-        .read-slide {
-            background: linear-gradient(135deg, #007bff 0%, #6f42c1 100%);
-        }
-        
-        .update-slide {
-            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
-        }
-        
-        .delete-slide {
-            background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
-        }
 
-        .code-block {
-            background: rgba(44, 62, 80, 0.9);
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 15px;
+        .code-box {
+            background: rgba(0,0,0,0.3);
             padding: 25px;
-            margin: 20px 0;
+            border-radius: 15px;
             font-family: 'Courier New', monospace;
             text-align: left;
-            max-width: 85%;
-            overflow-x: auto;
-            backdrop-filter: blur(10px);
-            font-size: 1.3em;
+            margin: 20px auto;
+            max-width: 80%;
+            border: 2px solid rgba(255,255,255,0.2);
         }
 
-        .code-block pre {
-            color: #ecf0f1;
-            line-height: 1.6;
-            white-space: pre-wrap;
+        .list-item {
+            font-size: 1.8em;
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
         }
 
-        .comment { color: #95a5a6; }
-        .keyword { color: #74b9ff; }
-        .function { color: #55a3ff; }
-        .string { color: #fdcb6e; }
-        .success { color: #2ecc71; }
+        .create-slide {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .read-slide {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .update-slide {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .delete-slide {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .test-slide {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+
+        .concept-slide {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .final-slide {
+            background: linear-gradient(135deg, #ff6e7f 0%, #bfe9ff 100%);
+        }
 
         .navigation {
             position: fixed;
@@ -142,337 +143,339 @@
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 20px;
+            gap: 15px;
             z-index: 1000;
         }
-        
+
         .nav-btn {
             background: rgba(255,255,255,0.3);
-            border: 2px solid rgba(255,255,255,0.5);
             color: white;
-            padding: 12px 20px;
+            border: 2px solid rgba(255,255,255,0.5);
+            padding: 12px 25px;
             border-radius: 25px;
             cursor: pointer;
+            font-size: 1em;
             font-weight: bold;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
             backdrop-filter: blur(10px);
         }
-        
+
         .nav-btn:hover {
             background: rgba(255,255,255,0.5);
-            transform: translateY(-2px);
+            transform: scale(1.05);
+        }
+
+        .emoji-large {
+            font-size: 6em;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
 
 <!-- Slide 1: Título -->
-<div class="slide education-slide active" id="slide1">
-    <div class="slide-number">1/14</div>
-    <div class="timing">0:00</div>
-    <h1>🎓 CRUD Explicado e Expandido</h1>
-    <div class="big-text">
-        Não é apenas <strong>digitar código</strong><br>
-        É <strong>ENTENDER</strong> cada conceito!
-    </div>
+<div class="slide concept-slide active" id="slide1">
+    <div class="timing">0:00 - 1:00</div>
+    <div class="slide-number">1 / 15</div>
+    <div class="emoji-large">🎓</div>
+    <h1>Operações CRUD<br>Explicadas e Expandidas</h1>
     <div class="highlight-box">
-        <h2>📚 Continuando da Parte 4</h2>
-        <div class="medium-text">CREATE/READ existem → Vamos EXPLICAR + adicionar UPDATE/DELETE</div>
+        <p class="medium-text">
+            Entender profundamente + adicionar UPDATE<br>
+            + melhorar DELETE + interface completa
+        </p>
     </div>
+    <p class="big-text" style="margin-top: 30px;">12 minutos de domínio total!</p>
 </div>
 
-<!-- Slide 2: Problema -->
-<div class="slide education-slide" id="slide2">
-    <div class="slide-number">2/14</div>
-    <div class="timing">0:30</div>
-    <h1>🤔 Status do CRUD</h1>
-    <div class="highlight-box" style="text-align: left; max-width: 80%;">
-        <h2>✅ O que JÁ temos (Parte 4):</h2>
-        <ul style="font-size: 1.8em; line-height: 2; list-style: none;">
-            <li>✅ CREATE (sem validação)</li>
-            <li>✅ READ (não explicado)</li>
-            <li>✅ DELETE hard (permanente)</li>
-        </ul>
-        
-        <h2 style="margin-top: 30px;">🎯 O que vamos fazer:</h2>
-        <ul style="font-size: 1.8em; line-height: 2; list-style: none;">
-            <li>📚 Explicar conceitos profundamente</li>
-            <li>✅ Adicionar validações</li>
-            <li>➕ Implementar UPDATE (novo!)</li>
-            <li>🏷️ Melhorar DELETE (soft delete)</li>
-        </ul>
+<!-- Slide 2: CREATE - Anatomia -->
+<div class="slide create-slide" id="slide2">
+    <div class="timing">1:00 - 1:30</div>
+    <div class="slide-number">2 / 15</div>
+    <h2>📖 CREATE: Anatomia Completa</h2>
+    <div class="code-box" style="max-width: 90%;">
+        <p style="margin-bottom: 15px;">func createTransaction(...) async throws -> String {</p>
+        <p style="margin-left: 30px; margin-bottom: 10px;">guard isValidTransaction(...) else { throw ... }</p>
+        <p style="margin-left: 30px; margin-bottom: 10px;">let path = "users/\(userId)/transactions"</p>
+        <p style="margin-left: 30px; margin-bottom: 10px;">let id = try await save(...)</p>
+        <p style="margin-left: 30px; margin-bottom: 10px;">return id</p>
+        <p>}</p>
     </div>
+    <p class="big-text" style="margin-top: 20px;">✅ Validação preventiva, path hierárquico, perfeito!</p>
 </div>
 
-<!-- Slide 3: CREATE - Async/Await -->
+<!-- Slide 3: Async/Await -->
 <div class="slide create-slide" id="slide3">
-    <div class="slide-number">3/14</div>
-    <div class="timing">1:00</div>
-    <h1>✅ CREATE: Async/Await</h1>
-    <div class="code-block">
-        <pre><span class="keyword">func</span> <span class="function">createTransaction</span>(...) <span class="keyword">async throws</span> -> String</pre>
+    <div class="timing">1:30 - 2:15</div>
+    <div class="slide-number">3 / 15</div>
+    <h2>⚡ Por Que ASYNC?</h2>
+    <div class="highlight-box" style="max-width: 80%;">
+        <div class="list-item">async throws -> String: Operação assíncrona que pode dar erro</div>
+        <div class="list-item">await: Espera Firebase completar SEM travar UI</div>
+        <div class="list-item">Path hierárquico: users/userId/transactions</div>
+        <div class="list-item">return docId: ID gerado pelo Firebase</div>
     </div>
-    <div class="highlight-box">
-        <h2>🤔 Por que ASYNC?</h2>
-        <div class="medium-text">
-            Salvar no Firebase leva tempo!<br>
-            Sem async = tela <strong>TRAVA</strong><br>
-            Com async = app continua <strong>RESPONSIVO</strong>
-        </div>
-    </div>
+    <p class="big-text" style="margin-top: 30px;">
+        ⏱️ Firebase leva tempo - async previne travamento!
+    </p>
 </div>
 
-<!-- Slide 4: CREATE - Throws -->
+<!-- Slide 4: Throws -->
 <div class="slide create-slide" id="slide4">
-    <div class="slide-number">4/14</div>
-    <div class="timing">1:30</div>
-    <h1>✅ CREATE: Error Handling</h1>
-    <div class="code-block">
-        <pre><span class="keyword">func</span> createTransaction(...) async <span class="keyword">throws</span> -> String {
-    <span class="comment">// Pode dar erro de rede, validação, Firebase...</span>
-    <span class="keyword">try await</span> firestoreService.saveDocument(...)
-}</pre>
+    <div class="timing">2:15 - 2:45</div>
+    <div class="slide-number">4 / 15</div>
+    <h2>🛡️ Validação Preventiva</h2>
+    <div class="code-box" style="max-width: 70%;">
+        <p>guard isValidTransaction(transaction) else {</p>
+        <p style="margin-left: 30px;">throw FirestoreError.invalidData</p>
+        <p>}</p>
     </div>
-    <div class="highlight-box">
-        <h2>🛡️ THROWS = Segurança</h2>
-        <div class="medium-text">
-            Obriga usar <strong>try/catch</strong><br>
-            Erros são <strong>tratados</strong>, não ignorados!
-        </div>
+    <div class="highlight-box" style="max-width: 80%; margin-top: 30px;">
+        <h3 style="margin-bottom: 20px;">Benefícios:</h3>
+        <div class="list-item">💰 Economia - não gasta operação Firebase</div>
+        <div class="list-item">⚡ Performance - erro imediato, sem latência</div>
+        <div class="list-item">🎯 Consistência - banco sempre válido</div>
     </div>
 </div>
 
-<!-- Slide 5: CREATE - Path Hierárquico -->
+<!-- Slide 5: Timestamps -->
 <div class="slide create-slide" id="slide5">
-    <div class="slide-number">5/14</div>
-    <div class="timing">2:00</div>
-    <h1>✅ CREATE: Path Hierárquico</h1>
-    <div class="code-block">
-        <pre><span class="keyword">let</span> path = <span class="string">"users/\(userId)/transactions"</span>
-
-<span class="comment">// NoSQL organizado em árvore:</span>
-<span class="comment">// users/</span>
-<span class="comment">//   └─ demo_user/</span>
-<span class="comment">//       └─ transactions/</span>
-<span class="comment">//           ├─ abc123 (transação 1)</span>
-<span class="comment">//           └─ def456 (transação 2)</span></pre>
+    <div class="timing">2:45 - 3:30</div>
+    <div class="slide-number">5 / 15</div>
+    <h2>📅 Melhoria: Timestamps de Auditoria</h2>
+    <div class="code-box" style="max-width: 80%;">
+        <p>// ✏️ ADICIONAR ao Transaction.swift</p>
+        <p>var createdAt: Timestamp = Timestamp(date: Date())</p>
+        <p>var updatedAt: Timestamp = Timestamp(date: Date())</p>
+        <p>var isDeleted: Bool = false</p>
+        <p>var deletedAt: Timestamp?</p>
     </div>
-    <div class="highlight-box">
-        <h2>🗂️ Organização = Privacidade</h2>
-        <div class="medium-text">Cada usuário tem suas transações!</div>
-    </div>
+    <p class="big-text" style="margin-top: 30px;">✅ Agora com auditoria completa!</p>
 </div>
 
-<!-- Slide 6: READ - Query -->
+<!-- Slide 6: READ Query -->
 <div class="slide read-slide" id="slide6">
-    <div class="slide-number">6/14</div>
-    <div class="timing">3:30</div>
-    <h1>📖 READ: Query Inteligente</h1>
-    <div class="code-block">
-        <pre><span class="keyword">try await</span> firestoreService.fetchDocuments(
-    Transaction.<span class="keyword">self</span>,    <span class="comment">// Tipo para converter</span>
-    from: path,
-    orderBy: <span class="string">"date"</span>,     <span class="comment">// Mais recentes primeiro</span>
-    limit: <span class="string">50</span>           <span class="comment">// Performance!</span>
-)</pre>
+    <div class="timing">3:30 - 4:00</div>
+    <div class="slide-number">6 / 15</div>
+    <h2>📚 READ: Anatomia da Query</h2>
+    <div class="code-box" style="max-width: 90%;">
+        <p>let transactions = try await service.getDocuments(</p>
+        <p style="margin-left: 30px;">from: "users/\(userId)/transactions",</p>
+        <p style="margin-left: 30px;">type: Transaction.self,</p>
+        <p style="margin-left: 30px;">limit: 50,</p>
+        <p style="margin-left: 30px;">orderBy: "date",</p>
+        <p style="margin-left: 30px;">descending: true</p>
+        <p>)</p>
     </div>
-    <div class="highlight-box">
-        <h2>🎯 Filtrar + Ordenar + Limitar</h2>
-        <div class="medium-text">Query eficiente = App rápido!</div>
-    </div>
+    <p class="big-text" style="margin-top: 20px;">Query completa: filtro, ordenação, limite!</p>
 </div>
 
-<!-- Slide 7: READ - Codable -->
+<!-- Slide 7: Codable -->
 <div class="slide read-slide" id="slide7">
-    <div class="slide-number">7/14</div>
-    <div class="timing">4:30</div>
-    <h1>📖 READ: Codable Magic</h1>
-    <div class="highlight-box" style="text-align: left; max-width: 80%;">
-        <h2>🎨 Conversão Automática:</h2>
-        <div class="code-block">
-            <pre><span class="comment">// Firebase retorna JSON:</span>
-{
-  "amount": 5000,
-  "description": "Salário"
-}
-
-<span class="comment">// Codable converte para Swift:</span>
-Transaction(
-  amount: 5000,
-  description: "Salário"
-)</pre>
+    <div class="timing">4:45 - 5:30</div>
+    <div class="slide-number">7 / 15</div>
+    <h2>🎨 Mágica do Codable</h2>
+    <div class="highlight-box" style="max-width: 85%;">
+        <p class="big-text" style="margin-bottom: 30px;">
+            document.data(as: Transaction.self)
+        </p>
+        <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 10px; margin: 20px 0;">
+            <p class="medium-text">Firebase: {"amount": 5000, "description": "Salário"}</p>
+            <p class="medium-text" style="margin-top: 15px;">⬇️</p>
+            <p class="medium-text" style="margin-top: 15px;">Swift: Transaction(amount: 5000, ...)</p>
         </div>
-        <div class="medium-text">Sem parsing manual! Zero erros de tipo!</div>
+        <p class="medium-text" style="margin-top: 20px;">
+            ❌ Sem Codable? Parsing manual de CADA campo!
+        </p>
     </div>
 </div>
 
-<!-- Slide 8: UPDATE - Introdução -->
+<!-- Slide 8: UPDATE Introdução -->
 <div class="slide update-slide" id="slide8">
-    <div class="slide-number">8/14</div>
-    <div class="timing">5:30</div>
-    <h1>✏️ UPDATE: Novo Método</h1>
-    <div class="big-text">
-        Não existia na Parte 4!<br>
-        <strong>Vamos implementar agora</strong>
+    <div class="timing">5:30 - 6:00</div>
+    <div class="slide-number">8 / 15</div>
+    <h2>✏️ UPDATE é Especial</h2>
+    <div class="highlight-box" style="max-width: 80%;">
+        <div class="list-item">📄 Documento completo: Substitui tudo</div>
+        <div class="list-item">⚡ Campos específicos (Merge): Atualiza só alguns</div>
     </div>
-    <div class="highlight-box">
-        <h2>⚡ Dois tipos de Update:</h2>
-        <div class="medium-text">
-            <strong>Completo:</strong> Substitui documento inteiro<br>
-            <strong>Parcial (Merge):</strong> Atualiza só alguns campos
+    <p class="big-text" style="margin-top: 40px;">
+        Vamos implementar com <strong>merge inteligente</strong>!
+    </p>
+</div>
+
+<!-- Slide 9: UPDATE Merge -->
+<div class="slide update-slide" id="slide9">
+    <div class="timing">6:45 - 7:30</div>
+    <div class="slide-number">9 / 15</div>
+    <h2>⚡ Merge: O Parâmetro Crítico</h2>
+    <div class="code-box" style="max-width: 85%;">
+        <p>try db.collection(path).document(id)</p>
+        <p style="margin-left: 30px;">.setData(from: doc, merge: true)</p>
+    </div>
+    <div class="highlight-box" style="max-width: 80%; margin-top: 30px;">
+        <div class="list-item">✅ merge: true → Atualiza só campos enviados</div>
+        <div class="list-item">❌ merge: false → Substitui documento inteiro</div>
+    </div>
+    <p class="big-text" style="margin-top: 30px;">
+        ⚠️ Sem merge = PERDA DE DADOS!
+    </p>
+</div>
+
+<!-- Slide 10: DELETE Problema -->
+<div class="slide delete-slide" id="slide10">
+    <div class="timing">7:30 - 8:00</div>
+    <div class="slide-number">10 / 15</div>
+    <h2>🗑️ DELETE: Problema Atual</h2>
+    <div class="code-box" style="max-width: 80%;">
+        <p>// ✅ JÁ EXISTE (mas só HARD DELETE)</p>
+        <p>func deleteTransaction(...) async throws {</p>
+        <p style="margin-left: 30px;">try await service.deleteDocument(...)</p>
+        <p>}</p>
+    </div>
+    <p class="big-text" style="margin-top: 40px; color: #ff6b6b;">
+        ❌ Remove PERMANENTEMENTE!<br>
+        Sem auditoria!
+    </p>
+</div>
+
+<!-- Slide 11: Soft Delete -->
+<div class="slide delete-slide" id="slide11">
+    <div class="timing">8:00 - 8:45</div>
+    <div class="slide-number">11 / 15</div>
+    <h2>🏷️ Soft Delete: A Solução</h2>
+    <div class="code-box" style="max-width: 85%;">
+        <p>if soft {</p>
+        <p style="margin-left: 30px;">let data = [</p>
+        <p style="margin-left: 60px;">"isDeleted": true,</p>
+        <p style="margin-left: 60px;">"deletedAt": Timestamp(date: Date())</p>
+        <p style="margin-left: 30px;">]</p>
+        <p style="margin-left: 30px;">try await update(data, merge: true)</p>
+        <p>} else {</p>
+        <p style="margin-left: 30px;">try await delete(...) // hard delete</p>
+        <p>}</p>
+    </div>
+</div>
+
+<!-- Slide 12: Interface -->
+<div class="slide test-slide" id="slide12">
+    <div class="timing">9:30 - 10:00</div>
+    <div class="slide-number">12 / 15</div>
+    <h2>🎨 Interface Completa</h2>
+    <div class="highlight-box" style="max-width: 80%;">
+        <h3 style="margin-bottom: 20px;">CRUDDemoView.swift</h3>
+        <div class="list-item">➕ Botão Criar: Nova transação</div>
+        <div class="list-item">📋 Botão Carregar: Lista completa</div>
+        <div class="list-item">✏️ Botão Atualizar: Modifica valor</div>
+        <div class="list-item">🗑️ Botão Soft Delete: Marca deletado</div>
+    </div>
+    <p class="big-text" style="margin-top: 30px;">
+        Tudo funcionando no simulador!
+    </p>
+</div>
+
+<!-- Slide 13: Conceitos Revisados -->
+<div class="slide concept-slide" id="slide13">
+    <div class="timing">11:00 - 11:30</div>
+    <div class="slide-number">13 / 15</div>
+    <h2>🎓 O Que Você Dominou</h2>
+    <div class="highlight-box" style="max-width: 85%;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div class="list-item">✅ CREATE com validação</div>
+            <div class="list-item">✅ READ otimizado</div>
+            <div class="list-item">✅ UPDATE com merge</div>
+            <div class="list-item">✅ DELETE soft/hard</div>
+            <div class="list-item">✅ Timestamps auditoria</div>
+            <div class="list-item">✅ Async/await</div>
+            <div class="list-item">✅ Throws robustos</div>
+            <div class="list-item">✅ Queries otimizadas</div>
         </div>
     </div>
 </div>
 
-<!-- Slide 9: UPDATE - Merge -->
-<div class="slide update-slide" id="slide9">
-    <div class="slide-number">9/14</div>
-    <div class="timing">6:30</div>
-    <h1>✏️ UPDATE: Merge Critical</h1>
-    <div class="code-block">
-        <pre><span class="comment">// ✅ COM merge: true</span>
-.setData(data, <span class="keyword">merge</span>: <span class="keyword">true</span>)
-<span class="comment">// Atualiza SÓ campos enviados</span>
-
-<span class="comment">// ❌ SEM merge</span>
-.setData(data)
-<span class="comment">// SUBSTITUI documento inteiro!</span>
-<span class="comment">// Perde outros campos!</span></pre>
-    </div>
-    <div class="highlight-box">
-        <h2>⚠️ Sem merge = Perda de dados!</h2>
-    </div>
-</div>
-
-<!-- Slide 10: DELETE - Estratégias -->
-<div class="slide delete-slide" id="slide10">
-    <div class="slide-number">10/14</div>
-    <div class="timing">7:30</div>
-    <h1>🗑️ DELETE: Melhorando</h1>
-    <div class="highlight-box" style="text-align: left; max-width: 80%;">
-        <h2>❌ Atual (Parte 4):</h2>
-        <ul style="font-size: 1.6em; line-height: 1.8; list-style: none;">
-            <li>💥 Só hard delete (permanente)</li>
-            <li>🚫 Sem auditoria</li>
-            <li>⚠️ Sem recuperação</li>
-        </ul>
-        
-        <h2 style="margin-top: 30px; color: #28a745;">✅ Vamos adicionar:</h2>
-        <ul style="font-size: 1.6em; line-height: 1.8; list-style: none;">
-            <li>🏷️ Soft delete (marcação)</li>
-            <li>📋 Auditoria completa</li>
-            <li>↩️ Recuperação possível</li>
-        </ul>
+<!-- Slide 14: Comparativo -->
+<div class="slide concept-slide" id="slide14">
+    <div class="timing">11:30 - 11:45</div>
+    <div class="slide-number">14 / 15</div>
+    <h2>📊 Parte 4 vs Parte 5</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; max-width: 90%;">
+        <div class="highlight-box">
+            <h3 style="margin-bottom: 20px;">JÁ TINHA (Parte 4)</h3>
+            <div class="list-item">✅ CREATE validado</div>
+            <div class="list-item">✅ READ com queries</div>
+            <div class="list-item">✅ DELETE hard</div>
+        </div>
+        <div class="highlight-box" style="background: rgba(46, 213, 115, 0.3);">
+            <h3 style="margin-bottom: 20px;">ADICIONAMOS (Parte 5)</h3>
+            <div class="list-item">➕ UPDATE completo</div>
+            <div class="list-item">🏷️ Soft delete</div>
+            <div class="list-item">📅 Timestamps</div>
+            <div class="list-item">🎨 Interface teste</div>
+        </div>
     </div>
 </div>
 
-<!-- Slide 11: DELETE - Implementação -->
-<div class="slide delete-slide" id="slide11">
-    <div class="slide-number">11/14</div>
-    <div class="timing">8:30</div>
-    <h1>🗑️ DELETE: Código</h1>
-    <div class="code-block">
-        <pre><span class="keyword">func</span> <span class="function">deleteTransaction</span>(id: String, soft: Bool = <span class="keyword">true</span>) {
-    <span class="keyword">if</span> soft {
-        <span class="comment">// 🏷️ Marcar como deletado</span>
-        .setData([<span class="string">"isDeleted"</span>: <span class="keyword">true</span>], <span class="keyword">merge</span>: <span class="keyword">true</span>)
-    } <span class="keyword">else</span> {
-        <span class="comment">// 💥 Remover permanentemente</span>
-        .delete()
-    }
-}</pre>
+<!-- Slide 15: Final -->
+<div class="slide final-slide" id="slide15">
+    <div class="timing">11:45 - 12:00</div>
+    <div class="slide-number">15 / 15</div>
+    <div class="emoji-large">🎉</div>
+    <h1>Parabéns!</h1>
+    <div class="highlight-box" style="max-width: 80%;">
+        <p class="big-text" style="margin-bottom: 30px;">
+            CRUD completo + auditoria profissional!
+        </p>
+        <div class="medium-text" style="margin: 20px 0;">
+            ✅ CREATE • READ • UPDATE • DELETE<br>
+            ✅ Validações • Timestamps • Interface
+        </div>
     </div>
-    <div class="highlight-box">
-        <h2>🛡️ Soft por padrão = Seguro</h2>
-    </div>
-</div>
-
-<!-- Slide 12: Interface Completa -->
-<div class="slide" id="slide12">
-    <div class="slide-number">12/14</div>
-    <div class="timing">9:00</div>
-    <h1>🎨 Interface de Teste Completa</h1>
-    <div class="highlight-box" style="text-align: left; max-width: 80%;">
-        <h2>Botões para testar cada operação:</h2>
-        <ul style="font-size: 1.8em; line-height: 2; list-style: none;">
-            <li>✅ Criar Receita +R$ 5000</li>
-            <li>📖 Carregar Todas Transações</li>
-            <li>✏️ Atualizar Primeira</li>
-            <li>🗑️ Deletar (Soft)</li>
-            <li>💥 Deletar (Hard)</li>
-        </ul>
-    </div>
-    <div class="medium-text" style="margin-top: 30px;">
-        Tudo funcionando no simulador!
+    <div class="highlight-box" style="max-width: 80%; margin-top: 30px; background: rgba(255,255,255,0.25);">
+        <h3 style="margin-bottom: 15px;">📍 Próxima: Parte 6</h3>
+        <p class="big-text">LISTENERS EM TEMPO REAL!</p>
+        <p class="medium-text" style="margin-top: 15px;">Sincronização automática entre dispositivos!</p>
     </div>
 </div>
 
-<!-- Slide 13: Conceitos Dominados -->
-<div class="slide" id="slide13">
-    <div class="slide-number">13/14</div>
-    <div class="timing">11:00</div>
-    <h1>🎓 Conceitos Dominados</h1>
-    <div class="highlight-box" style="text-align: left; max-width: 80%;">
-        <ul style="font-size: 1.8em; line-height: 2; list-style: none;">
-            <li>✅ <strong>Async/await:</strong> Operações não travantes</li>
-            <li>✅ <strong>Try/throws:</strong> Error handling robusto</li>
-            <li>✅ <strong>Path hierárquico:</strong> Organização NoSQL</li>
-            <li>✅ <strong>Queries:</strong> Filtros + ordenação + limit</li>
-            <li>✅ <strong>Codable:</strong> Conversão automática</li>
-            <li>✅ <strong>Merge:</strong> Updates parciais seguros</li>
-            <li>✅ <strong>Soft delete:</strong> Auditoria e recuperação</li>
-        </ul>
-    </div>
-</div>
-
-<!-- Slide 14: Próximos Passos -->
-<div class="slide" id="slide14">
-    <div class="slide-number">14/14</div>
-    <div class="timing">11:45</div>
-    <h1>🎉 CRUD Completo Dominado!</h1>
-    <div class="big-text">
-        ✅ CREATE <strong>+ validações</strong><br>
-        ✅ READ <strong>explicado</strong><br>
-        ✅ UPDATE <strong>implementado</strong><br>
-        ✅ DELETE <strong>+ soft delete</strong><br>
-        ✅ Interface <strong>funcionando</strong>
-    </div>
-    <div class="highlight-box">
-        <h2>🔜 Próximo: Listeners em Tempo Real</h2>
-        <div class="medium-text">Sincronização automática instantânea!</div>
-    </div>
-</div>
-
+<!-- Navegação -->
 <div class="navigation">
-    <button class="nav-btn" id="prevBtn">← Anterior</button>
     <button class="nav-btn" id="homeBtn">🏠 Início</button>
+    <button class="nav-btn" id="prevBtn">← Anterior</button>
     <button class="nav-btn" style="background: rgba(255,255,255,0.4);">
-        <span id="slideCounter">1 / 14</span>
+        <span id="slideCounter">1 / 15</span>
     </button>
-    <button class="nav-btn" id="endBtn">🏁 Fim</button>
     <button class="nav-btn" id="nextBtn">Próximo →</button>
+    <button class="nav-btn" id="endBtn">🏁 Fim</button>
 </div>
 
 <script>
 let currentSlide = 1;
-const totalSlides = 14;
+const totalSlides = 15;
 
 function goToSlide(slideNumber) {
     if (slideNumber < 1) slideNumber = 1;
     if (slideNumber > totalSlides) slideNumber = totalSlides;
     
-    const allSlides = document.querySelectorAll('.slide');
-    allSlides.forEach(slide => slide.classList.remove('active'));
-    
-    const targetSlide = document.getElementById(`slide${slideNumber}`);
-    if (targetSlide) {
-        targetSlide.classList.add('active');
-        currentSlide = slideNumber;
+    try {
+        const allSlides = document.querySelectorAll('.slide');
+        allSlides.forEach(slide => {
+            slide.classList.remove('active');
+        });
         
-        const counter = document.getElementById('slideCounter');
-        if (counter) {
-            counter.textContent = `${currentSlide} / ${totalSlides}`;
+        const targetSlide = document.getElementById(`slide${slideNumber}`);
+        if (targetSlide) {
+            targetSlide.classList.add('active');
+            currentSlide = slideNumber;
+            
+            const counter = document.getElementById('slideCounter');
+            if (counter) {
+                counter.textContent = `${currentSlide} / ${totalSlides}`;
+            }
+        } else {
+            console.error('Slide não encontrado:', slideNumber);
         }
+    } catch (error) {
+        console.error('Erro ao navegar para slide:', error);
     }
 }
 
@@ -544,6 +547,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     goToSlide(1);
+});
+
+window.addEventListener('load', function() {
+    const activeSlides = document.querySelectorAll('.slide.active');
+    if (activeSlides.length === 0) {
+        goToSlide(1);
+    }
 });
 </script>
 
