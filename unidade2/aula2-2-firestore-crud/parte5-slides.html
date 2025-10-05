@@ -204,19 +204,32 @@
     <p class="big-text" style="margin-top: 20px;">✅ Validação preventiva, path hierárquico, perfeito!</p>
 </div>
 
-<!-- Slide 3: Async/Await -->
+<!-- Slide 3: Async/Await + Path Hierárquico -->
 <div class="slide create-slide" id="slide3">
-    <div class="timing">1:30 - 2:15</div>
+    <div class="timing">1:30 - 2:30</div>
     <div class="slide-number">3 / 15</div>
-    <h2>⚡ Por Que ASYNC?</h2>
-    <div class="highlight-box" style="max-width: 80%;">
-        <div class="list-item">async throws -> String: Operação assíncrona que pode dar erro</div>
-        <div class="list-item">await: Espera Firebase completar SEM travar UI</div>
-        <div class="list-item">Path hierárquico: users/userId/transactions</div>
-        <div class="list-item">return docId: ID gerado pelo Firebase</div>
+    <h2>⚡ Conceitos Fundamentais</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 90%;">
+        <div class="highlight-box">
+            <h3 style="margin-bottom: 15px;">Assíncrono</h3>
+            <div class="list-item" style="font-size: 1.3em;">async throws -> String</div>
+            <div class="list-item" style="font-size: 1.3em;">await: Não trava UI</div>
+            <div class="list-item" style="font-size: 1.3em;">return docId gerado</div>
+        </div>
+        <div class="highlight-box">
+            <h3 style="margin-bottom: 15px;">Path Hierárquico</h3>
+            <div class="code-box" style="background: rgba(0,0,0,0.4); padding: 20px; font-size: 1.2em; text-align: left;">
+                users/<br>
+                &nbsp;&nbsp;└─ demo_user/<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ transactions/<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─ ABC123<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├─ DEF456<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ GHI789
+            </div>
+        </div>
     </div>
-    <p class="big-text" style="margin-top: 30px;">
-        ⏱️ Firebase leva tempo - async previne travamento!
+    <p class="big-text" style="margin-top: 20px;">
+        ⏱️ Async previne travamento + hierarquia organiza!
     </p>
 </div>
 
@@ -270,56 +283,126 @@
     <p class="big-text" style="margin-top: 20px;">Query completa: filtro, ordenação, limite!</p>
 </div>
 
-<!-- Slide 7: Codable -->
+<!-- Slide 7: Codable com Comparação -->
 <div class="slide read-slide" id="slide7">
     <div class="timing">4:45 - 5:30</div>
     <div class="slide-number">7 / 15</div>
     <h2>🎨 Mágica do Codable</h2>
-    <div class="highlight-box" style="max-width: 85%;">
-        <p class="big-text" style="margin-bottom: 30px;">
-            document.data(as: Transaction.self)
-        </p>
-        <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 10px; margin: 20px 0;">
-            <p class="medium-text">Firebase: {"amount": 5000, "description": "Salário"}</p>
-            <p class="medium-text" style="margin-top: 15px;">⬇️</p>
-            <p class="medium-text" style="margin-top: 15px;">Swift: Transaction(amount: 5000, ...)</p>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 90%;">
+        <div class="highlight-box" style="background: rgba(255,100,100,0.3);">
+            <h3 style="margin-bottom: 10px;">❌ SEM Codable</h3>
+            <div class="code-box" style="font-size: 0.9em; text-align: left;">
+                let json = doc.data()<br>
+                let amt = json["amount"] as? Double<br>
+                let desc = json["description"] as? String<br>
+                // ... 10+ campos!<br>
+                Transaction(amt, desc, ...)
+            </div>
+            <p style="margin-top: 10px; font-size: 1.1em;">Parsing manual - CHATO!</p>
         </div>
-        <p class="medium-text" style="margin-top: 20px;">
-            ❌ Sem Codable? Parsing manual de CADA campo!
-        </p>
+        <div class="highlight-box" style="background: rgba(100,255,100,0.3);">
+            <h3 style="margin-bottom: 10px;">✅ COM Codable</h3>
+            <div class="code-box" style="font-size: 0.9em; text-align: left;">
+                let transaction = try<br>
+                &nbsp;&nbsp;doc.data(as:<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;Transaction.self)<br>
+                <br>
+                // Pronto! ✨
+            </div>
+            <p style="margin-top: 10px; font-size: 1.1em;">UMA linha - ELEGANTE!</p>
+        </div>
+    </div>
+    <div class="highlight-box" style="margin-top: 20px; max-width: 85%;">
+        <h3 style="margin-bottom: 10px;">📋 Como Codable Funciona:</h3>
+        <div style="font-size: 1.2em; line-height: 1.6;">
+            Firebase JSON → Codable analisa → Swift Object
+        </div>
     </div>
 </div>
 
-<!-- Slide 8: UPDATE Introdução -->
+<!-- Slide 8: UPDATE com Replace vs Merge -->
 <div class="slide update-slide" id="slide8">
     <div class="timing">5:30 - 6:00</div>
     <div class="slide-number">8 / 15</div>
-    <h2>✏️ UPDATE é Especial</h2>
-    <div class="highlight-box" style="max-width: 80%;">
-        <div class="list-item">📄 Documento completo: Substitui tudo</div>
-        <div class="list-item">⚡ Campos específicos (Merge): Atualiza só alguns</div>
+    <h2>✏️ UPDATE: Duas Estratégias</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 90%;">
+        <div class="highlight-box" style="background: rgba(255,100,100,0.3);">
+            <h3 style="margin-bottom: 10px;">❌ Replace</h3>
+            <div class="code-box" style="font-size: 0.85em; text-align: left;">
+                Antes:<br>
+                {amt: 100, desc: "Café",<br>
+                &nbsp;cat: "Food"}<br><br>
+                Atualiza desc:<br>
+                {desc: "Starbucks"}<br><br>
+                Depois:<br>
+                {desc: "Starbucks"}<br>
+                ❌ Perdeu amt e cat!
+            </div>
+        </div>
+        <div class="highlight-box" style="background: rgba(100,255,100,0.3);">
+            <h3 style="margin-bottom: 10px;">✅ Merge</h3>
+            <div class="code-box" style="font-size: 0.85em; text-align: left;">
+                Antes:<br>
+                {amt: 100, desc: "Café",<br>
+                &nbsp;cat: "Food"}<br><br>
+                Atualiza desc + MERGE:<br>
+                {desc: "Starbucks"}<br><br>
+                Depois:<br>
+                {amt: 100, desc: "Starbucks",<br>
+                &nbsp;cat: "Food"}<br>
+                ✅ Preservou tudo!
+            </div>
+        </div>
     </div>
-    <p class="big-text" style="margin-top: 40px;">
-        Vamos implementar com <strong>merge inteligente</strong>!
+    <p class="big-text" style="margin-top: 20px;">
+        Vamos usar <strong>merge inteligente</strong>!
     </p>
 </div>
 
-<!-- Slide 9: UPDATE Merge -->
+<!-- Slide 9: UPDATE Merge Crítico -->
 <div class="slide update-slide" id="slide9">
     <div class="timing">6:45 - 7:30</div>
     <div class="slide-number">9 / 15</div>
-    <h2>⚡ Merge: O Parâmetro Crítico</h2>
-    <div class="code-box" style="max-width: 85%;">
-        <p>try db.collection(path).document(id)</p>
-        <p style="margin-left: 30px;">.setData(from: doc, merge: true)</p>
+    <h2>⚡ Merge: CRÍTICO!</h2>
+    <div class="code-box" style="max-width: 90%; font-size: 0.9em;">
+        <p>try await updateDocument(doc, id: id, merge: true)</p>
     </div>
-    <div class="highlight-box" style="max-width: 80%; margin-top: 30px;">
-        <div class="list-item">✅ merge: true → Atualiza só campos enviados</div>
-        <div class="list-item">❌ merge: false → Substitui documento inteiro</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 90%; margin-top: 20px;">
+        <div class="highlight-box" style="background: rgba(255,100,100,0.3);">
+            <h3 style="margin-bottom: 10px;">❌ SEM merge</h3>
+            <div class="code-box" style="font-size: 0.75em; text-align: left;">
+                Antes:<br>
+                {amt: 100, desc: "Café",<br>
+                &nbsp;cat: "Food", tags: [...],<br>
+                &nbsp;created: "2024-10-01"}<br><br>
+                Update desc:<br>
+                {desc: "Starbucks",<br>
+                &nbsp;updated: "2024-10-04"}<br><br>
+                Depois:<br>
+                {desc: "Starbucks",<br>
+                &nbsp;updated: "2024-10-04"}<br>
+                ❌ PERDEU TUDO!
+            </div>
+        </div>
+        <div class="highlight-box" style="background: rgba(100,255,100,0.3);">
+            <h3 style="margin-bottom: 10px;">✅ COM merge</h3>
+            <div class="code-box" style="font-size: 0.75em; text-align: left;">
+                Antes:<br>
+                {amt: 100, desc: "Café",<br>
+                &nbsp;cat: "Food", tags: [...],<br>
+                &nbsp;created: "2024-10-01"}<br><br>
+                Update desc + MERGE:<br>
+                {desc: "Starbucks",<br>
+                &nbsp;updated: "2024-10-04"}<br><br>
+                Depois:<br>
+                {amt: 100, desc: "Starbucks",<br>
+                &nbsp;cat: "Food", tags: [...],<br>
+                &nbsp;created: "2024-10-01",<br>
+                &nbsp;updated: "2024-10-04"}<br>
+                ✅ Preservou + atualizou!
+            </div>
+        </div>
     </div>
-    <p class="big-text" style="margin-top: 30px;">
-        ⚠️ Sem merge = PERDA DE DADOS!
-    </p>
 </div>
 
 <!-- Slide 10: DELETE Problema -->
@@ -339,21 +422,46 @@
     </p>
 </div>
 
-<!-- Slide 11: Soft Delete -->
+<!-- Slide 11: Soft Delete Completo -->
 <div class="slide delete-slide" id="slide11">
-    <div class="timing">8:00 - 8:45</div>
+    <div class="timing">8:00 - 9:00</div>
     <div class="slide-number">11 / 15</div>
-    <h2>🏷️ Soft Delete: A Solução</h2>
-    <div class="code-box" style="max-width: 85%;">
-        <p>if soft {</p>
-        <p style="margin-left: 30px;">let data = [</p>
-        <p style="margin-left: 60px;">"isDeleted": true,</p>
-        <p style="margin-left: 60px;">"deletedAt": Timestamp(date: Date())</p>
-        <p style="margin-left: 30px;">]</p>
-        <p style="margin-left: 30px;">try await update(data, merge: true)</p>
-        <p>} else {</p>
-        <p style="margin-left: 30px;">try await delete(...) // hard delete</p>
-        <p>}</p>
+    <h2>🏷️ Soft Delete: Estratégias</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 90%;">
+        <div class="highlight-box" style="background: rgba(255,100,100,0.3);">
+            <h3 style="margin-bottom: 10px;">💥 Hard Delete</h3>
+            <div class="code-box" style="font-size: 0.75em; text-align: left;">
+                Antes:<br>
+                [{id: "ABC", amt: 100}]<br><br>
+                Hard delete ABC<br><br>
+                Depois:<br>
+                []<br>
+                ❌ Sumiu do banco!
+            </div>
+        </div>
+        <div class="highlight-box" style="background: rgba(100,255,100,0.3);">
+            <h3 style="margin-bottom: 10px;">🏷️ Soft Delete</h3>
+            <div class="code-box" style="font-size: 0.75em; text-align: left;">
+                Antes:<br>
+                [{id: "ABC", amt: 100,<br>
+                &nbsp;isDeleted: false}]<br><br>
+                Soft delete ABC<br><br>
+                Depois:<br>
+                [{id: "ABC", amt: 100,<br>
+                &nbsp;isDeleted: true,<br>
+                &nbsp;deletedAt: "2024..."}]<br>
+                ✅ Marcado, não removido!
+            </div>
+        </div>
+    </div>
+    <div class="highlight-box" style="margin-top: 15px; max-width: 90%;">
+        <h3 style="margin-bottom: 10px;">📊 Filtro Inteligente</h3>
+        <div class="code-box" style="font-size: 0.85em; text-align: left;">
+            // Padrão: só ativos<br>
+            .filter { !$0.isDeleted }<br><br>
+            // Auditoria: incluir deletados<br>
+            getAllIncludingDeleted() // Sem filtro
+        </div>
     </div>
 </div>
 
