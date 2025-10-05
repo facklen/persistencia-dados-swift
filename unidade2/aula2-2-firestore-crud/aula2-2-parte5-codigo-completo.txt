@@ -4,62 +4,58 @@
 // ==========================================
 
 // ==========================================
-// 1. Transaction.swift (ATUALIZADO)
+// 1. Transaction.swift (✅ ATUALIZADO - Parte 4 + Timestamps)
 // ==========================================
 
 import Foundation
 import FirebaseFirestore
 
-// MARK: - TransactionType Enum
-enum TransactionType: String, Codable {
-    case income = "income"
-    case expense = "expense"
-}
-
-// MARK: - Transaction Model (Versão Completa com Auditoria)
-struct Transaction: Codable, Identifiable {
+// MARK: - 💰 Modelo de Transação (Versão com Auditoria)
+struct Transaction: Identifiable, Codable {
+    @DocumentID var id: String?
+    var amount: Double
+    var description: String
+    var type: TransactionType
+    var date: Date
+    var userId: String
     
-    // 🏷️ IDENTIFICAÇÃO
-    var id: String?
-    let userId: String
+    // ✨ NOVOS CAMPOS - PARTE 5: Timestamps de Auditoria
+    var createdAt: Date = Date()        // Quando foi criado
+    var updatedAt: Date = Date()        // Última atualização
+    var isDeleted: Bool = false         // Soft delete
+    var deletedAt: Date?                // Quando foi deletado
     
-    // 💰 DADOS FINANCEIROS
-    let amount: Double
-    let description: String
-    let categoryId: String
-    let type: TransactionType
+    // 💡 OPCIONAL: Campos adicionais que podem ser adicionados depois
+    // var tags: [String] = []
+    // var notes: String?
     
-    // 📅 TIMESTAMPS (NOVOS - PARTE 5)
-    let date: Timestamp
-    var createdAt: Timestamp = Timestamp(date: Date())      // ✅ NOVO
-    var updatedAt: Timestamp = Timestamp(date: Date())      // ✅ NOVO
-    
-    // 🗑️ SOFT DELETE (NOVOS - PARTE 5)
-    var isDeleted: Bool = false                             // ✅ NOVO
-    var deletedAt: Timestamp?                               // ✅ NOVO
-    
-    // 🏷️ METADADOS OPCIONAIS
-    var tags: [String] = []
-    var notes: String?
-    
-    // MARK: - Computed Properties
-    
-    var formattedAmount: String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "BRL"
-        formatter.locale = Locale(identifier: "pt_BR")
+    enum TransactionType: String, Codable, CaseIterable {
+        case income = "income"
+        case expense = "expense"
         
-        let value = formatter.string(from: NSNumber(value: abs(amount))) ?? "R$ 0,00"
-        return type == .income ? value : value
+        var displayName: String {
+            switch self {
+            case .income: return "Receita"
+            case .expense: return "Despesa"
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .income: return "arrow.down.circle.fill"
+            case .expense: return "arrow.up.circle.fill"
+            }
+        }
     }
     
-    var typeIcon: String {
-        return type == .income ? "arrow.up.circle.fill" : "arrow.down.circle.fill"
-    }
-    
-    var typeColor: String {
-        return type == .income ? "#4CAF50" : "#F44336"
+    // Inicializador para criar novas transações
+    init(amount: Double, description: String, type: TransactionType, userId: String) {
+        self.amount = amount
+        self.description = description
+        self.type = type
+        self.date = Date()
+        self.userId = userId
+        // createdAt, updatedAt, isDeleted já têm valores padrão
     }
 }
 
