@@ -294,7 +294,13 @@ class TransactionService {
         return docId
     }
     
-    // MARK: - READ (já existia - da Parte 4)
+    // MARK: - READ (✅ ATUALIZADO - filtro de deletados)
+    /*
+     📖 BUSCAR TRANSAÇÕES DO USUÁRIO
+     
+     Por padrão, NÃO retorna transações deletadas (soft delete).
+     Para incluir deletadas, use getAllTransactionsIncludingDeleted()
+     */
     func getUserTransactions(
         userId: String,
         limit: Int = 50
@@ -312,10 +318,46 @@ class TransactionService {
             limit: limit
         )
         
-        // Dupla validação (defesa em profundidade)
+        // Dupla validação + filtro de deletados
+        let activeTransactions = transactions
+            .filter { isValidTransaction($0) }
+            .filter { !$0.isDeleted }  // ✨ NOVO: Não mostra deletados
+        
+        print("✅ \(activeTransactions.count) transações ativas retornadas")
+        return activeTransactions
+    }
+    
+    // MARK: - READ Including Deleted (✅ NOVO - PARTE 5)
+    /*
+     📖 BUSCAR TODAS AS TRANSAÇÕES (INCLUINDO DELETADAS)
+     
+     Útil para:
+     - Administração e auditoria
+     - Relatórios completos
+     - Recuperação de dados
+     - Análise de histórico completo
+     */
+    func getAllTransactionsIncludingDeleted(
+        userId: String,
+        limit: Int = 50
+    ) async throws -> [Transaction] {
+        print("📖 TransactionService: Buscando TODAS transações (incluindo deletadas)")
+        print("  📏 Limite: \(limit)")
+        
+        let collectionPath = "users/\(userId)/transactions"
+        
+        let transactions: [Transaction] = try await firestoreService.getDocuments(
+            from: collectionPath,
+            type: Transaction.self,
+            orderBy: "date",
+            descending: true,
+            limit: limit
+        )
+        
+        // Só valida, mas NÃO filtra deletados
         let validTransactions = transactions.filter { isValidTransaction($0) }
         
-        print("✅ \(validTransactions.count) transações válidas retornadas")
+        print("✅ \(validTransactions.count) transações totais (incluindo deletadas)")
         return validTransactions
     }
     
