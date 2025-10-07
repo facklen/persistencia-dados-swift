@@ -469,20 +469,20 @@ class TransactionService {
      */
     private func isValidTransaction(_ transaction: Transaction) -> Bool {
         // 1. Amount não pode ser zero
-        guard transaction.amount != 0 else {
-            print("❌ Validação falhou: amount é zero")
+        guard transaction.amount > 0 else {
+            print("❌ Valor inválido: \(transaction.amount)")
             return false
         }
         
         // 2. Description não pode estar vazia
         guard !transaction.description.isEmpty else {
-            print("❌ Validação falhou: description vazia")
+            print("❌ Validação falhou: descrição vazia")
             return false
         }
         
         // 3. Data não pode ser futura (nova validação!)
         guard transaction.date <= Date() else {
-            print("❌ Validação falhou: data no futuro")
+            print("❌ Data futura: \(transaction.date.dateValue())")
             return false
         }
         
