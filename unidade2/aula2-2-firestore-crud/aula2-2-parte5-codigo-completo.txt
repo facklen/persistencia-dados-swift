@@ -115,7 +115,7 @@ enum FirestoreError: Error, LocalizedError {
         case 5:  // FirestoreErrorCode.notFound
             return .documentNotFound
         case 14: // FirestoreErrorCode.unavailable
-            return .networkError
+            return .networkError(error)
         case 8:  // FirestoreErrorCode.resourceExhausted
             return .quotaExceeded
         default:
