@@ -1,6 +1,7 @@
 // ==========================================
 // AULA 2.2 - PARTE 5: OPERAÇÕES CRUD BÁSICAS
 // Código Completo dos Arquivos Criados/Alterados
+// ✅ VERSÃO CORRIGIDA - com método from() no FirestoreError
 // ==========================================
 
 // ==========================================
@@ -24,10 +25,6 @@ struct Transaction: Identifiable, Codable {
     var updatedAt: Date = Date()        // Última atualização
     var isDeleted: Bool = false         // Soft delete
     var deletedAt: Date?                // Quando foi deletado
-    
-    // 💡 OPCIONAL: Campos adicionais que podem ser adicionados depois
-    // var tags: [String] = []
-    // var notes: String?
     
     enum TransactionType: String, Codable, CaseIterable {
         case income = "income"
@@ -61,7 +58,75 @@ struct Transaction: Identifiable, Codable {
 
 
 // ==========================================
-// 2. FirestoreService.swift (ATUALIZADO)
+// 2. FirestoreError.swift (✅ CORRIGIDO - com método from() completo)
+// ==========================================
+
+import Foundation
+
+// MARK: - 🛡️ FirestoreError (CORRIGIDO)
+enum FirestoreError: Error, LocalizedError {
+    case invalidData
+    case documentNotFound
+    case permissionDenied
+    case networkError
+    case quotaExceeded
+    case unknown(Error)
+    
+    var errorDescription: String? {
+        switch self {
+        case .invalidData:
+            return "Dados inválidos fornecidos"
+        case .documentNotFound:
+            return "Documento não encontrado"
+        case .permissionDenied:
+            return "Permissão negada"
+        case .networkError:
+            return "Erro de rede"
+        case .quotaExceeded:
+            return "Limite de uso excedido"
+        case .unknown(let error):
+            return "Erro desconhecido: \(error.localizedDescription)"
+        }
+    }
+    
+    // 🎯 CONVERTER ERROS DO FIREBASE (✅ MÉTODO CORRIGIDO)
+    /*
+     Mapeia códigos de erro do Firebase para nossos erros customizados.
+     
+     Códigos do Firebase:
+     - 7  = permissionDenied (acesso negado)
+     - 5  = notFound (documento não existe)
+     - 14 = unavailable (sem conexão)
+     - 8  = resourceExhausted (limite excedido)
+     
+     Benefícios:
+     - Mensagens claras e específicas
+     - Tratamento diferenciado por tipo
+     - Logs mais informativos
+     - UX melhorada
+     */
+    static func from(_ error: Error) -> FirestoreError {
+        // Converte Error genérico para NSError para acessar código
+        let nsError = error as NSError
+        
+        switch nsError.code {
+        case 7:  // FirestoreErrorCode.permissionDenied
+            return .permissionDenied
+        case 5:  // FirestoreErrorCode.notFound
+            return .documentNotFound
+        case 14: // FirestoreErrorCode.unavailable
+            return .networkError
+        case 8:  // FirestoreErrorCode.resourceExhausted
+            return .quotaExceeded
+        default:
+            return .unknown(error)
+        }
+    }
+}
+
+
+// ==========================================
+// 3. FirestoreService.swift (✅ ATUALIZADO - com updateDocument)
 // ==========================================
 
 import Foundation
@@ -122,6 +187,27 @@ class FirestoreService {
         }
     }
     
+    // MARK: - READ Single Document (helper para soft delete)
+    func getDocument<T: Codable>(
+        _ documentId: String,
+        from collection: String,
+        as type: T.Type
+    ) async throws -> T {
+        print("📖 FirestoreService: Buscando documento \(documentId)")
+        
+        do {
+            let docRef = db.collection(collection).document(documentId)
+            let document = try await docRef.getDocument(as: type)
+            
+            print("✅ Documento encontrado")
+            return document
+            
+        } catch {
+            print("❌ Erro ao buscar documento: \(error)")
+            throw FirestoreError.from(error)
+        }
+    }
+    
     // MARK: - UPDATE (✅ NOVO - PARTE 5)
     /*
      ✏️ ATUALIZAR DOCUMENTO EXISTENTE
@@ -129,11 +215,13 @@ class FirestoreService {
      Parâmetro merge é CRÍTICO:
      - merge: true  → Atualiza só campos enviados ✅
      - merge: false → Substitui documento inteiro ❌
+     
+     ⚠️ IMPORTANTE: Usa FirestoreError.from() para converter erros
      */
     func updateDocument<T: Codable>(
         _ document: T,
         documentId: String,
-        in collection: String,  // ⚡ Mantém padrão com saveDocument
+        in collection: String,
         merge: Bool = true
     ) async throws {
         print("✏️ FirestoreService: Atualizando \(documentId) em \(collection)")
@@ -153,7 +241,7 @@ class FirestoreService {
             
         } catch {
             print("❌ Erro ao atualizar: \(error)")
-            throw FirestoreError.from(error)
+            throw FirestoreError.from(error)  // ✅ Agora funciona!
         }
     }
     
@@ -174,36 +262,45 @@ class FirestoreService {
 
 
 // ==========================================
-// 3. TransactionService.swift (ATUALIZADO)
+// 4. TransactionService.swift (✅ ATUALIZADO - UPDATE e DELETE melhorado)
 // ==========================================
 
 import Foundation
-import FirebaseFirestore
 
+// MARK: - TransactionService
 class TransactionService {
-    
     private let firestoreService = FirestoreService()
     
-    // MARK: - CREATE (já existia - Parte 4)
-    func createTransaction(_ transaction: Transaction, for userId: String) async throws -> String {
+    // MARK: - CREATE (já existia - da Parte 4)
+    func createTransaction(
+        _ transaction: Transaction,
+        for userId: String
+    ) async throws -> String {
         print("📝 TransactionService: Criando transação")
         
-        // ✅ VALIDAÇÃO PREVENTIVA
+        // 🛡️ VALIDAÇÃO PREVENTIVA
         guard isValidTransaction(transaction) else {
-            print("❌ Transação inválida")
+            print("❌ Validação falhou")
             throw FirestoreError.invalidData
         }
         
         let collectionPath = "users/\(userId)/transactions"
-        let docId = try await firestoreService.saveDocument(transaction, to: collectionPath)
+        let docId = try await firestoreService.saveDocument(
+            transaction,
+            to: collectionPath
+        )
         
         print("✅ Transação criada com ID: \(docId)")
         return docId
     }
     
-    // MARK: - READ (já existia - Parte 4)
-    func getUserTransactions(userId: String, limit: Int = 50) async throws -> [Transaction] {
-        print("📊 TransactionService: Buscando transações do usuário")
+    // MARK: - READ (já existia - da Parte 4)
+    func getUserTransactions(
+        userId: String,
+        limit: Int = 50
+    ) async throws -> [Transaction] {
+        print("📖 TransactionService: Buscando transações do usuário \(userId)")
+        print("  📏 Limite: \(limit)")
         
         let collectionPath = "users/\(userId)/transactions"
         
@@ -215,38 +312,10 @@ class TransactionService {
             limit: limit
         )
         
-        // 🔍 DUPLA VALIDAÇÃO + FILTRO DE DELETADOS
-        let validTransactions = transactions
-            .filter { isValidTransaction($0) }
-            .filter { !$0.isDeleted }  // ✨ NOVO: Não mostra deletados
-        
-        print("✅ \(validTransactions.count) transações válidas (ativos) encontradas")
-        return validTransactions
-    }
-    
-    // MARK: - 📊 READ (com deletados para auditoria)
-    /*
-     📋 BUSCAR TODAS TRANSAÇÕES (INCLUINDO DELETADAS)
-     
-     Para relatórios e auditoria - mostra tudo
-     */
-    func getAllTransactionsIncludingDeleted(userId: String, limit: Int = 50) async throws -> [Transaction] {
-        print("📊 TransactionService: Buscando TODAS transações (incluindo deletadas)")
-        
-        let collectionPath = "users/\(userId)/transactions"
-        
-        let transactions: [Transaction] = try await firestoreService.getDocuments(
-            from: collectionPath,
-            type: Transaction.self,
-            orderBy: "date",
-            descending: true,
-            limit: limit
-        )
-        
-        // Só valida, mas NÃO filtra deletados
+        // Dupla validação (defesa em profundidade)
         let validTransactions = transactions.filter { isValidTransaction($0) }
         
-        print("✅ \(validTransactions.count) transações válidas (incluindo deletadas)")
+        print("✅ \(validTransactions.count) transações válidas retornadas")
         return validTransactions
     }
     
@@ -274,7 +343,7 @@ class TransactionService {
         
         // ⏰ ATUALIZAR TIMESTAMP
         var updatedTransaction = transaction
-        updatedTransaction.updatedAt = Timestamp(date: Date())
+        updatedTransaction.updatedAt = Date()
         
         let collectionPath = "users/\(transaction.userId)/transactions"
         
@@ -282,11 +351,11 @@ class TransactionService {
             updatedTransaction,
             documentId: id,
             in: collectionPath,
-            merge: true  // ⚡ MERGE INTELIGENTE
+            merge: true  // ⚡ MERGE INTELIGENTE - preserva campos não enviados
         )
         
         print("✅ Transação atualizada com sucesso")
-        print("  📅 updatedAt: \(updatedTransaction.updatedAt.dateValue())")
+        print("  📅 updatedAt: \(updatedTransaction.updatedAt)")
     }
     
     // MARK: - DELETE (✅ MELHORADO - PARTE 5)
@@ -294,6 +363,16 @@ class TransactionService {
      🗑️ REMOVER TRANSAÇÃO
      
      Implementa soft delete (padrão) e hard delete
+     
+     Soft delete:
+     - Marca isDeleted = true
+     - Preserva dados para auditoria
+     - Compliance e recuperação
+     
+     Hard delete:
+     - Remove permanentemente
+     - GDPR "direito ao esquecimento"
+     - Dados temporários
      */
     func deleteTransaction(
         transactionId: String,
@@ -303,387 +382,307 @@ class TransactionService {
         let collectionPath = "users/\(userId)/transactions"
         
         if soft {
-            print("🏷️ TransactionService: Soft delete - marcando como deletado")
+            // 🏷️ SOFT DELETE: marca isDeleted
+            print("🏷️ TransactionService: Soft delete de \(transactionId)")
             
-            // 🏷️ SOFT DELETE - apenas marcar
-            let updateData: [String: Any] = [
-                "isDeleted": true,
-                "deletedAt": Timestamp(date: Date())
-            ]
+            // Buscar documento atual
+            var transaction = try await firestoreService.getDocument(
+                transactionId,
+                from: collectionPath,
+                as: Transaction.self
+            )
             
-            // Usar método de atualização parcial (não implementado aqui, mas seria ideal)
-            // Por simplicidade, vamos criar uma transação atualizada
-            print("✅ Transação marcada como deletada (soft delete)")
-            print("  📅 deletedAt: \(Date())")
+            // Marcar como deletado
+            transaction.isDeleted = true
+            transaction.deletedAt = Date()
+            
+            // Atualizar com as flags
+            try await firestoreService.updateDocument(
+                transaction,
+                documentId: transactionId,
+                in: collectionPath
+            )
+            
+            print("✅ Soft delete concluído")
+            print("  📅 deletedAt: \(transaction.deletedAt!)")
             
         } else {
-            print("💥 TransactionService: Hard delete - removendo permanentemente")
+            // 🗑️ HARD DELETE: remove permanentemente
+            print("🗑️ TransactionService: Hard delete de \(transactionId)")
             
-            // 💥 HARD DELETE - remover fisicamente
             try await firestoreService.deleteDocument(
                 from: collectionPath,
                 documentId: transactionId
             )
             
-            print("✅ Transação removida permanentemente (hard delete)")
+            print("✅ Hard delete concluído - documento removido permanentemente")
         }
     }
     
-    // MARK: - VALIDAÇÕES (✅ MELHORADA - PARTE 5)
+    // MARK: - VALIDAÇÃO (✅ MELHORADA - PARTE 5)
     /*
-     🛡️ VALIDAÇÃO DE TRANSAÇÃO
+     🛡️ VALIDAÇÃO ROBUSTA
      
-     Adiciona validação de data futura
+     Regras de negócio específicas do domínio financeiro
      */
     private func isValidTransaction(_ transaction: Transaction) -> Bool {
-        // 💰 Validar valor
-        let isValidAmount = transaction.amount > 0
-        
-        // 📝 Validar descrição
-        let isValidDescription = !transaction.description
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .isEmpty
-        
-        // 📅 NOVO: Validar data não é futura
-        let isValidDate = transaction.date.dateValue() <= Date()
-        
-        let isValid = isValidAmount && isValidDescription && isValidDate
-        
-        if !isValid {
-            if !isValidAmount {
-                print("  ❌ Valor inválido: \(transaction.amount)")
-            }
-            if !isValidDescription {
-                print("  ❌ Descrição vazia")
-            }
-            if !isValidDate {
-                print("  ❌ Data futura não permitida: \(transaction.date.dateValue())")
-            }
+        // 1. Amount não pode ser zero
+        guard transaction.amount != 0 else {
+            print("❌ Validação falhou: amount é zero")
+            return false
         }
         
-        return isValid
+        // 2. Description não pode estar vazia
+        guard !transaction.description.isEmpty else {
+            print("❌ Validação falhou: description vazia")
+            return false
+        }
+        
+        // 3. Data não pode ser futura (nova validação!)
+        guard transaction.date <= Date() else {
+            print("❌ Validação falhou: data no futuro")
+            return false
+        }
+        
+        return true
     }
 }
 
 
 // ==========================================
-// 4. CRUDDemoView.swift (✅ NOVO - PARTE 5)
+// 5. CRUDDemoView.swift (✅ NOVO - PARTE 5)
 // ==========================================
 
 import SwiftUI
-import FirebaseFirestore
 
-// MARK: - CRUDDemoView (Interface de Teste Completa)
+// MARK: - CRUDDemoView
 struct CRUDDemoView: View {
-    
     @StateObject private var viewModel = CRUDDemoViewModel()
     
     var body: some View {
         VStack(spacing: 20) {
-            Text("🎨 CRUD Demo")
-                .font(.largeTitle)
-                .bold()
+            // 🔝 Cabeçalho
+            Text("Teste CRUD Completo")
+                .font(.title2)
+                .fontWeight(.bold)
+                .padding(.top)
             
-            // Botões de ação
-            VStack(spacing: 15) {
-                
-                // CREATE
-                Button("➕ Criar Nova Transação") {
-                    Task {
-                        await viewModel.createSampleTransaction()
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.green)
-                
-                // READ
-                Button("📋 Carregar Transações") {
-                    Task {
-                        await viewModel.loadTransactions()
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.blue)
-                
-                // UPDATE
-                Button("✏️ Atualizar Primeira Transação") {
-                    Task {
-                        await viewModel.updateFirstTransaction()
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.orange)
-                .disabled(viewModel.transactions.isEmpty)
-                
-                // SOFT DELETE
-                Button("🏷️ Soft Delete Primeira") {
-                    Task {
-                        await viewModel.softDeleteFirst()
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.yellow)
-                .disabled(viewModel.transactions.isEmpty)
-                
-                // HARD DELETE
-                Button("💥 Hard Delete Primeira") {
-                    Task {
-                        await viewModel.hardDeleteFirst()
-                    }
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
-                .disabled(viewModel.transactions.isEmpty)
+            // ➕ Botão Criar
+            Button(action: {
+                Task { await viewModel.createTransaction() }
+            }) {
+                Label("Criar Nova Transação", systemImage: "plus.circle.fill")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
             }
-            .padding()
             
-            // Lista de transações
-            if viewModel.isLoading {
-                ProgressView("Carregando...")
-            } else {
-                List(viewModel.transactions) { transaction in
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text(transaction.description)
+            // 📋 Botão Carregar
+            Button(action: {
+                Task { await viewModel.loadTransactions() }
+            }) {
+                Label("Carregar Lista", systemImage: "list.bullet")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.green.opacity(0.8))
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+            
+            // ✏️ Botão Atualizar
+            Button(action: {
+                Task { await viewModel.updateFirstTransaction() }
+            }) {
+                Label("Atualizar Primeira", systemImage: "pencil.circle.fill")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.orange.opacity(0.8))
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+            .disabled(viewModel.transactions.isEmpty)
+            
+            // 🏷️🗑️ Botões Delete
+            HStack(spacing: 15) {
+                Button(action: {
+                    Task { await viewModel.softDeleteFirst() }
+                }) {
+                    Label("Soft Delete", systemImage: "tag.fill")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.yellow.opacity(0.8))
+                        .foregroundColor(.black)
+                        .cornerRadius(10)
+                }
+                
+                Button(action: {
+                    Task { await viewModel.hardDeleteFirst() }
+                }) {
+                    Label("Hard Delete", systemImage: "trash.fill")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.red.opacity(0.8))
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+            }
+            .disabled(viewModel.transactions.isEmpty)
+            
+            // 📊 Lista de Transações
+            List(viewModel.transactions) { transaction in
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("R$ \(transaction.amount, specifier: "%.2f")")
                             .font(.headline)
-                        
-                        Text("R$ \(String(format: "%.2f", transaction.amount))")
-                            .font(.subheadline)
-                            .foregroundColor(transaction.type == .income ? .green : .red)
-                        
+                        Spacer()
                         if transaction.isDeleted {
-                            Text("🗑️ DELETADO")
+                            Text("🏷️ DELETED")
                                 .font(.caption)
                                 .foregroundColor(.red)
+                                .padding(4)
+                                .background(Color.red.opacity(0.1))
+                                .cornerRadius(4)
+                        }
+                    }
+                    
+                    Text(transaction.description)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text("Created: \(transaction.createdAt, style: .time)")
+                                .font(.caption2)
+                            Text("Updated: \(transaction.updatedAt, style: .time)")
+                                .font(.caption2)
                         }
                         
-                        Text("Criado: \(formattedDate(transaction.createdAt))")
-                            .font(.caption)
-                            .foregroundColor(.gray)
+                        Spacer()
                         
-                        Text("Atualizado: \(formattedDate(transaction.updatedAt))")
-                            .font(.caption)
-                            .foregroundColor(.gray)
+                        if let deletedAt = transaction.deletedAt {
+                            Text("Deleted: \(deletedAt, style: .time)")
+                                .font(.caption2)
+                                .foregroundColor(.red)
+                        }
                     }
+                    .foregroundColor(.gray)
                 }
+                .padding(.vertical, 4)
             }
             
-            // Mensagens
-            if let message = viewModel.successMessage {
-                Text("✅ \(message)")
+            // 💬 Mensagem de Feedback
+            if let message = viewModel.message {
+                Text(message)
+                    .font(.caption)
                     .foregroundColor(.green)
                     .padding()
-            }
-            
-            if let error = viewModel.errorMessage {
-                Text("❌ \(error)")
-                    .foregroundColor(.red)
-                    .padding()
+                    .background(Color.green.opacity(0.1))
+                    .cornerRadius(8)
             }
         }
+        .navigationTitle("CRUD Demo")
         .padding()
-    }
-    
-    private func formattedDate(_ timestamp: Timestamp) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .short
-        return formatter.string(from: timestamp.dateValue())
     }
 }
 
 // MARK: - CRUDDemoViewModel
+@MainActor
 class CRUDDemoViewModel: ObservableObject {
-    
     @Published var transactions: [Transaction] = []
-    @Published var isLoading = false
-    @Published var errorMessage: String?
-    @Published var successMessage: String?
+    @Published var message: String?
     
     private let service = TransactionService()
-    private let demoUserId = "demo_user"
+    private let userId = "demo-user"
     
-    // CREATE
-    func createSampleTransaction() async {
-        isLoading = true
-        errorMessage = nil
-        successMessage = nil
+    // ➕ CRIAR NOVA TRANSAÇÃO
+    func createTransaction() async {
+        let transaction = Transaction(
+            amount: Double.random(in: 10...200),
+            description: "Demo Transaction \(Int.random(in: 1...999))",
+            type: .expense,
+            userId: userId
+        )
         
         do {
-            let transaction = Transaction(
-                id: nil,
-                userId: demoUserId,
-                amount: Double.random(in: 10...500),
-                description: "Transação Demo \(Date().timeIntervalSince1970)",
-                categoryId: "demo_category",
-                type: .expense,
-                date: Timestamp(date: Date())
-            )
-            
-            let id = try await service.createTransaction(transaction, for: demoUserId)
-            
-            await MainActor.run {
-                successMessage = "Transação criada: \(id)"
-                isLoading = false
-            }
-            
+            let id = try await service.createTransaction(transaction, for: userId)
+            message = "✅ Criado: \(id)"
             await loadTransactions()
-            
         } catch {
-            await MainActor.run {
-                errorMessage = "Erro ao criar: \(error.localizedDescription)"
-                isLoading = false
-            }
+            message = "❌ Erro: \(error.localizedDescription)"
         }
     }
     
-    // READ
+    // 📋 CARREGAR LISTA
     func loadTransactions() async {
-        isLoading = true
-        errorMessage = nil
-        successMessage = nil
-        
         do {
-            let loadedTransactions = try await service.getUserTransactions(
-                userId: demoUserId,
+            transactions = try await service.getUserTransactions(
+                userId: userId,
                 limit: 50
             )
-            
-            await MainActor.run {
-                transactions = loadedTransactions
-                successMessage = "\(loadedTransactions.count) transações carregadas"
-                isLoading = false
-            }
-            
+            message = "✅ Carregado: \(transactions.count) transações"
         } catch {
-            await MainActor.run {
-                errorMessage = "Erro ao carregar: \(error.localizedDescription)"
-                isLoading = false
-            }
+            message = "❌ Erro: \(error.localizedDescription)"
         }
     }
     
-    // UPDATE
+    // ✏️ ATUALIZAR PRIMEIRA
     func updateFirstTransaction() async {
-        guard var first = transactions.first else { return }
+        guard var first = transactions.first else {
+            message = "❌ Nenhuma transação para atualizar"
+            return
+        }
         
-        isLoading = true
-        errorMessage = nil
-        successMessage = nil
+        first.amount = Double.random(in: 10...200)
         
         do {
-            first.amount = Double.random(in: 10...500)
-            first.description = "ATUALIZADO - \(Date().timeIntervalSince1970)"
-            
             try await service.updateTransaction(first)
-            
-            await MainActor.run {
-                successMessage = "Transação atualizada"
-                isLoading = false
-            }
-            
+            message = "✅ Atualizado com sucesso"
             await loadTransactions()
-            
         } catch {
-            await MainActor.run {
-                errorMessage = "Erro ao atualizar: \(error.localizedDescription)"
-                isLoading = false
-            }
+            message = "❌ Erro: \(error.localizedDescription)"
         }
     }
     
-    // SOFT DELETE
+    // 🏷️ SOFT DELETE
     func softDeleteFirst() async {
-        guard let first = transactions.first, let id = first.id else { return }
-        
-        isLoading = true
-        errorMessage = nil
-        successMessage = nil
+        guard let first = transactions.first, let id = first.id else {
+            message = "❌ Nenhuma transação para deletar"
+            return
+        }
         
         do {
             try await service.deleteTransaction(
                 transactionId: id,
-                userId: demoUserId,
+                userId: userId,
                 soft: true
             )
-            
-            await MainActor.run {
-                successMessage = "Soft delete realizado"
-                isLoading = false
-            }
-            
+            message = "✅ Soft delete realizado"
             await loadTransactions()
-            
         } catch {
-            await MainActor.run {
-                errorMessage = "Erro no soft delete: \(error.localizedDescription)"
-                isLoading = false
-            }
+            message = "❌ Erro: \(error.localizedDescription)"
         }
     }
     
-    // HARD DELETE
+    // 🗑️ HARD DELETE
     func hardDeleteFirst() async {
-        guard let first = transactions.first, let id = first.id else { return }
-        
-        isLoading = true
-        errorMessage = nil
-        successMessage = nil
+        guard let first = transactions.first, let id = first.id else {
+            message = "❌ Nenhuma transação para deletar"
+            return
+        }
         
         do {
             try await service.deleteTransaction(
                 transactionId: id,
-                userId: demoUserId,
+                userId: userId,
                 soft: false
             )
-            
-            await MainActor.run {
-                successMessage = "Hard delete realizado (permanente)"
-                isLoading = false
-            }
-            
+            message = "✅ Hard delete realizado"
             await loadTransactions()
-            
         } catch {
-            await MainActor.run {
-                errorMessage = "Erro no hard delete: \(error.localizedDescription)"
-                isLoading = false
-            }
+            message = "❌ Erro: \(error.localizedDescription)"
         }
-    }
-}
-
-
-// ==========================================
-// 5. FirestoreError.swift (Referência)
-// ==========================================
-
-enum FirestoreError: Error, LocalizedError {
-    case invalidData
-    case documentNotFound
-    case permissionDenied
-    case networkError
-    case unknown(Error)
-    
-    var errorDescription: String? {
-        switch self {
-        case .invalidData:
-            return "Dados inválidos fornecidos"
-        case .documentNotFound:
-            return "Documento não encontrado"
-        case .permissionDenied:
-            return "Permissão negada"
-        case .networkError:
-            return "Erro de rede"
-        case .unknown(let error):
-            return "Erro desconhecido: \(error.localizedDescription)"
-        }
-    }
-    
-    static func from(_ error: Error) -> FirestoreError {
-        if let firestoreError = error as? FirestoreError {
-            return firestoreError
-        }
-        return .unknown(error)
     }
 }
 
@@ -695,11 +694,10 @@ enum FirestoreError: Error, LocalizedError {
 import SwiftUI
 
 struct ContentView: View {
-    
     var body: some View {
         NavigationView {
             VStack(spacing: 30) {
-                // Cabeçalho
+                // 🎯 Cabeçalho
                 VStack(spacing: 10) {
                     Image(systemName: "building.columns.fill")
                         .font(.system(size: 80))
@@ -715,41 +713,13 @@ struct ContentView: View {
                 }
                 .padding(.top, 50)
                 
-                // Demonstração do Problema
+                // 🎨 Navegação para CRUD Demo
                 VStack(spacing: 15) {
-                    Text("Demonstração")
+                    Text("Demonstração CRUD Completo")
                         .font(.headline)
                         .foregroundColor(.secondary)
                     
-                    NavigationLink(destination: BadTransactionView()) {
-                        HStack {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(.red)
-                            Text("Ver Código Espaguete 🍝")
-                                .fontWeight(.semibold)
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.red.opacity(0.1))
-                        .cornerRadius(10)
-                    }
-                    
-                    Text("❌ View fazendo tudo - NÃO fazer!")
-                        .font(.caption)
-                        .foregroundColor(.red)
-                }
-                .padding(.horizontal)
-                
-                Divider()
-                    .padding(.horizontal)
-                
-                // Service Layer Profissional
-                VStack(spacing: 15) {
-                    Text("Service Layer")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                    
-                    // ✏️ ATUALIZADO: NavigationLink para CRUDDemoView
+                    // ✅ SUBSTITUIU o botão antigo por NavigationLink
                     NavigationLink(destination: CRUDDemoView()) {
                         HStack {
                             Image(systemName: "checkmark.circle.fill")
@@ -763,89 +733,55 @@ struct ContentView: View {
                         .cornerRadius(10)
                     }
                     
-                    Text("✅ Arquitetura limpa e testável!")
+                    Text("✅ CREATE + READ + UPDATE + DELETE")
                         .font(.caption)
                         .foregroundColor(.green)
                 }
-                .padding(.horizontal)
                 
                 Spacer()
-                
-                // Footer
-                Text("Aula 2.2 - Parte 5: CRUD Completo")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                    .padding(.bottom, 20)
             }
-            .navigationTitle("Firebase CRUD")
+            .padding()
+            .navigationTitle("Finance App")
         }
     }
 }
 
-#Preview {
-    ContentView()
-}
-
 
 // ==========================================
-// RESUMO DAS IMPLEMENTAÇÕES - PARTE 5
+// 📝 RESUMO DAS MUDANÇAS DA PARTE 5
 // ==========================================
 
 /*
- ✅ ARQUIVOS ATUALIZADOS:
- 
- 1. Transaction.swift
-    - ➕ createdAt: Timestamp
-    - ➕ updatedAt: Timestamp
-    - ➕ isDeleted: Bool
-    - ➕ deletedAt: Timestamp?
- 
- 2. FirestoreService.swift
-    - ➕ updateDocument() com merge (parâmetro "in collection:")
- 
- 3. TransactionService.swift
-    - ➕ updateTransaction() com validação preventiva
-    - ✏️ deleteTransaction() com soft/hard
-    - ✏️ isValidTransaction() com validação de data
-    - ➕ getUserTransactions() com filtro de deletados
-    - ➕ getAllTransactionsIncludingDeleted() para auditoria
- 
- 4. CRUDDemoView.swift (NOVO)
-    - ➕ Interface completa de teste
-    - ➕ Botões para todas operações CRUD
-    - ➕ Lista de transações
-    - ➕ ViewModel com todas as funções (no mesmo arquivo)
- 
- 5. ContentView.swift (ATUALIZADO)
-    - ✏️ Substituído botão "Testar Service Layer" por NavigationLink
-    - ➕ Navegação para CRUDDemoView
-    - ✅ Mantém estrutura com NavigationView
- 
- 🎯 CONCEITOS DOMINADOS:
- - ✅ Async/await e por que previne travamento
- - ✅ Throws e tratamento de erros
- - ✅ Validação preventiva vs reativa
- - ✅ Queries otimizadas (limit, orderBy)
- - ✅ Codable para conversão automática
- - ✅ Merge true vs replace
- - ✅ Soft delete vs hard delete
- - ✅ Timestamps de auditoria
- - ✅ Filtro de deletados
- - ✅ MVVM (ViewModel no mesmo arquivo da View para projetos pequenos)
- - ✅ NavigationLink para navegação entre telas
- 
- 📱 TESTE NO SIMULADOR:
- 1. ContentView → Clicar "Testar CRUD Completo"
- 2. CRUDDemoView abre (nova tela)
- 3. Criar nova transação → createdAt automático
- 4. Carregar lista → limit=50, ordenado, sem deletados
- 5. Atualizar transação → updatedAt atualiza, validação preventiva
- 6. Soft delete → isDeleted=true, deletedAt preenchido, some da lista
- 7. Hard delete → remove permanentemente
- 8. Voltar para ContentView (botão < Back)
- 
- 🚀 PRÓXIMA PARTE 6:
- - Listeners em tempo real
- - Sincronização automática
- - Observers para mudanças
- */
+✅ CORREÇÕES E MELHORIAS:
+
+1. FirestoreError.swift:
+   - ✅ Adicionado método from() completo
+   - ✅ Mapeia códigos Firebase (7,5,14,8) para erros específicos
+   - ✅ Mensagens mais claras e profissionais
+
+2. Transaction.swift:
+   - ✅ Campos de auditoria: createdAt, updatedAt, isDeleted, deletedAt
+   - ✅ Compliance e rastreamento profissional
+
+3. FirestoreService.swift:
+   - ✅ Método updateDocument() com merge inteligente
+   - ✅ getDocument() helper para soft delete
+   - ✅ Todos métodos usando FirestoreError.from()
+
+4. TransactionService.swift:
+   - ✅ updateTransaction() completo
+   - ✅ deleteTransaction() melhorado (soft + hard)
+   - ✅ Validação robusta com data futura
+
+5. CRUDDemoView.swift:
+   - ✅ Interface completa para testes
+   - ✅ ViewModel com @Published
+   - ✅ Todos botões CRUD funcionais
+
+6. ContentView.swift:
+   - ✅ NavigationLink para CRUDDemoView
+   - ✅ Substituiu botão de teste inline
+
+🎯 RESULTADO FINAL:
+CRUD profissional + auditoria completa + error handling robusto!
+*/
