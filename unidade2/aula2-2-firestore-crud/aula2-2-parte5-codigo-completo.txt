@@ -521,16 +521,30 @@ struct CRUDDemoView: View {
                     .cornerRadius(10)
             }
             
-            // 📋 Botão Carregar
-            Button(action: {
-                Task { await viewModel.loadTransactions() }
-            }) {
-                Label("Carregar Lista", systemImage: "list.bullet")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.green.opacity(0.8))
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+            // 📋 Botão Carregar + Toggle Deletados
+            HStack(spacing: 15) {
+                Button(action: {
+                    Task { await viewModel.loadTransactions() }
+                }) {
+                    Label("Carregar Lista", systemImage: "list.bullet")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.green.opacity(0.8))
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                
+                // ✨ TOGGLE MOSTRAR DELETADOS
+                Button(action: {
+                    Task { await viewModel.toggleShowDeleted() }
+                }) {
+                    Image(systemName: viewModel.showDeleted ? "eye.fill" : "eye.slash.fill")
+                        .font(.title2)
+                        .foregroundColor(viewModel.showDeleted ? .orange : .gray)
+                        .padding()
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(10)
+                }
             }
             
             // ✏️ Botão Atualizar
@@ -634,6 +648,7 @@ struct CRUDDemoView: View {
 class CRUDDemoViewModel: ObservableObject {
     @Published var transactions: [Transaction] = []
     @Published var message: String?
+    @Published var showDeleted: Bool = false  // ✨ Toggle para mostrar deletados
     
     private let service = TransactionService()
     private let userId = "demo-user"
@@ -656,17 +671,33 @@ class CRUDDemoViewModel: ObservableObject {
         }
     }
     
-    // 📋 CARREGAR LISTA
+    // 📋 CARREGAR LISTA (com ou sem deletados)
     func loadTransactions() async {
         do {
-            transactions = try await service.getUserTransactions(
-                userId: userId,
-                limit: 50
-            )
-            message = "✅ Carregado: \(transactions.count) transações"
+            if showDeleted {
+                // Mostra TODOS incluindo deletados
+                transactions = try await service.getAllTransactionsIncludingDeleted(
+                    userId: userId,
+                    limit: 50
+                )
+                message = "✅ Carregado: \(transactions.count) transações (incluindo deletadas)"
+            } else {
+                // Mostra só ativas (padrão)
+                transactions = try await service.getUserTransactions(
+                    userId: userId,
+                    limit: 50
+                )
+                message = "✅ Carregado: \(transactions.count) transações ativas"
+            }
         } catch {
             message = "❌ Erro: \(error.localizedDescription)"
         }
+    }
+    
+    // 🔄 TOGGLE MOSTRAR DELETADOS
+    func toggleShowDeleted() async {
+        showDeleted.toggle()
+        await loadTransactions()
     }
     
     // ✏️ ATUALIZAR PRIMEIRA
@@ -727,7 +758,6 @@ class CRUDDemoViewModel: ObservableObject {
         }
     }
 }
-
 
 // ==========================================
 // 6. ContentView.swift (✅ ATUALIZADO - PARTE 5)
