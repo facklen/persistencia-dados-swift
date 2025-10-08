@@ -766,16 +766,23 @@ class CRUDDemoViewModel: ObservableObject {
 import SwiftUI
 
 struct ContentView: View {
+    // ========================================================================
+    // ❌ REMOVER: Estados do teste inline (não precisa mais)
+    // Comentado para referência:
+    // @State private var isTestingService = false
+    // @State private var serviceTestResult: String = ""
+    // ========================================================================
+    
     var body: some View {
         NavigationView {
             VStack(spacing: 30) {
-                // 🎯 Cabeçalho
+                // Cabeçalho
                 VStack(spacing: 10) {
                     Image(systemName: "building.columns.fill")
                         .font(.system(size: 80))
                         .foregroundColor(.blue)
                     
-                    Text("🛠️ Service Layer Demo")
+                    Text("🏛️ Service Layer Demo")
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     
@@ -785,13 +792,45 @@ struct ContentView: View {
                 }
                 .padding(.top, 50)
                 
-                // 🎨 Navegação para CRUD Demo
+                // ✅ MANTER: Demonstração do Problema
                 VStack(spacing: 15) {
-                    Text("Demonstração CRUD Completo")
+                    Text("Demonstração")
                         .font(.headline)
                         .foregroundColor(.secondary)
                     
-                    // ✅ SUBSTITUIU o botão antigo por NavigationLink
+                    NavigationLink(destination: BadTransactionView()) {
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.red)
+                            Text("Ver Código Espaguete 🍝")
+                                .fontWeight(.semibold)
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color.red.opacity(0.1))
+                        .cornerRadius(10)
+                    }
+                    
+                    Text("❌ View fazendo tudo - NÃO fazer!")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal)
+                
+                Divider()
+                    .padding(.horizontal)
+                
+                // ================================================================
+                // ✅ MODIFICADO PARA PARTE 5: NavigationLink para CRUDDemoView
+                // ANTES: Tinha botão que executava testServiceLayer() inline
+                // AGORA: NavigationLink para tela dedicada de testes
+                // ================================================================
+                VStack(spacing: 15) {
+                    Text("CRUD Completo Implementado! 🎉")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    
+                    // ✅ SUBSTITUIR o botão antigo por este NavigationLink:
                     NavigationLink(destination: CRUDDemoView()) {
                         HStack {
                             Image(systemName: "checkmark.circle.fill")
@@ -805,19 +844,51 @@ struct ContentView: View {
                         .cornerRadius(10)
                     }
                     
-                    Text("✅ CREATE + READ + UPDATE + DELETE")
+                    Text("✅ CREATE + READ + UPDATE + DELETE + Auditoria")
                         .font(.caption)
                         .foregroundColor(.green)
                 }
+                .padding(.horizontal)
                 
                 Spacer()
+                
+                // ✅ MANTER: Informação de ambiente
+                Text(EnvironmentConfig.environmentName)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.bottom)
             }
-            .padding()
-            .navigationTitle("Finance App")
+            .navigationBarHidden(true)
+        }
+        // ✅ MANTER: Task com validação
+        .task {
+            // 🧪 Validação automática da configuração
+            print("🧪 Executando validação automática...")
+            let result = await ConfigurationValidator.validateSetup()
+            
+            if result.isValid {
+                print("🎉 App pronto para uso!")
+            } else {
+                print("⚠️ \(result.message)")
+            }
         }
     }
+    
+    // ========================================================================
+    // ❌ REMOVER ESTE MÉTODO COMPLETO (testServiceLayer)
+    // Agora usamos CRUDDemoView com interface dedicada
+    // ========================================================================
+    /*
+    // MÉTODO ANTIGO - NÃO USAR MAIS
+    private func testServiceLayer() {
+        // ... código removido ...
+    }
+    */
 }
 
+#Preview {
+    ContentView()
+}
 
 // ==========================================
 // 📝 RESUMO DAS MUDANÇAS DA PARTE 5
