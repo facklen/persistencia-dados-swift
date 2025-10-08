@@ -313,9 +313,9 @@ class TransactionService {
         let transactions: [Transaction] = try await firestoreService.getDocuments(
             from: collectionPath,
             type: Transaction.self,
+            limit: limit,
             orderBy: "date",
-            descending: true,
-            limit: limit
+            descending: true
         )
         
         // Dupla validação + filtro de deletados
@@ -349,9 +349,9 @@ class TransactionService {
         let transactions: [Transaction] = try await firestoreService.getDocuments(
             from: collectionPath,
             type: Transaction.self,
+            limit: limit,
             orderBy: "date",
-            descending: true,
-            limit: limit
+            descending: true
         )
         
         // Só valida, mas NÃO filtra deletados
@@ -482,7 +482,7 @@ class TransactionService {
         
         // 3. Data não pode ser futura (nova validação!)
         guard transaction.date <= Date() else {
-            print("❌ Data futura: \(transaction.date.dateValue())")
+            print("❌ Data futura: \(transaction.date)")
             return false
         }
         
