@@ -1,0 +1,1166 @@
+// ==========================================
+// AULA 2.2 - PARTE 6: LISTENERS EM TEMPO REAL
+// Código Completo dos Arquivos Criados/Alterados
+// ✅ COMPATÍVEL COM PARTE 5: Timestamps + Soft Delete
+// ==========================================
+
+/*
+ 📋 PRÉ-REQUISITOS DA PARTE 5:
+ 
+ ✅ Transaction.swift com timestamps:
+    - createdAt: Date
+    - updatedAt: Date
+    - isDeleted: Bool
+    - deletedAt: Date?
+ 
+ ✅ FirestoreError.swift com método from()
+ ✅ FirestoreService.swift completo
+ ✅ Soft delete implementado
+ ✅ CRUDDemoView navegável
+ ✅ ContentView com NavigationView
+ 
+ 🎯 NESTA PARTE ADICIONAMOS:
+ 
+ ✨ Método listener em TransactionService (startListeningToUserTransactions)
+ ✨ RealtimeDemoViewModel completo
+ ✨ RealtimeDemoView com timestamps visíveis
+ ✨ NavigationLink adicional em ContentView
+ ✨ Sincronização automática funcionando
+*/
+
+
+// ==========================================
+// 1. TransactionService.swift (ARQUIVO COMPLETO - Parte 5 + 6)
+// ==========================================
+
+import Foundation
+import FirebaseFirestore
+
+/*
+ 🛠️ TRANSACTION SERVICE - SERVIÇO DE NEGÓCIO
+ 
+ Camada de serviço que orquestra operações de transações.
+ Implementa CRUD completo + Listeners em tempo real.
+ 
+ Responsabilidades:
+ - Validações de negócio
+ - Orquestração de chamadas Firestore
+ - Tratamento de erros específicos
+ - Gerenciamento de listeners
+ 
+ NÃO faz:
+ - Manipulação direta do Firestore (usa FirestoreService)
+ - Atualização de UI (responsabilidade da ViewModel)
+*/
+class TransactionService {
+    
+    private let firestoreService = FirestoreService()
+    
+    // MARK: - CREATE (Parte 4/5)
+    
+    /*
+     ➕ CRIAR NOVA TRANSAÇÃO
+     
+     Fluxo:
+     1. Valida dados preventivamente
+     2. Delega criação para FirestoreService
+     3. Retorna ID gerado pelo Firebase
+     
+     Por que validar ANTES de enviar?
+     - Economia (não gasta read/write Firebase)
+     - Performance (erro imediato vs esperar rede)
+     - Consistência (banco sempre com dados válidos)
+     */
+    func createTransaction(
+        _ transaction: Transaction,
+        for userId: String
+    ) async throws -> String {
+        print("📝 TransactionService: Criando transação")
+        
+        // 🛡️ VALIDAÇÃO PREVENTIVA
+        guard isValidTransaction(transaction) else {
+            print("❌ Validação falhou")
+            throw FirestoreError.invalidData
+        }
+        
+        let collectionPath = "users/\(userId)/transactions"
+        let docId = try await firestoreService.saveDocument(
+            transaction,
+            to: collectionPath
+        )
+        
+        print("✅ Transação criada com ID: \(docId)")
+        return docId
+    }
+    
+    // MARK: - READ (Parte 4/5)
+    
+    /*
+     📖 BUSCAR TRANSAÇÕES DO USUÁRIO
+     
+     Por padrão, NÃO retorna transações deletadas (soft delete).
+     Para incluir deletadas, use getAllTransactionsIncludingDeleted()
+     
+     Parâmetros:
+     - userId: ID do usuário proprietário
+     - limit: Máximo de docs (padrão 50 para performance)
+     
+     Retorna: Array de transações ATIVAS (isDeleted = false)
+     */
+    func getUserTransactions(
+        userId: String,
+        limit: Int = 50
+    ) async throws -> [Transaction] {
+        print("📖 TransactionService: Buscando transações do usuário \(userId)")
+        print("  📏 Limite: \(limit)")
+        
+        let collectionPath = "users/\(userId)/transactions"
+        
+        let transactions: [Transaction] = try await firestoreService.getDocuments(
+            from: collectionPath,
+            type: Transaction.self,
+            orderBy: "date",
+            descending: true,
+            limit: limit
+        )
+        
+        // Dupla validação + filtro de deletados
+        let activeTransactions = transactions
+            .filter { isValidTransaction($0) }
+            .filter { !$0.isDeleted }  // ✨ NÃO mostra deletados
+        
+        print("✅ \(activeTransactions.count) transações ativas retornadas")
+        return activeTransactions
+    }
+    
+    /*
+     📖 BUSCAR TODAS AS TRANSAÇÕES (INCLUINDO DELETADAS)
+     
+     Útil para:
+     - Administração e auditoria
+     - Relatórios completos
+     - Recuperação de dados
+     - Análise de histórico completo
+     */
+    func getAllTransactionsIncludingDeleted(
+        userId: String,
+        limit: Int = 50
+    ) async throws -> [Transaction] {
+        print("📖 TransactionService: Buscando TODAS transações (incluindo deletadas)")
+        print("  📏 Limite: \(limit)")
+        
+        let collectionPath = "users/\(userId)/transactions"
+        
+        let transactions: [Transaction] = try await firestoreService.getDocuments(
+            from: collectionPath,
+            type: Transaction.self,
+            orderBy: "date",
+            descending: true,
+            limit: limit
+        )
+        
+        // Só valida, mas NÃO filtra deletados
+        let validTransactions = transactions.filter { isValidTransaction($0) }
+        
+        print("✅ \(validTransactions.count) transações totais (incluindo deletadas)")
+        return validTransactions
+    }
+    
+    // MARK: - UPDATE (Parte 5)
+    
+    /*
+     ✏️ ATUALIZAR TRANSAÇÃO EXISTENTE
+     
+     Atualiza documento completo com merge inteligente
+     e updatedAt automático
+     */
+    func updateTransaction(_ transaction: Transaction) async throws {
+        print("✏️ TransactionService: Atualizando transação")
+        
+        // 🔒 VALIDAR ID
+        guard let id = transaction.id else {
+            print("❌ Erro: Transação deve ter ID para atualização")
+            throw FirestoreError.invalidData
+        }
+        
+        // 🛡️ VALIDAR DADOS (preventivo!)
+        guard isValidTransaction(transaction) else {
+            print("❌ Erro: Dados inválidos")
+            throw FirestoreError.invalidData
+        }
+        
+        // ⏰ ATUALIZAR TIMESTAMP
+        var updatedTransaction = transaction
+        updatedTransaction.updatedAt = Date()
+        
+        let collectionPath = "users/\(transaction.userId)/transactions"
+        
+        try await firestoreService.updateDocument(
+            updatedTransaction,
+            documentId: id,
+            in: collectionPath,
+            merge: true  // ⚡ MERGE INTELIGENTE - preserva campos não enviados
+        )
+        
+        print("✅ Transação atualizada com sucesso")
+        print("  📅 updatedAt: \(updatedTransaction.updatedAt)")
+    }
+    
+    // MARK: - DELETE (Parte 5)
+    
+    /*
+     🗑️ REMOVER TRANSAÇÃO
+     
+     Implementa soft delete (padrão) e hard delete
+     
+     Soft delete:
+     - Marca isDeleted = true
+     - Preserva dados para auditoria
+     - Compliance e recuperação
+     
+     Hard delete:
+     - Remove permanentemente
+     - GDPR "direito ao esquecimento"
+     - Dados temporários
+     */
+    func deleteTransaction(
+        transactionId: String,
+        userId: String,
+        soft: Bool = true  // 🏷️ Padrão: soft delete
+    ) async throws {
+        let collectionPath = "users/\(userId)/transactions"
+        
+        if soft {
+            // 🏷️ SOFT DELETE: marca isDeleted
+            print("🏷️ TransactionService: Soft delete de \(transactionId)")
+            
+            // Buscar documento atual
+            var transaction = try await firestoreService.getDocument(
+                transactionId,
+                from: collectionPath,
+                as: Transaction.self
+            )
+            
+            // Marcar como deletado
+            transaction.isDeleted = true
+            transaction.deletedAt = Date()
+            
+            // Atualizar com as flags
+            try await firestoreService.updateDocument(
+                transaction,
+                documentId: transactionId,
+                in: collectionPath
+            )
+            
+            print("✅ Soft delete concluído")
+            print("  📅 deletedAt: \(transaction.deletedAt!)")
+            
+        } else {
+            // 🗑️ HARD DELETE: remove permanentemente
+            print("🗑️ TransactionService: Hard delete de \(transactionId)")
+            
+            try await firestoreService.deleteDocument(
+                from: collectionPath,
+                documentId: transactionId
+            )
+            
+            print("✅ Hard delete concluído - documento removido permanentemente")
+        }
+    }
+    
+    // MARK: - 🔄 Real-time Listeners (✨ PARTE 6 - NOVO!)
+    
+    /*
+     👂 LISTENER PARA TRANSAÇÕES EM TEMPO REAL
+     
+     Escuta mudanças em tempo real e notifica a UI automaticamente.
+     Implementa padrão Observer para sincronização automática.
+     
+     🎯 Como funciona:
+     1. Registra interesse nesta query (addSnapshotListener)
+     2. Firebase detecta writes/deletes que afetam query
+     3. Servidor envia diff (só o que mudou) via WebSocket
+     4. Closure é executada AUTOMATICAMENTE
+     5. UI atualiza sem usuário fazer nada!
+     
+     🎯 Parâmetros:
+     - userId: ID do usuário proprietário das transações
+     - limit: Limite de documentos (padrão 50 para performance)
+     - onUpdate: Closure chamada quando dados mudam (fornece [Transaction])
+     - onError: Closure chamada quando ocorre erro
+     
+     ✅ Retorna: ListenerRegistration para cleanup posterior
+     
+     ⚠️ CRÍTICO: 
+     - SEMPRE chamar listener.remove() quando não precisar mais!
+     - Usar [weak self] na closure para evitar retain cycle
+     - Usar DispatchQueue.main.async para atualizar UI
+     */
+    func startListeningToUserTransactions(
+        userId: String,
+        limit: Int = 50,
+        onUpdate: @escaping ([Transaction]) -> Void,
+        onError: @escaping (Error) -> Void
+    ) -> ListenerRegistration {
+        
+        print("👂 === INICIANDO LISTENER TEMPO REAL ===")
+        print("👤 Usuário: \(userId)")
+        print("📏 Limite: \(limit) transações")
+        print("🎯 Objetivo: Sincronização automática em tempo real")
+        
+        // 🗄️ CONSTRUIR QUERY OTIMIZADA
+        let db = Firestore.firestore()
+        let query = db.collection("users")
+            .document(userId)
+            .collection("transactions")
+            .order(by: "date", descending: true)  // Mais recentes primeiro
+            .limit(to: limit)                     // Limitar para performance
+        
+        print("📍 Query construída: users/\(userId)/transactions")
+        print("🔄 Listener ativo - aguardando mudanças...")
+        
+        // 👂 ADICIONAR LISTENER (A MÁGICA ACONTECE AQUI!)
+        /*
+         📝 addSnapshotListener é o coração do tempo real:
+         
+         O que acontece:
+         1. Firestore "marca" esta query como "interessante"
+         2. Toda vez que dados desta query mudam, Firestore avisa
+         3. A closure abaixo é executada AUTOMATICAMENTE
+         4. Recebemos snapshot com dados atualizados
+         
+         É como assinar notificações push, mas para dados!
+         
+         Esta closure executa:
+         - IMEDIATAMENTE (dados iniciais)
+         - TODA VEZ que algo mudar
+         - AUTOMATICAMENTE sem a gente chamar nada!
+         */
+        let listener = query.addSnapshotListener { [weak self] snapshot, error in
+            
+            // 🚨 TRATAMENTO DE ERRO
+            if let error = error {
+                print("❌ Erro no listener: \(error.localizedDescription)")
+                
+                // Converter para nosso erro customizado (Parte 5!)
+                let firestoreError = FirestoreError.from(error)
+                onError(firestoreError)
+                return
+            }
+            
+            // 📄 VERIFICAR SNAPSHOT
+            guard let snapshot = snapshot else {
+                print("⚠️ Snapshot vazio recebido")
+                onUpdate([])
+                return
+            }
+            
+            print("📦 Snapshot recebido: \(snapshot.documents.count) documentos")
+            
+            // 🎯 CONVERTER DOCUMENTOS PARA OBJETOS SWIFT
+            do {
+                // Codable faz a mágica: Firebase JSON → Swift Object
+                let allTransactions = try snapshot.documents.map { document in
+                    try document.data(as: Transaction.self)
+                }
+                
+                print("✅ Convertidos: \(allTransactions.count) transações")
+                
+                // 🏷️ FILTRAR DELETADOS (soft delete - Parte 5!)
+                /*
+                 Por padrão, não mostramos transações deletadas.
+                 isDeleted é do modelo atualizado na Parte 5.
+                 */
+                let activeTransactions = allTransactions.filter { !$0.isDeleted }
+                
+                print("🏷️ Filtradas: \(activeTransactions.count) ativas (sem deletadas)")
+                
+                // 🛡️ VALIDAR DADOS (defesa em profundidade)
+                /*
+                 Dupla validação:
+                 1. Antes de salvar (preventiva)
+                 2. Depois de buscar (garantia)
+                 
+                 Protege contra dados corrompidos ou regras mudadas.
+                 */
+                let validTransactions = activeTransactions.filter { 
+                    self?.isValidTransaction($0) ?? true 
+                }
+                
+                print("✅ Validadas: \(validTransactions.count) transações válidas")
+                
+                // 🎯 NOTIFICAR UI NA THREAD PRINCIPAL
+                /*
+                 ⚠️ CRÍTICO: UI só pode ser atualizada na main thread!
+                 
+                 Listener executa em background thread (Firebase decide).
+                 Temos que voltar pra main thread antes de atualizar UI.
+                 
+                 Sem isso: CRASH garantido!
+                 "UIKit must be accessed from main thread"
+                 */
+                DispatchQueue.main.async {
+                    onUpdate(validTransactions)
+                }
+                
+                print("🎨 UI notificada com \(validTransactions.count) transações")
+                
+            } catch {
+                print("❌ Erro ao converter documentos: \(error)")
+                onError(FirestoreError.from(error))
+            }
+        }
+        
+        print("📌 Listener registrado com sucesso")
+        print("⚡ Sincronização automática ATIVA!")
+        
+        // ✅ RETORNAR LISTENER PARA CLEANUP POSTERIOR
+        /*
+         ⚠️ IMPORTANTE: Este listener precisa ser REMOVIDO quando não for mais necessário!
+         
+         Sem remoção = MEMORY LEAK:
+         - Listener continua rodando
+         - Consome recursos
+         - App fica lento
+         - Pode travar
+         
+         Sempre guardar este return e chamar .remove() depois!
+         
+         Pattern recomendado:
+         1. Guardar em var listener: ListenerRegistration?
+         2. Chamar listener?.remove() em stopListening()
+         3. Ter deinit que chama stopListening() (rede de segurança)
+         */
+        return listener
+    }
+    
+    // MARK: - VALIDAÇÃO (Parte 5)
+    
+    /*
+     🛡️ VALIDAÇÃO ROBUSTA
+     
+     Regras de negócio específicas do domínio financeiro
+     */
+    private func isValidTransaction(_ transaction: Transaction) -> Bool {
+        // 1. Amount não pode ser zero
+        guard transaction.amount > 0 else {
+            print("❌ Valor inválido: \(transaction.amount)")
+            return false
+        }
+        
+        // 2. Description não pode estar vazia
+        guard !transaction.description.isEmpty else {
+            print("❌ Validação falhou: descrição vazia")
+            return false
+        }
+        
+        // 3. Data não pode ser futura
+        guard transaction.date <= Date() else {
+            print("❌ Data futura: \(transaction.date)")
+            return false
+        }
+        
+        return true
+    }
+}
+
+
+// ==========================================
+// 2. RealtimeDemoViewModel.swift (ARQUIVO COMPLETO - NOVO)
+// ==========================================
+
+import SwiftUI
+import FirebaseFirestore
+
+/*
+ 🎭 VIEWMODEL PARA DEMONSTRAÇÃO DE TEMPO REAL
+ 
+ Gerencia estado e lógica da tela de demonstração.
+ Implementa padrão MVVM (Model-View-ViewModel).
+ 
+ Responsabilidades:
+ - Iniciar/parar listeners
+ - Gerenciar estado da UI (@Published)
+ - Cleanup adequado (deinit)
+ - Conversão de erros para mensagens
+ 
+ NÃO faz:
+ - Renderização (responsabilidade da View)
+ - Lógica de negócio (responsabilidade do Service)
+ */
+@MainActor
+class RealtimeDemoViewModel: ObservableObject {
+    
+    // MARK: - Published Properties
+    
+    /*
+     @Published: Quando estes valores mudam, SwiftUI re-renderiza a View automaticamente.
+     
+     É o "contrato" entre ViewModel e View:
+     - ViewModel atualiza @Published
+     - View observa mudanças
+     - SwiftUI re-desenha automaticamente
+     
+     @MainActor garante que TUDO desta classe executa na main thread (UI-safe).
+     */
+    @Published var transactions: [Transaction] = []
+    @Published var isListening = false
+    @Published var message: String?
+    
+    // MARK: - Private Properties
+    
+    private let service = TransactionService()
+    private let userId = "demo-user"
+    
+    /*
+     ⚠️ CRÍTICO: Guardar ListenerRegistration para poder remover depois!
+     
+     Sem guardar = Não consegue parar listener = Memory leak!
+     */
+    private var listener: ListenerRegistration?
+    
+    // MARK: - Public Methods
+    
+    /*
+     ▶️ INICIAR LISTENER
+     
+     Começa a observar mudanças em tempo real.
+     */
+    func startListening() {
+        // 🛡️ Validar: não iniciar se já está escutando
+        guard !isListening else {
+            message = "⚠️ Já está escutando!"
+            print("⚠️ Tentativa de iniciar listener duplicado - ignorado")
+            return
+        }
+        
+        print("🎧 ViewModel: Iniciando listener...")
+        message = "🔄 Iniciando listener..."
+        
+        // 👂 Iniciar listener do service
+        /*
+         [weak self]: Evita retain cycle (referência circular).
+         
+         Sem [weak self]:
+         - Listener → retém closure
+         - Closure → retém self (ViewModel)
+         - ViewModel → retém listener
+         - Círculo vicioso = Memory leak!
+         
+         Com [weak self]:
+         - Closure não retém ViewModel fortemente
+         - Quando View desaparece, ViewModel pode ser destruído
+         - deinit executa e remove listener
+         
+         É como ter airbag E cinto:
+         - Ideal é usar cinto (stopListening manual)
+         - Mas airbag (deinit) salva se esquecer!
+         */
+        listener = service.startListeningToUserTransactions(
+            userId: userId,
+            limit: 50,
+            onUpdate: { [weak self] transactions in
+                // 🎯 Dados atualizados!
+                print("🎯 ViewModel: Recebeu \(transactions.count) transações")
+                self?.transactions = transactions
+                self?.isListening = true
+                self?.message = "✅ \(transactions.count) transações em tempo real"
+            },
+            onError: { [weak self] error in
+                // 🚨 Erro ocorreu!
+                print("❌ ViewModel: Erro recebido - \(error.localizedDescription)")
+                self?.isListening = false
+                self?.message = "❌ Erro: \(error.localizedDescription)"
+            }
+        )
+        
+        print("✅ ViewModel: Listener iniciado com sucesso")
+    }
+    
+    /*
+     ⏸️ PARAR LISTENER
+     
+     Para de observar mudanças e libera recursos.
+     */
+    func stopListening() {
+        print("🛑 ViewModel: Parando listener...")
+        
+        // Remover listener do Firestore
+        listener?.remove()
+        listener = nil
+        
+        // Atualizar estado
+        isListening = false
+        message = "🛑 Listener parado"
+        
+        print("✅ ViewModel: Listener parado com sucesso")
+    }
+    
+    // MARK: - Lifecycle
+    
+    /*
+     🧹 DESTRUTOR (CRÍTICO PARA CLEANUP!)
+     
+     Executado automaticamente quando ViewModel é destruído.
+     
+     Por que é crítico:
+     - View pode desaparecer sem chamar stopListening()
+     - ViewModel seria destruído mas listener continuaria rodando
+     - deinit é nossa REDE DE SEGURANÇA
+     - Garante que listener sempre será removido
+     
+     É como ter um finally {} automático!
+     
+     Cenários onde deinit salva:
+     1. Usuário fecha app bruscamente
+     2. Navegação rápida entre telas
+     3. Erro/crash na view
+     4. Memory warning (iOS libera VMs não visíveis)
+     
+     Sem deinit adequado:
+     - Listener continua rodando para sempre
+     - Consome CPU e rede constantemente
+     - Memória nunca é liberada
+     - App fica progressivamente mais lento
+     - iOS pode matar app por excesso de memória
+     */
+    deinit {
+        print("🧹 ViewModel: deinit chamado - removendo listener")
+        stopListening()
+        print("✅ ViewModel: Cleanup completo")
+    }
+}
+
+
+// ==========================================
+// 3. RealtimeDemoView.swift (ARQUIVO COMPLETO - NOVO)
+// ==========================================
+
+import SwiftUI
+
+/*
+ 🎨 VIEW PARA DEMONSTRAÇÃO DE TEMPO REAL
+ 
+ Interface visual que demonstra sincronização automática.
+ 
+ Features:
+ - Indicador visual de status (🎧 escutando / 🔇 parado)
+ - Botões para iniciar/parar listener
+ - Lista com transações atualizando em tempo real
+ - Timestamps de auditoria visíveis (Parte 5!)
+ */
+struct RealtimeDemoView: View {
+    
+    /*
+     @StateObject: Cria e mantém ViewModel vivo enquanto View existe.
+     
+     @StateObject vs @ObservedObject:
+     - @StateObject: View DONA do objeto (cria e destrói)
+     - @ObservedObject: View só OBSERVA (recebe pronto)
+     
+     Aqui usamos @StateObject porque esta View cria o ViewModel.
+     Quando View desaparece → SwiftUI destrói @StateObject → deinit executa!
+     */
+    @StateObject private var viewModel = RealtimeDemoViewModel()
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            
+            // 📍 CABEÇALHO
+            Text("⚡ Tempo Real Demo")
+                .font(.title2)
+                .fontWeight(.bold)
+                .padding(.top)
+            
+            // 🎧 STATUS DO LISTENER
+            /*
+             Indicador visual: usuário sabe se está sincronizando.
+             
+             Verde (🎧 Escutando): Dados atualizando automaticamente
+             Cinza (🔇 Parado): Sem sincronização
+             
+             UX profissional: feedback visual constante do estado do sistema
+             */
+            HStack(spacing: 10) {
+                Circle()
+                    .fill(viewModel.isListening ? Color.green : Color.gray)
+                    .frame(width: 12, height: 12)
+                    .animation(.easeInOut, value: viewModel.isListening)
+                
+                Text(viewModel.isListening ? "🎧 Escutando" : "🔇 Parado")
+                    .font(.subheadline)
+                    .foregroundColor(viewModel.isListening ? .green : .gray)
+            }
+            .padding(10)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(20)
+            
+            // 🎛️ BOTÕES DE CONTROLE
+            HStack(spacing: 15) {
+                // ▶️ Iniciar Listener
+                Button(action: {
+                    viewModel.startListening()
+                }) {
+                    Label("Iniciar", systemImage: "play.circle.fill")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(viewModel.isListening ? Color.gray.opacity(0.3) : Color.green.opacity(0.8))
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                .disabled(viewModel.isListening)
+                
+                // ⏸️ Parar Listener
+                Button(action: {
+                    viewModel.stopListening()
+                }) {
+                    Label("Parar", systemImage: "stop.circle.fill")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(!viewModel.isListening ? Color.gray.opacity(0.3) : Color.red.opacity(0.8))
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                .disabled(!viewModel.isListening)
+            }
+            
+            // 💬 MENSAGEM DE FEEDBACK
+            if let message = viewModel.message {
+                Text(message)
+                    .font(.caption)
+                    .foregroundColor(message.contains("❌") ? .red : .green)
+                    .padding(10)
+                    .background(
+                        (message.contains("❌") ? Color.red : Color.green)
+                            .opacity(0.1)
+                    )
+                    .cornerRadius(8)
+            }
+            
+            // 📋 LISTA DE TRANSAÇÕES EM TEMPO REAL
+            /*
+             ✨ ATUALIZA AUTOMATICAMENTE!
+             
+             Quando Firebase detecta mudança:
+             1. Listener notifica ViewModel
+             2. ViewModel atualiza @Published transactions
+             3. SwiftUI detecta mudança
+             4. Lista re-renderiza AUTOMATICAMENTE
+             
+             Sem apertar NADA! 🤯
+             
+             Magia do SwiftUI + Combine + Listeners:
+             - ViewModel é @ObservableObject
+             - transactions é @Published
+             - View observa com @StateObject
+             - Mudança propaga automaticamente
+             */
+            List(viewModel.transactions) { transaction in
+                VStack(alignment: .leading, spacing: 8) {
+                    
+                    // 💰 VALOR + STATUS
+                    HStack {
+                        Text("R$ \(transaction.amount, specifier: "%.2f")")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        Spacer()
+                        
+                        // 🏷️ Badge de Deletado (se soft deleted)
+                        if transaction.isDeleted {
+                            Text("🏷️ DELETED")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                                .padding(4)
+                                .background(Color.red)
+                                .cornerRadius(4)
+                        }
+                    }
+                    
+                    // 📝 DESCRIÇÃO
+                    Text(transaction.description)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    // ✨ TIMESTAMPS DE AUDITORIA (PARTE 5!)
+                    /*
+                     Mostra quando foi:
+                     - Created: Criado pela primeira vez (nunca muda)
+                     - Updated: Última modificação (atualiza em tempo real!)
+                     - Deleted: Quando foi deletado (se deletado)
+                     
+                     Estes campos vêm do Transaction.swift atualizado na Parte 5!
+                     
+                     A mágica: quando UPDATE acontece em outro dispositivo:
+                     1. updatedAt muda no Firestore
+                     2. Listener detecta mudança
+                     3. UI atualiza timestamp AUTOMATICAMENTE
+                     4. Usuário vê mudança em tempo real! ⚡
+                     */
+                    HStack(spacing: 15) {
+                        // Timestamps criação e atualização
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Created: \(transaction.createdAt, style: .time)")
+                                .font(.caption2)
+                            Text("Updated: \(transaction.updatedAt, style: .time)")
+                                .font(.caption2)
+                        }
+                        .foregroundColor(.gray)
+                        
+                        Spacer()
+                        
+                        // Timestamp de deleção (se existir)
+                        if let deletedAt = transaction.deletedAt {
+                            Text("Deleted: \(deletedAt, style: .time)")
+                                .font(.caption2)
+                                .foregroundColor(.red)
+                        }
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+            .listStyle(.plain)
+        }
+        .navigationTitle("⚡ Tempo Real")
+        .padding()
+        
+        /*
+         📝 NOTA: Não precisamos chamar stopListening() manualmente!
+         
+         Quando esta View desaparece:
+         1. SwiftUI destrói @StateObject (viewModel)
+         2. deinit do ViewModel é chamado automaticamente
+         3. deinit chama stopListening()
+         4. Listener é removido
+         5. Cleanup completo! ✅
+         
+         É a beleza de usar deinit como rede de segurança!
+         É como ter airbag no carro - pode não precisar, mas salva se acontecer algo.
+         
+         Pattern: Defensive Programming
+         - 1ª linha: stopListening() manual (ideal path)
+         - 2ª linha: deinit automático (fallback)
+         */
+    }
+}
+
+// Preview para desenvolvimento
+#Preview {
+    NavigationView {
+        RealtimeDemoView()
+    }
+}
+
+
+// ==========================================
+// 4. ContentView.swift (ARQUIVO COMPLETO - Atualizado)
+// ==========================================
+
+import SwiftUI
+
+/*
+ 🏠 CONTENTVIEW - TELA PRINCIPAL DO APP
+ 
+ Menu principal com navegação para diferentes demos:
+ - CRUD Completo (Parte 5)
+ - Tempo Real (Parte 6)
+ 
+ Estrutura:
+ - NavigationView (para NavigationLinks funcionarem)
+ - Cabeçalho visual
+ - Botões de demonstração
+ - Validação automática no .task
+ */
+struct ContentView: View {
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 30) {
+                
+                // 📱 CABEÇALHO
+                VStack(spacing: 10) {
+                    Image(systemName: "building.columns.fill")
+                        .font(.system(size: 80))
+                        .foregroundColor(.blue)
+                    
+                    Text("🛡️ Service Layer Demo")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                    
+                    Text("Arquitetura Profissional")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                }
+                .padding(.top, 50)
+                
+                // 🎯 DEMONSTRAÇÕES
+                VStack(spacing: 15) {
+                    Text("Demonstrações")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    
+                    // ============================================================
+                    // ✅ CRUD COMPLETO (PARTE 5)
+                    // ============================================================
+                    NavigationLink(destination: CRUDDemoView()) {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                                .font(.title2)
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Testar CRUD Completo")
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.primary)
+                                
+                                Text("CREATE + READ + UPDATE + DELETE + Auditoria")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.gray)
+                        }
+                        .padding()
+                        .background(Color.green.opacity(0.1))
+                        .cornerRadius(10)
+                    }
+                    
+                    // ============================================================
+                    // ✨ TEMPO REAL (PARTE 6 - NOVO!)
+                    // ============================================================
+                    NavigationLink(destination: RealtimeDemoView()) {
+                        HStack {
+                            Image(systemName: "bolt.circle.fill")
+                                .foregroundColor(.blue)
+                                .font(.title2)
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Testar Tempo Real")
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.primary)
+                                
+                                Text("Sincronização Automática + Timestamps")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.gray)
+                        }
+                        .padding()
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(10)
+                    }
+                }
+                .padding(.horizontal)
+                
+                Spacer()
+                
+                // ℹ️ INFORMAÇÃO DE AMBIENTE
+                Text(EnvironmentConfig.environmentName)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.bottom)
+            }
+            .navigationBarHidden(true)
+        }
+        .task {
+            // 🧪 Validação automática da configuração
+            print("🧪 Executando validação automática...")
+            let result = await ConfigurationValidator.validateSetup()
+            
+            if result.isValid {
+                print("🎉 App pronto para uso!")
+            } else {
+                print("⚠️ \(result.message)")
+            }
+        }
+    }
+}
+
+#Preview {
+    ContentView()
+}
+
+
+// ==========================================
+// 📝 RESUMO DAS MUDANÇAS DA PARTE 6
+// ==========================================
+
+/*
+✅ ADICIONADO À PARTE 5:
+
+1. TransactionService.swift:
+   ✨ Método startListeningToUserTransactions() COMPLETO
+   ✨ Filtra isDeleted (soft delete da Parte 5)
+   ✨ Valida dados (dupla validação mantida)
+   ✨ DispatchQueue.main.async (thread safety)
+   ✨ Retorna ListenerRegistration (para cleanup)
+   ✨ Comentários educativos linha por linha
+
+2. RealtimeDemoViewModel.swift (NOVO - ARQUIVO COMPLETO):
+   ✨ @MainActor para thread safety total
+   ✨ @Published properties para UI reativa
+   ✨ startListening() e stopListening()
+   ✨ [weak self] para evitar retain cycles
+   ✨ deinit para cleanup automático (rede de segurança)
+   ✨ Tratamento de erros com mensagens
+
+3. RealtimeDemoView.swift (NOVO - ARQUIVO COMPLETO):
+   ✨ @StateObject para gerenciar ViewModel
+   ✨ Indicador visual de status (🎧/🔇 animado)
+   ✨ Botões para iniciar/parar listener
+   ✨ Lista com timestamps visíveis (Parte 5!)
+   ✨ UI atualiza automaticamente (SwiftUI magic)
+   ✨ Feedback visual constante
+
+4. ContentView.swift (ARQUIVO COMPLETO - ATUALIZADO):
+   ✨ NavigationLink para RealtimeDemoView
+   ✨ Mantém NavigationLink do CRUDDemoView
+   ✨ Dois botões com ícones e descrições
+   ✨ Layout consistente e profissional
+
+🎯 RESULTADO FINAL:
+App profissional com:
+- CRUD completo (Parte 5)
+- Sincronização automática em tempo real (Parte 6)
+- Auditoria profissional integrada
+- Thread safety garantido
+- Memory management correto
+- Arquitetura MVVM escalável
+- UX moderna e responsiva
+
+💼 NÍVEL: EMPRESARIAL! 🚀
+*/
+
+
+// ==========================================
+// 🧪 COMO TESTAR
+// ==========================================
+
+/*
+1️⃣ RODAR APP:
+   - Command+R no Xcode
+   - Simulador abre ContentView
+
+2️⃣ NAVEGAR PARA TEMPO REAL:
+   - Clicar botão "Testar Tempo Real ⚡"
+   - RealtimeDemoView abre
+
+3️⃣ INICIAR LISTENER:
+   - Clicar "▶️ Iniciar"
+   - Indicador fica verde (🎧 Escutando)
+   - Console mostra:
+     👂 === INICIANDO LISTENER ===
+     🔄 Listener ativo - aguardando mudanças...
+
+4️⃣ TESTAR SINCRONIZAÇÃO (CREATE):
+   - Voltar ao ContentView (< Back)
+   - Entrar em "Testar CRUD Completo ✅"
+   - Criar nova transação
+   - Voltar para "Testar Tempo Real ⚡"
+   - ✨ Transação aparece AUTOMATICAMENTE!
+   - Timestamps visíveis (Created, Updated)
+
+5️⃣ TESTAR UPDATE EM TEMPO REAL:
+   - Ir em CRUD Demo
+   - Atualizar uma transação (mudar valor)
+   - Voltar para Tempo Real Demo
+   - ✨ Valor muda AUTOMATICAMENTE!
+   - ✨ Updated timestamp muda AUTOMATICAMENTE!
+
+6️⃣ TESTAR SOFT DELETE:
+   - Ir em CRUD Demo
+   - Fazer soft delete de uma transação
+   - Voltar para Tempo Real Demo
+   - ✨ Transação SOME da lista AUTOMATICAMENTE!
+   - Ainda existe no Firestore (auditoria)
+
+7️⃣ PARAR LISTENER:
+   - Clicar "⏸️ Parar"
+   - Indicador fica cinza (🔇 Parado)
+   - Console mostra:
+     🛑 Listener parado
+
+8️⃣ TESTAR CLEANUP:
+   - Iniciar listener novamente
+   - Sair da tela (voltar)
+   - Console mostra:
+     🧹 ViewModel: deinit chamado - removendo listener
+     ✅ ViewModel: Cleanup completo
+
+✅ SE TUDO FUNCIONOU:
+   - Sincronização automática OK
+   - Timestamps aparecem e atualizam
+   - Cleanup sem memory leaks
+   - App nível EMPRESARIAL! 🎉
+
+📱 TESTE ADICIONAL (DOIS SIMULADORES):
+   - Abrir app em 2 simuladores simultaneamente
+   - Iniciar listener em ambos
+   - Criar transação no simulador 1
+   - ✨ Aparece INSTANTANEAMENTE no simulador 2!
+   - Isso é TEMPO REAL! 🔥
+*/
+
+
+// ==========================================
+// 🐛 TROUBLESHOOTING
+// ==========================================
+
+/*
+❌ PROBLEMA: Listener não atualiza
+✅ SOLUÇÃO:
+   - Verificar Firebase conectado (FirebaseApp.configure())
+   - Verificar regras de segurança no Firebase Console
+   - Confirmar userId correto ("demo-user")
+   - Logs no console mostram erros?
+
+❌ PROBLEMA: App trava ao atualizar lista
+✅ SOLUÇÃO:
+   - Confirmar DispatchQueue.main.async nas closures
+   - Sem isso = update UI em background thread = CRASH
+   - Adicionar nos dois lugares: onUpdate E onError
+
+❌ PROBLEMA: Memory leak (app fica lento)
+✅ SOLUÇÃO:
+   - Verificar [weak self] nas closures (startListening)
+   - Verificar deinit sendo chamado (console mostra?)
+   - Confirmar listener?.remove() no deinit
+   - Usar Instruments > Leaks para debug detalhado
+
+❌ PROBLEMA: Timestamps não aparecem
+✅ SOLUÇÃO:
+   - Confirmar Transaction.swift tem campos da Parte 5:
+     * createdAt: Date
+     * updatedAt: Date
+     * isDeleted: Bool
+     * deletedAt: Date?
+   - Recompilar projeto (Command+Shift+K, Command+B)
+
+❌ PROBLEMA: Botões não funcionam
+✅ SOLUÇÃO:
+   - Verificar ContentView tem NavigationView
+   - NavigationLink precisa de NavigationView pai
+   - Confirmar arquivos criados:
+     * RealtimeDemoViewModel.swift
+     * RealtimeDemoView.swift
+
+❌ PROBLEMA: Console mostra "UIKit not on main thread"
+✅ SOLUÇÃO:
+   - Adicionar DispatchQueue.main.async { } em TODAS as closures
+   - ViewModel precisa ter @MainActor
+   - Nunca atualizar @Published fora da main thread
+
+🆘 AINDA COM PROBLEMAS?
+   - Limpar build folder (Command+Shift+K)
+   - Rebuild (Command+B)
+   - Reiniciar simulador
+   - Verificar console para erros específicos
+   - Comparar código com este arquivo completo
+*/
