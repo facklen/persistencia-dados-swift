@@ -25,18 +25,41 @@
             align-items: center;
             justify-content: center;
             position: relative;
+            padding-bottom: 80px; /* Espaço para navegação */
         }
 
         .slide {
             display: none;
             width: 90%;
             max-width: 1200px;
+            max-height: calc(100vh - 120px); /* Limita altura */
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border-radius: 20px;
-            padding: 60px;
+            padding: 40px 60px 60px 60px; /* Mais padding inferior */
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             animation: slideIn 0.5s ease-out;
+            overflow-y: auto; /* ✅ SCROLL VERTICAL */
+            overflow-x: hidden;
+        }
+
+        /* ✅ Estilização da scrollbar */
+        .slide::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .slide::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .slide::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        .slide::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
         }
 
         .slide.active {
@@ -55,21 +78,39 @@
         }
 
         h1 {
-            font-size: 3.5em;
-            margin-bottom: 30px;
+            font-size: 3em;
+            margin-bottom: 25px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         h2 {
-            font-size: 2.5em;
-            margin-bottom: 25px;
+            font-size: 2.2em;
+            margin-bottom: 20px;
             color: #ffd700;
         }
 
         p, li {
-            font-size: 1.5em;
-            line-height: 1.8;
-            margin-bottom: 15px;
+            font-size: 1.4em;
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+
+        /* ✅ Reduz fonte em slides com muito conteúdo */
+        .compact-slide p,
+        .compact-slide li {
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .compact-slide h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .compact-slide .example-box {
+            font-size: 1.1em;
+            line-height: 1.5;
         }
 
         .checklist {
@@ -78,36 +119,37 @@
         }
 
         .checklist li {
-            padding-left: 40px;
+            padding-left: 35px;
             position: relative;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .checklist li:before {
             content: "✅";
             position: absolute;
             left: 0;
-            font-size: 1.5em;
+            font-size: 1.3em;
         }
 
         .example-box {
             background: rgba(255, 255, 255, 0.15);
             border-left: 5px solid #ffd700;
-            padding: 25px;
+            padding: 20px;
             border-radius: 10px;
-            margin: 20px 0;
-            font-size: 1.3em;
+            margin: 15px 0;
+            font-size: 1.2em;
+            line-height: 1.6;
         }
 
         .code-block {
             background: rgba(0, 0, 0, 0.4);
             border-radius: 10px;
-            padding: 25px;
+            padding: 20px;
             font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
-            font-size: 1.1em;
-            line-height: 1.6;
+            font-size: 1em;
+            line-height: 1.5;
             overflow-x: auto;
-            margin: 20px 0;
+            margin: 15px 0;
             white-space: pre-wrap;
             word-wrap: break-word;
         }
@@ -116,44 +158,48 @@
             background: rgba(255, 69, 0, 0.3);
             border: 3px solid #ff4500;
             border-radius: 10px;
-            padding: 25px;
-            margin: 20px 0;
+            padding: 20px;
+            margin: 15px 0;
         }
 
         .success-box {
             background: rgba(34, 197, 94, 0.3);
             border: 3px solid #22c55e;
             border-radius: 10px;
-            padding: 25px;
-            margin: 20px 0;
+            padding: 20px;
+            margin: 15px 0;
         }
 
         .slide-number {
             position: absolute;
-            top: 20px;
-            right: 30px;
-            font-size: 1.2em;
+            top: 15px;
+            right: 25px;
+            font-size: 1.1em;
             opacity: 0.7;
         }
 
         .timing {
             position: absolute;
-            top: 20px;
-            left: 30px;
-            font-size: 1.2em;
+            top: 15px;
+            left: 25px;
+            font-size: 1.1em;
             background: rgba(255, 215, 0, 0.3);
-            padding: 8px 15px;
-            border-radius: 20px;
+            padding: 6px 12px;
+            border-radius: 15px;
         }
 
         .navigation {
             position: fixed;
-            bottom: 30px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
-            gap: 15px;
+            gap: 12px;
             z-index: 1000;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 12px 20px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
         }
 
         .nav-btn {
@@ -161,11 +207,12 @@
             backdrop-filter: blur(10px);
             border: 2px solid rgba(255, 255, 255, 0.3);
             color: white;
-            padding: 15px 30px;
+            padding: 12px 25px;
             border-radius: 50px;
             cursor: pointer;
-            font-size: 1.1em;
+            font-size: 1em;
             transition: all 0.3s;
+            white-space: nowrap;
         }
 
         .nav-btn:hover {
@@ -184,7 +231,7 @@
 
         .intro-slide h1 {
             font-size: 4em;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
 
         .analogy-slide {
@@ -209,6 +256,43 @@
             padding: 2px 8px;
             border-radius: 5px;
         }
+
+        /* ✅ Responsividade para telas menores */
+        @media (max-height: 800px) {
+            h1 {
+                font-size: 2.5em;
+                margin-bottom: 20px;
+            }
+
+            p, li {
+                font-size: 1.2em;
+                line-height: 1.6;
+            }
+
+            .slide {
+                padding: 30px 50px 50px 50px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .slide {
+                width: 95%;
+                padding: 25px 30px 40px 30px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            p, li {
+                font-size: 1.1em;
+            }
+
+            .nav-btn {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+        }
     </style>
 </head>
 <body>
@@ -229,14 +313,14 @@
     <div class="timing">0:15</div>
     <h1>😞 O Problema do Usuário</h1>
     <div class="warning-box">
-        <p style="font-size: 2em; margin-bottom: 30px;">Sem Listeners:</p>
-        <ul style="list-style: none; font-size: 1.8em;">
-            <li style="margin: 20px 0;">📱 João adiciona despesa no iPhone</li>
-            <li style="margin: 20px 0;">⏸️ Maria abre app no iPad</li>
-            <li style="margin: 20px 0;">❌ NADA aparece!</li>
-            <li style="margin: 20px 0;">🔄 Ela precisa lembrar de "atualizar"</li>
+        <p style="font-size: 1.8em; margin-bottom: 25px;">Sem Listeners:</p>
+        <ul style="list-style: none; font-size: 1.6em;">
+            <li style="margin: 15px 0;">📱 João adiciona despesa no iPhone</li>
+            <li style="margin: 15px 0;">⏸️ Maria abre app no iPad</li>
+            <li style="margin: 15px 0;">❌ NADA aparece!</li>
+            <li style="margin: 15px 0;">🔄 Ela precisa lembrar de "atualizar"</li>
         </ul>
-        <p style="font-size: 1.5em; margin-top: 30px; color: #ff4500;"><strong>PÉSSIMA experiência!</strong></p>
+        <p style="font-size: 1.4em; margin-top: 25px; color: #ff4500;"><strong>PÉSSIMA experiência!</strong></p>
     </div>
 </div>
 
@@ -246,14 +330,14 @@
     <div class="timing">0:30</div>
     <h1>🎉 A Mágica do Tempo Real</h1>
     <div class="success-box">
-        <p style="font-size: 2em; margin-bottom: 30px;">Com Listeners:</p>
-        <ul style="list-style: none; font-size: 1.8em;">
-            <li style="margin: 20px 0;">📱 João adiciona despesa no iPhone</li>
-            <li style="margin: 20px 0;">⚡ Firebase detecta mudança</li>
-            <li style="margin: 20px 0;">📡 Retransmite automaticamente</li>
-            <li style="margin: 20px 0;">✅ Maria vê INSTANTANEAMENTE no iPad!</li>
+        <p style="font-size: 1.8em; margin-bottom: 25px;">Com Listeners:</p>
+        <ul style="list-style: none; font-size: 1.6em;">
+            <li style="margin: 15px 0;">📱 João adiciona despesa no iPhone</li>
+            <li style="margin: 15px 0;">⚡ Firebase detecta mudança</li>
+            <li style="margin: 15px 0;">📡 Retransmite automaticamente</li>
+            <li style="margin: 15px 0;">✅ Maria vê INSTANTANEAMENTE no iPad!</li>
         </ul>
-        <p style="font-size: 1.8em; margin-top: 30px; color: #22c55e;"><strong>Sem apertar NADA! 🤯</strong></p>
+        <p style="font-size: 1.6em; margin-top: 25px; color: #22c55e;"><strong>Sem apertar NADA! 🤯</strong></p>
     </div>
 </div>
 
@@ -273,20 +357,20 @@
     </div>
 </div>
 
-<!-- Slide 5: Analogia da Rádio -->
-<div class="slide analogy-slide" id="slide5">
+<!-- Slide 5: Analogia da Rádio - ✅ AJUSTADO COM COMPACT -->
+<div class="slide analogy-slide compact-slide" id="slide5">
     <div class="slide-number">5/16</div>
     <div class="timing">1:30</div>
     <h1>📡 Analogia: Rádio Inteligente</h1>
     <div class="example-box">
-        <p style="font-size: 1.8em; margin-bottom: 20px;"><strong>📻 Rádio Normal:</strong></p>
-        <ul style="font-size: 1.5em;">
+        <p style="font-size: 1.4em; margin-bottom: 15px;"><strong>📻 Rádio Normal:</strong></p>
+        <ul style="font-size: 1.2em; margin-left: 20px;">
             <li>Mesma música para todos</li>
             <li>Só escuta, não influencia</li>
         </ul>
         <br>
-        <p style="font-size: 1.8em; margin-bottom: 20px;"><strong>📡 Firestore (Rádio Inteligente):</strong></p>
-        <ul style="font-size: 1.5em;">
+        <p style="font-size: 1.4em; margin-bottom: 15px;"><strong>📡 Firestore (Rádio Inteligente):</strong></p>
+        <ul style="font-size: 1.2em; margin-left: 20px;">
             <li>Cada família tem sua <strong>frequência privada</strong></li>
             <li>Qualquer membro pode "tocar músicas" (enviar dados)</li>
             <li>Estação <strong>retransmite automaticamente</strong> para todos</li>
@@ -295,22 +379,28 @@
     </div>
 </div>
 
-<!-- Slide 6: Fluxo Rádio → Código -->
-<div class="slide analogy-slide" id="slide6">
+<!-- Slide 6: Fluxo Rádio → Código - ✅ AJUSTADO COM COMPACT -->
+<div class="slide analogy-slide compact-slide" id="slide6">
     <div class="slide-number">6/16</div>
     <div class="timing">2:00</div>
     <h1>🔄 Fluxo: Rádio → Código</h1>
     <div class="example-box">
-        <p style="font-size: 1.6em; line-height: 2;">
+        <p style="font-size: 1.3em; line-height: 1.8; margin-bottom: 10px;">
             <strong>1️⃣ SINTONIZAR:</strong> addSnapshotListener()<br>
-            João e Maria "sintonizam" frequência da família<br><br>
-            
+            João e Maria "sintonizam" frequência da família
+        </p>
+        
+        <p style="font-size: 1.3em; line-height: 1.8; margin-bottom: 10px;">
             <strong>2️⃣ TOCAR MÚSICA:</strong> createTransaction()<br>
-            João adiciona despesa = "toca música nova"<br><br>
-            
+            João adiciona despesa = "toca música nova"
+        </p>
+        
+        <p style="font-size: 1.3em; line-height: 1.8; margin-bottom: 10px;">
             <strong>3️⃣ RETRANSMITIR:</strong> Firestore detecta mudança<br>
-            "Opa! Documento novo na família!"<br><br>
-            
+            "Opa! Documento novo na família!"
+        </p>
+        
+        <p style="font-size: 1.3em; line-height: 1.8; margin-bottom: 0;">
             <strong>4️⃣ RECEBER:</strong> onUpdate([transações])<br>
             Maria "escuta" → UI atualiza automaticamente!
         </p>
@@ -344,7 +434,7 @@
     .limit(to: 50)  // ⚡ Performance!</div>
     <div class="example-box">
         <p><strong>Por que limit de 50?</strong></p>
-        <ul>
+        <ul style="margin-left: 20px;">
             <li>⚡ Performance: não observar milhões de docs</li>
             <li>💰 Custo: Firebase cobra por leitura</li>
             <li>🎨 UX: 50 transações já é muito na tela</li>
@@ -364,12 +454,12 @@
     // 3️⃣ AUTOMATICAMENTE!
 }</div>
     <div class="success-box">
-        <p style="font-size: 1.5em;"><strong>É literalmente uma assinatura de notificações para dados!</strong></p>
+        <p style="font-size: 1.4em;"><strong>É literalmente uma assinatura de notificações para dados!</strong></p>
     </div>
 </div>
 
-<!-- Slide 10: Implementação Completa -->
-<div class="slide implementation-slide" id="slide10">
+<!-- Slide 10: Implementação Completa - ✅ AJUSTADO -->
+<div class="slide implementation-slide compact-slide" id="slide10">
     <div class="slide-number">10/16</div>
     <div class="timing">4:30</div>
     <h1>💻 Método Completo</h1>
@@ -389,7 +479,7 @@
     let listener = query.addSnapshotListener { snapshot, error in
         // Conversão + Filtros + Validação
         // ✨ Filtra isDeleted (Parte 5!)
-        // ✨ Valida dados (defesa em profundidade)
+        // ✨ Valida dados
         onUpdate(validTransactions)
     }
     
@@ -397,8 +487,8 @@
 }</div>
 </div>
 
-<!-- Slide 10.5: UI com Timestamps (NOVO!) -->
-<div class="slide demo-slide" id="slide10-5">
+<!-- Slide 10.5: UI com Timestamps - ✅ AJUSTADO -->
+<div class="slide demo-slide compact-slide" id="slide10-5">
     <div class="slide-number">10.5/16</div>
     <div class="timing">10:30</div>
     <h1>🎨 Interface com Timestamps</h1>
@@ -406,16 +496,13 @@
     VStack(alignment: .leading, spacing: 8) {
         HStack {
             Text("R$ \(transaction.amount, specifier: "%.2f")")
-                .font(.headline)
             Spacer()
             if transaction.isDeleted {
                 Text("🏷️ DELETED")
-                    .foregroundColor(.red)
             }
         }
         
         Text(transaction.description)
-            .font(.subheadline)
         
         // ✨ TIMESTAMPS DE AUDITORIA (PARTE 5!)
         HStack {
@@ -424,22 +511,20 @@
                 Text("Updated: \(transaction.updatedAt, style: .time)")
             }
             .font(.caption2)
-            .foregroundColor(.gray)
             
             if let deletedAt = transaction.deletedAt {
                 Text("Deleted: \(deletedAt, style: .time)")
-                    .foregroundColor(.red)
             }
         }
     }
 }</div>
 </div>
 
-<!-- Slide 11: Filtros e Validação -->
-<div class="slide implementation-slide" id="slide11">
+<!-- Slide 11: Filtros e Validação - ✅ AJUSTADO -->
+<div class="slide implementation-slide compact-slide" id="slide11">
     <div class="slide-number">11/16</div>
     <div class="timing">6:30</div>
-    <h1>🛡️ Filtros e Validação (Parte 5!)</h1>
+    <h1>🛡️ Filtros e Validação</h1>
     <div class="code-block">// 📄 Converter documentos
 let allTransactions = try snapshot.documents.map { 
     try $0.data(as: Transaction.self) 
@@ -449,7 +534,7 @@ let allTransactions = try snapshot.documents.map {
 let activeTransactions = allTransactions
     .filter { !$0.isDeleted }
 
-// 🛡️ Validar dados (defesa em profundidade)
+// 🛡️ Validar dados
 let validTransactions = activeTransactions
     .filter { self?.isValidTransaction($0) ?? true }
 
@@ -459,8 +544,8 @@ DispatchQueue.main.async {
 }</div>
 </div>
 
-<!-- Slide 12: ViewModel -->
-<div class="slide demo-slide" id="slide12">
+<!-- Slide 12: ViewModel - ✅ AJUSTADO -->
+<div class="slide demo-slide compact-slide" id="slide12">
     <div class="slide-number">12/16</div>
     <div class="timing">9:00</div>
     <h1>🎭 ViewModel</h1>
@@ -486,14 +571,14 @@ class RealtimeDemoViewModel: ObservableObject {
 }</div>
 </div>
 
-<!-- Slide 13: Cleanup CRÍTICO -->
-<div class="slide" id="slide13">
+<!-- Slide 13: Cleanup CRÍTICO - ✅ AJUSTADO -->
+<div class="slide compact-slide" id="slide13">
     <div class="slide-number">13/16</div>
     <div class="timing">10:00</div>
     <h1>⚠️ Cleanup CRÍTICO</h1>
     <div class="warning-box">
-        <p style="font-size: 1.8em; margin-bottom: 20px;"><strong>SEM Cleanup:</strong></p>
-        <ul style="font-size: 1.5em;">
+        <p style="font-size: 1.5em; margin-bottom: 15px;"><strong>SEM Cleanup:</strong></p>
+        <ul style="font-size: 1.3em; margin-left: 20px;">
             <li>Listener continua rodando para sempre</li>
             <li>Memory leak garantido</li>
             <li>App fica mais lento</li>
@@ -507,13 +592,13 @@ class RealtimeDemoViewModel: ObservableObject {
 }
 
 deinit {
-    print("🧹 ViewModel destruído - removendo listener")
+    print("🧹 ViewModel destruído")
     stopListening()  // ✅ Rede de segurança!
 }</div>
 </div>
 
-<!-- Slide 14: ContentView -->
-<div class="slide demo-slide" id="slide14">
+<!-- Slide 14: ContentView - ✅ AJUSTADO -->
+<div class="slide demo-slide compact-slide" id="slide14">
     <div class="slide-number">14/16</div>
     <div class="timing">11:30</div>
     <h1>🔗 ContentView Atualizado</h1>
@@ -546,7 +631,7 @@ NavigationLink(destination: RealtimeDemoView()) {
     <div class="timing">11:45</div>
     <h1>🎭 Teste no Simulador</h1>
     <div class="checklist">
-        <ul style="font-size: 1.5em;">
+        <ul style="font-size: 1.3em;">
             <li>▶️ Clicar "Testar Tempo Real ⚡"</li>
             <li>🎧 Iniciar listener (indicador verde)</li>
             <li>➕ Criar transação em CRUDDemo</li>
@@ -563,29 +648,29 @@ NavigationLink(destination: RealtimeDemoView()) {
     <div class="slide-number">16/16</div>
     <div class="timing">12:00</div>
     <h1>🎉 Parabéns!</h1>
-    <p style="font-size: 2em; margin: 40px 0;">Você Dominou Listeners em Tempo Real!</p>
+    <p style="font-size: 1.8em; margin: 30px 0;">Você Dominou Listeners em Tempo Real!</p>
     <div class="success-box" style="text-align: left;">
-        <p style="font-size: 1.5em; margin-bottom: 20px;"><strong>O que você TEM agora:</strong></p>
-        <ul style="font-size: 1.3em; list-style: none;">
-            <li>✅ CRUD completo com auditoria</li>
-            <li>✅ Sincronização automática</li>
-            <li>✅ Filtros de soft delete</li>
-            <li>✅ Timestamps visíveis em tempo real</li>
-            <li>✅ Cleanup adequado (sem leaks!)</li>
-            <li>✅ Interface moderna e responsiva</li>
+        <p style="font-size: 1.3em; margin-bottom: 15px;"><strong>O que você TEM agora:</strong></p>
+        <ul style="font-size: 1.1em; list-style: none; margin-left: 20px;">
+            <li style="margin: 8px 0;">✅ CRUD completo com auditoria</li>
+            <li style="margin: 8px 0;">✅ Sincronização automática</li>
+            <li style="margin: 8px 0;">✅ Filtros de soft delete</li>
+            <li style="margin: 8px 0;">✅ Timestamps visíveis em tempo real</li>
+            <li style="margin: 8px 0;">✅ Cleanup adequado (sem leaks!)</li>
+            <li style="margin: 8px 0;">✅ Interface moderna e responsiva</li>
         </ul>
     </div>
-    <p style="font-size: 1.8em; margin-top: 40px;">App Nível <strong>EMPRESARIAL</strong>! 🚀</p>
+    <p style="font-size: 1.6em; margin-top: 30px;">App Nível <strong>EMPRESARIAL</strong>! 🚀</p>
 </div>
 
 </div>
 
 <!-- Navegação -->
 <div class="navigation">
-    <button class="nav-btn" id="homeBtn">🏠 Início</button>
-    <button class="nav-btn" id="prevBtn">◀️ Anterior</button>
-    <button class="nav-btn" id="nextBtn">Próximo ▶️</button>
-    <button class="nav-btn" id="endBtn">🏁 Final</button>
+    <button class="nav-btn" id="homeBtn">🏠</button>
+    <button class="nav-btn" id="prevBtn">◀️</button>
+    <button class="nav-btn" id="nextBtn">▶️</button>
+    <button class="nav-btn" id="endBtn">🏁</button>
 </div>
 
 <script>
@@ -607,7 +692,12 @@ function showSlide(n) {
         slide.classList.remove('active');
     });
 
-    document.getElementById('slide' + currentSlide).classList.add('active');
+    const activeSlide = document.getElementById('slide' + (currentSlide === 11 ? '10-5' : currentSlide));
+    if (activeSlide) {
+        activeSlide.classList.add('active');
+        // ✅ Scroll para o topo ao trocar de slide
+        activeSlide.scrollTop = 0;
+    }
 
     // Atualizar estado dos botões
     document.getElementById('prevBtn').disabled = (currentSlide === 1);
