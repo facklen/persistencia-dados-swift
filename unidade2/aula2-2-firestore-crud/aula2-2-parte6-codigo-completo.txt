@@ -341,17 +341,26 @@ class TransactionService {
             // 🚨 TRATAMENTO DE ERRO
             if let error = error {
                 print("❌ Erro no listener: \(error.localizedDescription)")
-                
-                // Converter para nosso erro customizado (Parte 5!)
-                let firestoreError = FirestoreError.from(error)
-                onError(firestoreError)
+
+                // 🎯 NOTIFICAR ERRO NA THREAD PRINCIPAL
+                /*
+                ⚠️ CRÍTICO: onError atualiza @Published properties na UI!
+                Precisa executar na main thread, assim como onUpdate.
+     
+                Sem isso: Crash "UIKit must be accessed from main thread"
+                */
+                DispatchQueue.main.async {
+                    onError(FirestoreError.from(error))
+                }
                 return
             }
             
             // 📄 VERIFICAR SNAPSHOT
             guard let snapshot = snapshot else {
                 print("⚠️ Snapshot vazio recebido")
-                onUpdate([])
+                DispatchQueue.main.async {
+                    onUpdate([])
+                }
                 return
             }
             
