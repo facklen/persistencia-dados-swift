@@ -416,7 +416,9 @@ class TransactionService {
                 
             } catch {
                 print("❌ Erro ao converter documentos: \(error)")
-                onError(FirestoreError.from(error))
+                DispatchQueue.main.async {
+                    onError(FirestoreError.from(error))
+                }
             }
         }
         
