@@ -25,25 +25,24 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            padding-bottom: 80px; /* Espaço para navegação */
+            padding-bottom: 80px;
         }
 
         .slide {
             display: none;
             width: 90%;
             max-width: 1200px;
-            max-height: calc(100vh - 120px); /* Limita altura */
+            max-height: calc(100vh - 120px);
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border-radius: 20px;
-            padding: 40px 60px 60px 60px; /* Mais padding inferior */
+            padding: 40px 60px 60px 60px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             animation: slideIn 0.5s ease-out;
-            overflow-y: auto; /* ✅ SCROLL VERTICAL */
+            overflow-y: auto;
             overflow-x: hidden;
         }
 
-        /* ✅ Estilização da scrollbar */
         .slide::-webkit-scrollbar {
             width: 8px;
         }
@@ -95,7 +94,6 @@
             margin-bottom: 12px;
         }
 
-        /* ✅ Reduz fonte em slides com muito conteúdo */
         .compact-slide p,
         .compact-slide li {
             font-size: 1.2em;
@@ -257,7 +255,6 @@
             border-radius: 5px;
         }
 
-        /* ✅ Responsividade para telas menores */
         @media (max-height: 800px) {
             h1 {
                 font-size: 2.5em;
@@ -357,7 +354,7 @@
     </div>
 </div>
 
-<!-- Slide 5: Analogia da Rádio - ✅ AJUSTADO COM COMPACT -->
+<!-- Slide 5: Analogia da Rádio -->
 <div class="slide analogy-slide compact-slide" id="slide5">
     <div class="slide-number">5/16</div>
     <div class="timing">1:30</div>
@@ -379,7 +376,7 @@
     </div>
 </div>
 
-<!-- Slide 6: Fluxo Rádio → Código - ✅ AJUSTADO COM COMPACT -->
+<!-- Slide 6: Fluxo Rádio → Código -->
 <div class="slide analogy-slide compact-slide" id="slide6">
     <div class="slide-number">6/16</div>
     <div class="timing">2:00</div>
@@ -458,7 +455,7 @@
     </div>
 </div>
 
-<!-- Slide 10: Implementação Completa - ✅ AJUSTADO -->
+<!-- Slide 10: Implementação Completa -->
 <div class="slide implementation-slide compact-slide" id="slide10">
     <div class="slide-number">10/16</div>
     <div class="timing">4:30</div>
@@ -487,252 +484,188 @@
 }</div>
 </div>
 
-<!-- Slide 11: RealtimeDemoViewModel - ✅ AJUSTADO -->    
-<div class="slide code-slide" id="slide11">
+<!-- Slide 11: RealtimeDemoViewModel -->
+<div class="slide implementation-slide compact-slide" id="slide11">
     <div class="slide-number">11/16</div>
-    <div class="timing">7:00 - 10:00</div>
-    <h2>🎭 RealtimeDemoViewModel</h2>
+    <div class="timing">7:00</div>
+    <h1>🎭 RealtimeDemoViewModel</h1>
+    <div class="code-block">@MainActor
+class RealtimeDemoViewModel: ObservableObject {
+    // 📢 @Published - UI atualiza automaticamente
+    @Published var transactions: [Transaction] = []
+    @Published var isListening = false
+    @Published var message: String?
     
-    <div class="code-preview">
-<span class="keyword">@MainActor</span>
-<span class="keyword">class</span> <span class="type">RealtimeDemoViewModel</span>: <span class="type">ObservableObject</span> {
-    <span class="comment">// 📢 @Published - UI atualiza automaticamente</span>
-    <span class="keyword">@Published var</span> transactions: [<span class="type">Transaction</span>] = []
-    <span class="keyword">@Published var</span> isListening = <span class="keyword">false</span>
-    <span class="keyword">@Published var</span> message: <span class="type">String</span>?
+    // 🛠️ Dependências
+    private let service = TransactionService()
+    private let userId = "demo_user"
     
-    <span class="comment">// 🛠️ Dependências</span>
-    <span class="keyword">private let</span> service = <span class="type">TransactionService</span>()
-    <span class="keyword">private let</span> userId = <span class="string">"demo_user"</span>
+    // 🎮 Controle do Listener (CRITICAL!)
+    nonisolated(unsafe) private var listener: ListenerRegistration?
     
-    <span class="comment">// 🎮 Controle do Listener (CRITICAL!)</span>
-    <span class="keyword">nonisolated(unsafe) private var</span> listener: <span class="type">ListenerRegistration</span>?
-    
-    <span class="comment">// ▶️ Iniciar + ⏸️ Parar + 🧹 deinit</span>
-}
-    </div>
-    
-    <div class="highlight-box">
-        <h3>🔑 3 Grupos de Properties:</h3>
-        <div class="medium-text">
-            1️⃣ <strong>@Published</strong> → UI observa<br>
-            2️⃣ <strong>Dependencies</strong> → Ferramentas<br>
-            3️⃣ <strong>Listener</strong> → Controle (evita leak!)
-        </div>
+    // ▶️ Iniciar + ⏸️ Parar + 🧹 deinit
+}</div>
+    <div class="example-box">
+        <p><strong>🔑 3 Grupos de Properties:</strong></p>
+        <ul style="margin-left: 20px;">
+            <li><strong>@Published</strong> → UI observa</li>
+            <li><strong>Dependencies</strong> → Ferramentas</li>
+            <li><strong>Listener</strong> → Controle (evita leak!)</li>
+        </ul>
     </div>
 </div>
 
-<!-- Slide 12: Método startListening - ✅ AJUSTADO -->    
-<div class="slide code-slide" id="slide12">
+<!-- Slide 12: Método startListening -->
+<div class="slide implementation-slide compact-slide" id="slide12">
     <div class="slide-number">12/16</div>
-    <div class="timing">10:00 - 11:30</div>
-    <h2>▶️ startListening() - O Botão Play</h2>
+    <div class="timing">10:00</div>
+    <h1>▶️ startListening()</h1>
+    <div class="code-block">func startListening() {
+    // 🛡️ Defesa: não iniciar duplicado
+    guard !isListening else { return }
     
-    <div class="code-preview">
-<span class="keyword">func</span> startListening() {
-    <span class="comment">// 🛡️ Defesa: não iniciar duplicado</span>
-    <span class="keyword">guard</span> !isListening <span class="keyword">else</span> { <span class="keyword">return</span> }
+    // 💬 Feedback imediato ao usuário
+    message = "🔄 Iniciando listener..."
     
-    <span class="comment">// 💬 Feedback imediato ao usuário</span>
-    message = <span class="string">"🔄 Iniciando listener..."</span>
-    
-    <span class="comment">// 🎧 Chamar service com [weak self]</span>
+    // 🎧 Chamar service com [weak self]
     listener = service.startListeningToUserTransactions(
         userId: userId,
-        limit: <span class="number">50</span>,
+        limit: 50,
         
-        <span class="success">// ✅ Sucesso: atualizar tudo</span>
-        onUpdate: { [<span class="keyword">weak self</span>] transactions <span class="keyword">in</span>
-            <span class="keyword">self</span>?.transactions = transactions
-            <span class="keyword">self</span>?.isListening = <span class="keyword">true</span>
-            <span class="keyword">self</span>?.message = <span class="string">"✅ \(transactions.count) transações"</span>
+        // ✅ Sucesso: atualizar tudo
+        onUpdate: { [weak self] transactions in
+            self?.transactions = transactions
+            self?.isListening = true
+            self?.message = "✅ \(transactions.count) transações"
         },
         
-        <span class="error">// ❌ Erro: mostrar problema</span>
-        onError: { [<span class="keyword">weak self</span>] error <span class="keyword">in</span>
-            <span class="keyword">self</span>?.isListening = <span class="keyword">false</span>
-            <span class="keyword">self</span>?.message = <span class="string">"❌ \(error.localizedDescription)"</span>
+        // ❌ Erro: mostrar problema
+        onError: { [weak self] error in
+            self?.isListening = false
+            self?.message = "❌ \(error.localizedDescription)"
         }
     )
-}
-    </div>
-    
-    <div class="highlight-box">
-        <h3>🔄 Fluxo:</h3>
-        <p class="medium-text">
-            Validar → Feedback → Chamar Service → Guardar Listener
-        </p>
+}</div>
+    <div class="success-box">
+        <p style="font-size: 1.3em;"><strong>🔄 Fluxo:</strong> Validar → Feedback → Chamar Service → Guardar Listener</p>
     </div>
 </div>
 
-    
-<!-- Slide 13: Métodos stopListening e Deinit - ViewModel - ✅ AJUSTADO -->
-<div class="slide code-slide" id="slide13">
+<!-- Slide 13: Métodos stopListening e Deinit -->
+<div class="slide implementation-slide compact-slide" id="slide13">
     <div class="slide-number">13/16</div>
-    <div class="timing">11:30 - 12:30</div>
-    <h2>⏸️ stopListening() + 🧹 deinit</h2>
-    
-    <div class="code-preview">
-<span class="comment">// ⏸️ PARAR MANUALMENTE</span>
-<span class="keyword">func</span> stopListening() {
+    <div class="timing">11:30</div>
+    <h1>⏸️ stopListening() + 🧹 deinit</h1>
+    <div class="code-block">// ⏸️ PARAR MANUALMENTE
+func stopListening() {
     cleanupListener()
-    isListening = <span class="keyword">false</span>
-    message = <span class="string">"🛑 Listener parado"</span>
+    isListening = false
+    message = "🛑 Listener parado"
 }
 
-<span class="comment">// 🧹 CLEANUP SEGURO (usado por deinit)</span>
-<span class="keyword">nonisolated private func</span> cleanupListener() {
-    listener?.remove()  <span class="comment">// 📡 Desligar antena Firebase</span>
-    listener = <span class="keyword">nil</span>       <span class="comment">// 🗑️ Liberar memória</span>
+// 🧹 CLEANUP SEGURO (usado por deinit)
+nonisolated private func cleanupListener() {
+    listener?.remove()  // 📡 Desligar antena Firebase
+    listener = nil       // 🗑️ Liberar memória
 }
 
-<span class="comment">// 🛡️ REDE DE SEGURANÇA AUTOMÁTICA</span>
-<span class="keyword">deinit</span> {
-    print(<span class="string">"🧹 ViewModel destruído - removendo listener"</span>)
+// 🛡️ REDE DE SEGURANÇA AUTOMÁTICA
+deinit {
+    print("🧹 ViewModel destruído - removendo listener")
     cleanupListener()
-    print(<span class="string">"✅ Cleanup completo"</span>)
-}
-    </div>
-    
-    <div class="highlight-box">
-        <h3>🛡️ 3 Camadas de Defesa:</h3>
-        <div class="medium-text">
-            1️⃣ onDisappear → Cleanup esperado<br>
-            2️⃣ Botões → Controle do usuário<br>
-            3️⃣ deinit → Rede de segurança final
-        </div>
+    print("✅ Cleanup completo")
+}</div>
+    <div class="warning-box">
+        <p style="font-size: 1.3em;"><strong>🛡️ 3 Camadas de Defesa:</strong></p>
+        <ul style="margin-left: 20px;">
+            <li><strong>1️⃣ onDisappear</strong> → Cleanup esperado</li>
+            <li><strong>2️⃣ Botões</strong> → Controle do usuário</li>
+            <li><strong>3️⃣ deinit</strong> → Rede de segurança final</li>
+        </ul>
     </div>
 </div>
-    
-<!-- Slide 14: RealtimeDemoView - Os 4 Pontos Críticos  -->
-<div class="slide concept-slide" id="slide14">
+
+<!-- Slide 14: RealtimeDemoView -->
+<div class="slide implementation-slide" id="slide14">
     <div class="slide-number">14/16</div>
-    <div class="timing">13:30 - 14:00</div>
-    <h2>📱 RealtimeDemoView - 4 Pontos Críticos</h2>
-    
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-        <div class="highlight-box">
-            <h3>1️⃣ @StateObject</h3>
-            <div class="code-preview" style="font-size: 0.8em;">
-<span class="keyword">@StateObject</span> <span class="keyword">private var</span> viewModel
-    = RealtimeDemoViewModel()
-            </div>
-            <p class="medium-text">View DONA do ViewModel<br>Observa mudanças</p>
-        </div>
-        
-        <div class="highlight-box">
-            <h3>2️⃣ onAppear/onDisappear</h3>
-            <div class="code-preview" style="font-size: 0.8em;">
+    <div class="timing">13:30</div>
+    <h1>📱 RealtimeDemoView - 4 Pontos</h1>
+    <div class="checklist">
+        <ul>
+            <li><strong>1️⃣ @StateObject:</strong> View DONA do ViewModel, observa mudanças</li>
+            <li><strong>2️⃣ onAppear/onDisappear:</strong> Cleanup manual, linha 1 de defesa</li>
+            <li><strong>3️⃣ Lista Reativa:</strong> ZERO código manual, atualiza sozinho! ⚡</li>
+            <li><strong>4️⃣ Timestamps Visíveis:</strong> Auditoria da Parte 5, tempo real visível! 👀</li>
+        </ul>
+    </div>
+    <div class="code-block">@StateObject private var viewModel = RealtimeDemoViewModel()
+
 .onAppear {
     viewModel.startListening()
 }
 .onDisappear {
     viewModel.stopListening()
 }
-            </div>
-            <p class="medium-text">Cleanup manual<br>Linha 1 de defesa</p>
-        </div>
-        
-        <div class="highlight-box">
-            <h3>3️⃣ Lista Reativa</h3>
-            <div class="code-preview" style="font-size: 0.8em;">
-List(viewModel.transactions) { tx <span class="keyword">in</span>
-    Text(<span class="string">"\(tx.description)"</span>)
-}
-            </div>
-            <p class="medium-text">ZERO código manual<br>Atualiza sozinho! ⚡</p>
-        </div>
-        
-        <div class="highlight-box">
-            <h3>4️⃣ Timestamps Visíveis</h3>
-            <div class="code-preview" style="font-size: 0.8em;">
-Text(<span class="string">"Created: \(tx.createdAt)"</span>)
-Text(<span class="string">"Updated: \(tx.updatedAt)"</span>)
-            </div>
-            <p class="medium-text">Auditoria da Parte 5<br>Tempo real visível! 👀</p>
-        </div>
-    </div>
+
+List(viewModel.transactions) { tx in
+    Text("\(tx.description)")
+    Text("Created: \(tx.createdAt)")
+    Text("Updated: \(tx.updatedAt)")
+}</div>
 </div>
 
 <!-- Slide 15: Demonstração com Dois Simuladores -->
 <div class="slide demo-slide" id="slide15">
     <div class="slide-number">15/16</div>
-    <div class="timing">14:00 - 16:30</div>
-    <h2>🧪 Teste ÉPICO: Dois Simuladores</h2>
-    
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
-        <div class="highlight-box">
-            <h3>📱 Simulador 1 (iPhone 16 Pro)</h3>
-            <div class="medium-text">
-                1️⃣ Abrir "Testar CRUD"<br>
-                2️⃣ Adicionar transação<br>
-                3️⃣ "Pizza 🍕 R$ 45,90"<br>
-                4️⃣ Salvar
-            </div>
-            <p style="font-size: 2em; margin: 20px 0;">↓</p>
-            <p class="big-text" style="color: #2ecc71;">
-                ✅ Criada!
-            </p>
-        </div>
-        
-        <div class="highlight-box">
-            <h3>📱 Simulador 2 (iPhone 16)</h3>
-            <div class="medium-text">
-                1️⃣ Tela "Tempo Real" aberta<br>
-                2️⃣ 🎧 Escutando...<br>
-                3️⃣ ⚡ BOOM!<br>
-                4️⃣ Aparece INSTANTANEAMENTE!
-            </div>
-            <p style="font-size: 2em; margin: 20px 0;">✨</p>
-            <p class="big-text" style="color: #3498db;">
-                🍕 Pizza R$ 45,90
-            </p>
-        </div>
+    <div class="timing">14:00</div>
+    <h1>🧪 Teste ÉPICO: Dois Simuladores</h1>
+    <div class="example-box">
+        <p style="font-size: 1.5em; margin-bottom: 15px;"><strong>📱 Simulador 1 (iPhone 16 Pro)</strong></p>
+        <p>1️⃣ Abrir "Testar CRUD" → 2️⃣ Adicionar transação → 3️⃣ "Pizza 🍕 R$ 45,90" → 4️⃣ Salvar</p>
+        <p style="font-size: 2em; color: #22c55e; text-align: center; margin: 15px 0;">✅ Criada!</p>
     </div>
-    
-    <div class="highlight-box" style="margin-top: 30px; background: rgba(46, 213, 115, 0.2);">
-        <p class="big-text">
-            💥 ZERO DELAY! Isso é TEMPO REAL! 🔥
-        </p>
-        <p class="medium-text">
-            Teste também UPDATE e DELETE<br>
-            Timestamps mudam automaticamente!
-        </p>
+    <div style="text-align: center; font-size: 3em; margin: 20px 0;">⇩</div>
+    <div class="success-box">
+        <p style="font-size: 1.5em; margin-bottom: 15px;"><strong>📱 Simulador 2 (iPhone 16)</strong></p>
+        <p>1️⃣ Tela "Tempo Real" aberta → 2️⃣ 🎧 Escutando... → 3️⃣ ⚡ BOOM! → 4️⃣ Aparece INSTANTANEAMENTE!</p>
+        <p style="font-size: 2em; color: #3498db; text-align: center; margin: 15px 0;">🍕 Pizza R$ 45,90</p>
+    </div>
+    <div class="warning-box" style="background: rgba(46, 213, 115, 0.3); border-color: #22c55e;">
+        <p style="font-size: 1.8em; text-align: center;"><strong>💥 ZERO DELAY! Isso é TEMPO REAL! 🔥</strong></p>
+        <p style="font-size: 1.3em; text-align: center; margin-top: 10px;">Teste também UPDATE e DELETE<br>Timestamps mudam automaticamente!</p>
     </div>
 </div>
 
-<!-- Slide 16: Recap Final + Próximos Passos -->
-<div class="slide final-slide" id="slide16">
+<!-- Slide 16: Recap Final -->
+<div class="slide" id="slide16">
     <div class="slide-number">16/16</div>
-    <div class="timing">16:30 - 18:00</div>
-    <div class="emoji-large">🎉</div>
-    <h1>Conceitos Dominados!</h1>
-    
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; max-width: 90%;">
-        <div class="highlight-box">
-            <h3>🔑 Conceitos Técnicos:</h3>
-            <div class="list-item">✅ @escaping closures</div>
-            <div class="list-item">✅ DispatchQueue.main.async</div>
-            <div class="list-item">✅ [weak self] (duplo!)</div>
-            <div class="list-item">✅ ListenerRegistration</div>
-            <div class="list-item">✅ @MainActor</div>
-            <div class="list-item">✅ deinit cleanup</div>
-        </div>
-        
-        <div class="highlight-box">
-            <h3>🏗️ Implementações:</h3>
-            <div class="list-item">✅ startListeningToUserTransactions</div>
-            <div class="list-item">✅ ViewModel reativo</div>
-            <div class="list-item">✅ Interface funcional</div>
-            <div class="list-item">✅ Timestamps visíveis</div>
-            <div class="list-item">✅ 3 camadas de defesa</div>
-            <div class="list-item">✅ Demo com 2 simuladores</div>
-        </div>
+    <div class="timing">16:30</div>
+    <h1 style="text-align: center;">🎉 Conceitos Dominados!</h1>
+    <div class="checklist">
+        <p style="font-size: 1.5em; margin-bottom: 20px;"><strong>🔑 Conceitos Técnicos:</strong></p>
+        <ul>
+            <li>@escaping closures</li>
+            <li>DispatchQueue.main.async</li>
+            <li>[weak self] (duplo!)</li>
+            <li>ListenerRegistration</li>
+            <li>@MainActor</li>
+            <li>deinit cleanup</li>
+        </ul>
     </div>
-    
-    <div class="highlight-box" style="margin-top: 30px; background: rgba(52, 152, 219, 0.3);">
-        <h3 style="margin-bottom: 15px;">📍 Próxima Aula:</h3>
-        <p class="big-text">
+    <div class="checklist">
+        <p style="font-size: 1.5em; margin-bottom: 20px; margin-top: 30px;"><strong>🗝️ Implementações:</strong></p>
+        <ul>
+            <li>startListeningToUserTransactions</li>
+            <li>ViewModel reativo</li>
+            <li>Interface funcional</li>
+            <li>Timestamps visíveis</li>
+            <li>3 camadas de defesa</li>
+            <li>Demo com 2 simuladores</li>
+        </ul>
+    </div>
+    <div class="success-box" style="margin-top: 30px;">
+        <h2 style="color: #fff; margin-bottom: 15px;">📚 Próxima Aula:</h2>
+        <p style="font-size: 1.6em; text-align: center;">
             Integração com Ciclo de Vida<br>
             Security Rules Avançadas
         </p>
@@ -768,14 +701,12 @@ function showSlide(n) {
         slide.classList.remove('active');
     });
 
-    const activeSlide = document.getElementById('slide' + (currentSlide === 11 ? '10-5' : currentSlide));
+    const activeSlide = document.getElementById('slide' + currentSlide);
     if (activeSlide) {
         activeSlide.classList.add('active');
-        // ✅ Scroll para o topo ao trocar de slide
         activeSlide.scrollTop = 0;
     }
 
-    // Atualizar estado dos botões
     document.getElementById('prevBtn').disabled = (currentSlide === 1);
     document.getElementById('nextBtn').disabled = (currentSlide === totalSlides);
 }
@@ -784,7 +715,6 @@ function goToSlide(n) {
     showSlide(n);
 }
 
-// Navegação por teclado
 document.addEventListener('keydown', function(event) {
     if (event.key === 'ArrowRight') {
         goToSlide(currentSlide + 1);
@@ -797,7 +727,6 @@ document.addEventListener('keydown', function(event) {
     }
 });
 
-// Navegação por clique
 document.addEventListener('click', function(event) {
     if (event.target.id !== 'prevBtn' && 
         event.target.id !== 'nextBtn' && 
@@ -807,7 +736,6 @@ document.addEventListener('click', function(event) {
     }
 });
 
-// Botões de navegação
 document.getElementById('prevBtn').addEventListener('click', function(e) {
     e.stopPropagation();
     goToSlide(currentSlide - 1);
@@ -828,7 +756,6 @@ document.getElementById('endBtn').addEventListener('click', function(e) {
     goToSlide(totalSlides);
 });
 
-// Inicializar primeiro slide
 showSlide(1);
 </script>
 
