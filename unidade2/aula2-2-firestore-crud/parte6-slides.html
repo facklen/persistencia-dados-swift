@@ -487,180 +487,256 @@
 }</div>
 </div>
 
-<!-- Slide 10.5: UI com Timestamps - ✅ AJUSTADO -->
-<div class="slide demo-slide compact-slide" id="slide10-5">
-    <div class="slide-number">10.5/16</div>
-    <div class="timing">10:30</div>
-    <h1>🎨 Interface com Timestamps</h1>
-    <div class="code-block">List(viewModel.transactions) { transaction in
-    VStack(alignment: .leading, spacing: 8) {
-        HStack {
-            Text("R$ \(transaction.amount, specifier: "%.2f")")
-            Spacer()
-            if transaction.isDeleted {
-                Text("🏷️ DELETED")
-            }
-        }
-        
-        Text(transaction.description)
-        
-        // ✨ TIMESTAMPS DE AUDITORIA (PARTE 5!)
-        HStack {
-            VStack(alignment: .leading) {
-                Text("Created: \(transaction.createdAt, style: .time)")
-                Text("Updated: \(transaction.updatedAt, style: .time)")
-            }
-            .font(.caption2)
-            
-            if let deletedAt = transaction.deletedAt {
-                Text("Deleted: \(deletedAt, style: .time)")
-            }
-        }
-    }
-}</div>
-</div>
-
-<!-- Slide 11: Filtros e Validação - ✅ AJUSTADO -->
-<div class="slide implementation-slide compact-slide" id="slide11">
+<!-- Slide 11: RealtimeDemoViewModel - ✅ AJUSTADO -->    
+<div class="slide code-slide" id="slide11">
     <div class="slide-number">11/16</div>
-    <div class="timing">6:30</div>
-    <h1>🛡️ Filtros e Validação</h1>
-    <div class="code-block">// 📄 Converter documentos
-let allTransactions = try snapshot.documents.map { 
-    try $0.data(as: Transaction.self) 
+    <div class="timing">7:00 - 10:00</div>
+    <h2>🎭 RealtimeDemoViewModel</h2>
+    
+    <div class="code-preview">
+<span class="keyword">@MainActor</span>
+<span class="keyword">class</span> <span class="type">RealtimeDemoViewModel</span>: <span class="type">ObservableObject</span> {
+    <span class="comment">// 📢 @Published - UI atualiza automaticamente</span>
+    <span class="keyword">@Published var</span> transactions: [<span class="type">Transaction</span>] = []
+    <span class="keyword">@Published var</span> isListening = <span class="keyword">false</span>
+    <span class="keyword">@Published var</span> message: <span class="type">String</span>?
+    
+    <span class="comment">// 🛠️ Dependências</span>
+    <span class="keyword">private let</span> service = <span class="type">TransactionService</span>()
+    <span class="keyword">private let</span> userId = <span class="string">"demo_user"</span>
+    
+    <span class="comment">// 🎮 Controle do Listener (CRITICAL!)</span>
+    <span class="keyword">nonisolated(unsafe) private var</span> listener: <span class="type">ListenerRegistration</span>?
+    
+    <span class="comment">// ▶️ Iniciar + ⏸️ Parar + 🧹 deinit</span>
 }
-
-// 🏷️ Filtrar soft deleted (Parte 5!)
-let activeTransactions = allTransactions
-    .filter { !$0.isDeleted }
-
-// 🛡️ Validar dados
-let validTransactions = activeTransactions
-    .filter { self?.isValidTransaction($0) ?? true }
-
-// 🎯 Notificar UI (thread principal!)
-DispatchQueue.main.async {
-    onUpdate(validTransactions)
-}</div>
-</div>
-
-<!-- Slide 12: ViewModel - ✅ AJUSTADO -->
-<div class="slide demo-slide compact-slide" id="slide12">
-    <div class="slide-number">12/16</div>
-    <div class="timing">9:00</div>
-    <h1>🎭 ViewModel</h1>
-    <div class="code-block">@MainActor
-class RealtimeDemoViewModel: ObservableObject {
-    @Published var transactions: [Transaction] = []
-    @Published var isListening = false
-    
-    private var listener: ListenerRegistration?
-    
-    func startListening() {
-        listener = service.startListeningToUserTransactions(
-            userId: userId,
-            onUpdate: { [weak self] transactions in
-                self?.transactions = transactions
-                self?.isListening = true
-            },
-            onError: { [weak self] error in
-                self?.message = "❌ \(error)"
-            }
-        )
-    }
-}</div>
-</div>
-
-<!-- Slide 13: Cleanup CRÍTICO - ✅ AJUSTADO -->
-<div class="slide compact-slide" id="slide13">
-    <div class="slide-number">13/16</div>
-    <div class="timing">10:00</div>
-    <h1>⚠️ Cleanup CRÍTICO</h1>
-    <div class="warning-box">
-        <p style="font-size: 1.5em; margin-bottom: 15px;"><strong>SEM Cleanup:</strong></p>
-        <ul style="font-size: 1.3em; margin-left: 20px;">
-            <li>Listener continua rodando para sempre</li>
-            <li>Memory leak garantido</li>
-            <li>App fica mais lento</li>
-            <li>Pode travar em produção</li>
-        </ul>
     </div>
-    <div class="code-block">func stopListening() {
-    listener?.remove()
-    listener = nil
-    isListening = false
-}
-
-deinit {
-    print("🧹 ViewModel destruído")
-    stopListening()  // ✅ Rede de segurança!
-}</div>
+    
+    <div class="highlight-box">
+        <h3>🔑 3 Grupos de Properties:</h3>
+        <div class="medium-text">
+            1️⃣ <strong>@Published</strong> → UI observa<br>
+            2️⃣ <strong>Dependencies</strong> → Ferramentas<br>
+            3️⃣ <strong>Listener</strong> → Controle (evita leak!)
+        </div>
+    </div>
 </div>
 
-<!-- Slide 14: ContentView - ✅ AJUSTADO -->
-<div class="slide demo-slide compact-slide" id="slide14">
+<!-- Slide 12: Método startListening - ✅ AJUSTADO -->    
+<div class="slide code-slide" id="slide12">
+    <div class="slide-number">12/16</div>
+    <div class="timing">10:00 - 11:30</div>
+    <h2>▶️ startListening() - O Botão Play</h2>
+    
+    <div class="code-preview">
+<span class="keyword">func</span> startListening() {
+    <span class="comment">// 🛡️ Defesa: não iniciar duplicado</span>
+    <span class="keyword">guard</span> !isListening <span class="keyword">else</span> { <span class="keyword">return</span> }
+    
+    <span class="comment">// 💬 Feedback imediato ao usuário</span>
+    message = <span class="string">"🔄 Iniciando listener..."</span>
+    
+    <span class="comment">// 🎧 Chamar service com [weak self]</span>
+    listener = service.startListeningToUserTransactions(
+        userId: userId,
+        limit: <span class="number">50</span>,
+        
+        <span class="success">// ✅ Sucesso: atualizar tudo</span>
+        onUpdate: { [<span class="keyword">weak self</span>] transactions <span class="keyword">in</span>
+            <span class="keyword">self</span>?.transactions = transactions
+            <span class="keyword">self</span>?.isListening = <span class="keyword">true</span>
+            <span class="keyword">self</span>?.message = <span class="string">"✅ \(transactions.count) transações"</span>
+        },
+        
+        <span class="error">// ❌ Erro: mostrar problema</span>
+        onError: { [<span class="keyword">weak self</span>] error <span class="keyword">in</span>
+            <span class="keyword">self</span>?.isListening = <span class="keyword">false</span>
+            <span class="keyword">self</span>?.message = <span class="string">"❌ \(error.localizedDescription)"</span>
+        }
+    )
+}
+    </div>
+    
+    <div class="highlight-box">
+        <h3>🔄 Fluxo:</h3>
+        <p class="medium-text">
+            Validar → Feedback → Chamar Service → Guardar Listener
+        </p>
+    </div>
+</div>
+
+    
+<!-- Slide 13: Métodos stopListening e Deinit - ViewModel - ✅ AJUSTADO -->
+<div class="slide code-slide" id="slide13">
+    <div class="slide-number">13/16</div>
+    <div class="timing">11:30 - 12:30</div>
+    <h2>⏸️ stopListening() + 🧹 deinit</h2>
+    
+    <div class="code-preview">
+<span class="comment">// ⏸️ PARAR MANUALMENTE</span>
+<span class="keyword">func</span> stopListening() {
+    cleanupListener()
+    isListening = <span class="keyword">false</span>
+    message = <span class="string">"🛑 Listener parado"</span>
+}
+
+<span class="comment">// 🧹 CLEANUP SEGURO (usado por deinit)</span>
+<span class="keyword">nonisolated private func</span> cleanupListener() {
+    listener?.remove()  <span class="comment">// 📡 Desligar antena Firebase</span>
+    listener = <span class="keyword">nil</span>       <span class="comment">// 🗑️ Liberar memória</span>
+}
+
+<span class="comment">// 🛡️ REDE DE SEGURANÇA AUTOMÁTICA</span>
+<span class="keyword">deinit</span> {
+    print(<span class="string">"🧹 ViewModel destruído - removendo listener"</span>)
+    cleanupListener()
+    print(<span class="string">"✅ Cleanup completo"</span>)
+}
+    </div>
+    
+    <div class="highlight-box">
+        <h3>🛡️ 3 Camadas de Defesa:</h3>
+        <div class="medium-text">
+            1️⃣ onDisappear → Cleanup esperado<br>
+            2️⃣ Botões → Controle do usuário<br>
+            3️⃣ deinit → Rede de segurança final
+        </div>
+    </div>
+</div>
+    
+<!-- Slide 14: RealtimeDemoView - Os 4 Pontos Críticos  -->
+<div class="slide concept-slide" id="slide14">
     <div class="slide-number">14/16</div>
-    <div class="timing">11:30</div>
-    <h1>🔗 ContentView Atualizado</h1>
-    <div class="code-block">// ✅ Botão da Parte 5 (já existe)
-NavigationLink(destination: CRUDDemoView()) {
-    HStack {
-        Image(systemName: "checkmark.circle.fill")
-        Text("Testar CRUD Completo ✅")
-    }
-    .padding()
-    .background(Color.green.opacity(0.1))
-    .cornerRadius(10)
+    <div class="timing">13:30 - 14:00</div>
+    <h2>📱 RealtimeDemoView - 4 Pontos Críticos</h2>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="highlight-box">
+            <h3>1️⃣ @StateObject</h3>
+            <div class="code-preview" style="font-size: 0.8em;">
+<span class="keyword">@StateObject</span> <span class="keyword">private var</span> viewModel
+    = RealtimeDemoViewModel()
+            </div>
+            <p class="medium-text">View DONA do ViewModel<br>Observa mudanças</p>
+        </div>
+        
+        <div class="highlight-box">
+            <h3>2️⃣ onAppear/onDisappear</h3>
+            <div class="code-preview" style="font-size: 0.8em;">
+.onAppear {
+    viewModel.startListening()
 }
-
-// ✨ NOVO: Botão da Parte 6
-NavigationLink(destination: RealtimeDemoView()) {
-    HStack {
-        Image(systemName: "bolt.circle.fill")
-        Text("Testar Tempo Real ⚡")
-    }
-    .padding()
-    .background(Color.blue.opacity(0.1))
-    .cornerRadius(10)
-}</div>
+.onDisappear {
+    viewModel.stopListening()
+}
+            </div>
+            <p class="medium-text">Cleanup manual<br>Linha 1 de defesa</p>
+        </div>
+        
+        <div class="highlight-box">
+            <h3>3️⃣ Lista Reativa</h3>
+            <div class="code-preview" style="font-size: 0.8em;">
+List(viewModel.transactions) { tx <span class="keyword">in</span>
+    Text(<span class="string">"\(tx.description)"</span>)
+}
+            </div>
+            <p class="medium-text">ZERO código manual<br>Atualiza sozinho! ⚡</p>
+        </div>
+        
+        <div class="highlight-box">
+            <h3>4️⃣ Timestamps Visíveis</h3>
+            <div class="code-preview" style="font-size: 0.8em;">
+Text(<span class="string">"Created: \(tx.createdAt)"</span>)
+Text(<span class="string">"Updated: \(tx.updatedAt)"</span>)
+            </div>
+            <p class="medium-text">Auditoria da Parte 5<br>Tempo real visível! 👀</p>
+        </div>
+    </div>
 </div>
 
-<!-- Slide 15: Teste no Simulador -->
+<!-- Slide 15: Demonstração com Dois Simuladores -->
 <div class="slide demo-slide" id="slide15">
     <div class="slide-number">15/16</div>
-    <div class="timing">11:45</div>
-    <h1>🎭 Teste no Simulador</h1>
-    <div class="checklist">
-        <ul style="font-size: 1.3em;">
-            <li>▶️ Clicar "Testar Tempo Real ⚡"</li>
-            <li>🎧 Iniciar listener (indicador verde)</li>
-            <li>➕ Criar transação em CRUDDemo</li>
-            <li>⚡ Aparece AUTOMATICAMENTE em RealtimeDemo!</li>
-            <li>✏️ Atualizar transação em CRUDDemo</li>
-            <li>🔄 Timestamps mudam INSTANTANEAMENTE!</li>
-            <li>⏸️ Parar listener (cleanup testado)</li>
-        </ul>
+    <div class="timing">14:00 - 16:30</div>
+    <h2>🧪 Teste ÉPICO: Dois Simuladores</h2>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+        <div class="highlight-box">
+            <h3>📱 Simulador 1 (iPhone 16 Pro)</h3>
+            <div class="medium-text">
+                1️⃣ Abrir "Testar CRUD"<br>
+                2️⃣ Adicionar transação<br>
+                3️⃣ "Pizza 🍕 R$ 45,90"<br>
+                4️⃣ Salvar
+            </div>
+            <p style="font-size: 2em; margin: 20px 0;">↓</p>
+            <p class="big-text" style="color: #2ecc71;">
+                ✅ Criada!
+            </p>
+        </div>
+        
+        <div class="highlight-box">
+            <h3>📱 Simulador 2 (iPhone 16)</h3>
+            <div class="medium-text">
+                1️⃣ Tela "Tempo Real" aberta<br>
+                2️⃣ 🎧 Escutando...<br>
+                3️⃣ ⚡ BOOM!<br>
+                4️⃣ Aparece INSTANTANEAMENTE!
+            </div>
+            <p style="font-size: 2em; margin: 20px 0;">✨</p>
+            <p class="big-text" style="color: #3498db;">
+                🍕 Pizza R$ 45,90
+            </p>
+        </div>
+    </div>
+    
+    <div class="highlight-box" style="margin-top: 30px; background: rgba(46, 213, 115, 0.2);">
+        <p class="big-text">
+            💥 ZERO DELAY! Isso é TEMPO REAL! 🔥
+        </p>
+        <p class="medium-text">
+            Teste também UPDATE e DELETE<br>
+            Timestamps mudam automaticamente!
+        </p>
     </div>
 </div>
 
-<!-- Slide 16: Conclusão -->
-<div class="slide intro-slide" id="slide16">
+<!-- Slide 16: Recap Final + Próximos Passos -->
+<div class="slide final-slide" id="slide16">
     <div class="slide-number">16/16</div>
-    <div class="timing">12:00</div>
-    <h1>🎉 Parabéns!</h1>
-    <p style="font-size: 1.8em; margin: 30px 0;">Você Dominou Listeners em Tempo Real!</p>
-    <div class="success-box" style="text-align: left;">
-        <p style="font-size: 1.3em; margin-bottom: 15px;"><strong>O que você TEM agora:</strong></p>
-        <ul style="font-size: 1.1em; list-style: none; margin-left: 20px;">
-            <li style="margin: 8px 0;">✅ CRUD completo com auditoria</li>
-            <li style="margin: 8px 0;">✅ Sincronização automática</li>
-            <li style="margin: 8px 0;">✅ Filtros de soft delete</li>
-            <li style="margin: 8px 0;">✅ Timestamps visíveis em tempo real</li>
-            <li style="margin: 8px 0;">✅ Cleanup adequado (sem leaks!)</li>
-            <li style="margin: 8px 0;">✅ Interface moderna e responsiva</li>
-        </ul>
+    <div class="timing">16:30 - 18:00</div>
+    <div class="emoji-large">🎉</div>
+    <h1>Conceitos Dominados!</h1>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; max-width: 90%;">
+        <div class="highlight-box">
+            <h3>🔑 Conceitos Técnicos:</h3>
+            <div class="list-item">✅ @escaping closures</div>
+            <div class="list-item">✅ DispatchQueue.main.async</div>
+            <div class="list-item">✅ [weak self] (duplo!)</div>
+            <div class="list-item">✅ ListenerRegistration</div>
+            <div class="list-item">✅ @MainActor</div>
+            <div class="list-item">✅ deinit cleanup</div>
+        </div>
+        
+        <div class="highlight-box">
+            <h3>🏗️ Implementações:</h3>
+            <div class="list-item">✅ startListeningToUserTransactions</div>
+            <div class="list-item">✅ ViewModel reativo</div>
+            <div class="list-item">✅ Interface funcional</div>
+            <div class="list-item">✅ Timestamps visíveis</div>
+            <div class="list-item">✅ 3 camadas de defesa</div>
+            <div class="list-item">✅ Demo com 2 simuladores</div>
+        </div>
     </div>
-    <p style="font-size: 1.6em; margin-top: 30px;">App Nível <strong>EMPRESARIAL</strong>! 🚀</p>
+    
+    <div class="highlight-box" style="margin-top: 30px; background: rgba(52, 152, 219, 0.3);">
+        <h3 style="margin-bottom: 15px;">📍 Próxima Aula:</h3>
+        <p class="big-text">
+            Integração com Ciclo de Vida<br>
+            Security Rules Avançadas
+        </p>
+    </div>
 </div>
 
 </div>
