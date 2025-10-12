@@ -663,15 +663,21 @@ class RealtimeDemoViewModel: ObservableObject {
 import SwiftUI
 
 /*
- 🎨 VIEW PARA DEMONSTRAÇÃO DE TEMPO REAL
+ 🎨 VIEW PARA DEMONSTRAÇÃO DE TEMPO REAL (PRODUCTION-READY)
  
- Interface visual que demonstra sincronização automática.
+ Interface visual que demonstra sincronização automática com 3 camadas de segurança.
  
  Features:
  - Indicador visual de status (🎧 escutando / 🔇 parado)
- - Botões para iniciar/parar listener
+ - Botões para controle manual (iniciar/parar listener)
  - Lista com transações atualizando em tempo real
  - Timestamps de auditoria visíveis (Parte 5!)
+ - Controle automático de ciclo de vida (onAppear/onDisappear)
+ 
+ 🛡️ 3 CAMADAS DE DEFESA:
+ 1. onAppear/onDisappear → Controle automático do ciclo de vida
+ 2. Botões manuais → Controle explícito pelo usuário (opcional)
+ 3. deinit no ViewModel → Rede de segurança final (defensive programming)
  */
 struct RealtimeDemoView: View {
     
@@ -719,7 +725,19 @@ struct RealtimeDemoView: View {
             .background(Color.gray.opacity(0.1))
             .cornerRadius(20)
             
-            // 🎛️ BOTÕES DE CONTROLE
+            // 🎛️ BOTÕES DE CONTROLE (OPCIONAL)
+            /*
+             ✨ CONTROLE MANUAL ADICIONAL
+             
+             Embora tenhamos onAppear/onDisappear automáticos,
+             mantemos botões para:
+             - Demonstração em aula (controle visual)
+             - Usuário pausar sincronização se quiser
+             - Testes e debug
+             
+             Na prática, muitos apps NÃO precisam destes botões,
+             mas são úteis para apps onde usuário quer controle total.
+             */
             HStack(spacing: 15) {
                 // ▶️ Iniciar Listener
                 Button(action: {
@@ -848,25 +866,90 @@ struct RealtimeDemoView: View {
         .navigationTitle("⚡ Tempo Real")
         .padding()
         
+        // 🛡️ CAMADA 1 DE DEFESA: CONTROLE AUTOMÁTICO DE CICLO DE VIDA
+        .onAppear {
+            /*
+             📝 ATIVA LISTENER AUTOMATICAMENTE
+             
+             onAppear é chamado quando View aparece na tela.
+             É o momento perfeito para iniciar sincronização!
+             
+             Fluxo:
+             1. Usuário navega para esta tela
+             2. SwiftUI chama onAppear {}
+             3. startListening() inicia listener
+             4. Dados começam a sincronizar
+             5. Lista popula automaticamente
+             
+             🎯 UX MELHOR: Dados já aparecem ao abrir tela!
+             Usuário não precisa apertar "Iniciar" manualmente.
+             */
+            print("📱 RealtimeDemoView.onAppear → iniciando listener")
+            viewModel.startListening()
+        }
+        
+        // 🛡️ CAMADA 2 DE DEFESA: CLEANUP EXPLÍCITO
+        .onDisappear {
+            /*
+             📝 PARA LISTENER AUTOMATICAMENTE
+             
+             onDisappear é chamado quando View some da tela.
+             É o momento perfeito para economizar recursos!
+             
+             Fluxo:
+             1. Usuário volta (botão back) ou navega para outra tela
+             2. SwiftUI chama onDisappear {}
+             3. stopListening() remove listener
+             4. Firebase para de enviar atualizações
+             5. Economia de bateria e dados! 🔋
+             
+             🎯 PERFORMANCE: Não desperdiça recursos em tela invisível!
+             
+             ⚠️ CRITICAL: Sempre parar listeners em onDisappear!
+             Se esquecer, listeners continuam rodando em background,
+             consumindo recursos desnecessariamente.
+             */
+            print("📱 RealtimeDemoView.onDisappear → parando listener")
+            viewModel.stopListening()
+        }
+        
         /*
-         📝 NOTA: Não precisamos chamar stopListening() manualmente!
+         🛡️ CAMADA 3 DE DEFESA: REDE DE SEGURANÇA (deinit no ViewModel)
          
-         Quando esta View desaparece:
-         1. SwiftUI destrói @StateObject (viewModel)
-         2. deinit do ViewModel é chamado automaticamente
+         E se algo der errado? E se:
+         - onDisappear não for chamado por algum bug?
+         - View for destruída de forma inesperada?
+         - App crashar ou ser forçado a fechar?
+         
+         O deinit no ViewModel é nossa ÚLTIMA LINHA DE DEFESA!
+         
+         Quando @StateObject é destruído (View some):
+         1. SwiftUI destrói viewModel
+         2. deinit do ViewModel é chamado AUTOMATICAMENTE
          3. deinit chama stopListening()
-         4. Listener é removido
-         5. Cleanup completo! ✅
+         4. Listener é removido com certeza! ✅
          
          É a beleza de usar deinit como rede de segurança!
          É como ter airbag no carro - pode não precisar, mas salva se acontecer algo.
          
-         Pattern: Defensive Programming
-         - 1ª linha: stopListening() manual (ideal path)
-         - 2ª linha: deinit automático (fallback)
+         🎯 DEFENSIVE PROGRAMMING PATTERN:
+         - 1ª linha: onDisappear (esperado/ideal)
+         - 2ª linha: Botões manuais (controle do usuário)
+         - 3ª linha: deinit (fallback automático)
+         
+         Nas 3 linhas, listener é removido. Cleanup garantido! 💪
+         
+         💡 ANALOGIA:
+         É como trancar uma casa:
+         1. Fechadura normal (onDisappear)
+         2. Tranca extra (botões manuais)
+         3. Alarme (deinit)
+         
+         Mesmo se esquecer de trancar, alarme ainda protege!
          */
     }
 }
+
 
 // Preview para desenvolvimento
 #Preview {
