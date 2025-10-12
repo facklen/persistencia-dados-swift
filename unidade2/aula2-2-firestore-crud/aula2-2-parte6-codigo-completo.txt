@@ -527,8 +527,18 @@ class RealtimeDemoViewModel: ObservableObject {
      ⚠️ CRÍTICO: Guardar ListenerRegistration para poder remover depois!
      
      Sem guardar = Não consegue parar listener = Memory leak!
+     
+    `nonisolated(unsafe)` significa:
+     - **nonisolated**: "pode ser acessado de qualquer thread"
+     - **unsafe**: "eu garanto que é seguro fazer isso"
+     
+     Ao usarmos o **nonisolated(unsafe)** dizemos que esta property NÃO está isolada ao MainActor. Pode ser acessada de qualquer contexto (incluindo deinit) sem passar pelo mecanismo de sincronização do actor. EU garanto que isso é seguro porque:
+
+     1. Firebase SDK é thread-safe
+     2. Operações são simples (atribuir/remover)
+     3. Property é privada e controlada    
      */
-    private var listener: ListenerRegistration?
+    nonisolated(unsafe) private var listener: ListenerRegistration?
     
     // MARK: - Public Methods
     
@@ -596,17 +606,20 @@ class RealtimeDemoViewModel: ObservableObject {
     func stopListening() {
         print("🛑 ViewModel: Parando listener...")
         
-        // Remover listener do Firestore
-        listener?.remove()
-        listener = nil
+        cleanupListener()      // Faz cleanup
         
-        // Atualizar estado
-        isListening = false
-        message = "🛑 Listener parado"
-        
+        isListening = false // Atualiza a UI
+        message = "🛑 Listener parado"  // Feedback
+                
         print("✅ ViewModel: Listener parado com sucesso")
     }
-    
+
+    // ✅ MÉTODO PRIVADO: Cleanup puro (usado pelo deinit)
+    nonisolated private func cleanupListener() {
+        listener?.remove()
+        listener = nil
+    }
+
     // MARK: - Lifecycle
     
     /*
@@ -637,7 +650,7 @@ class RealtimeDemoViewModel: ObservableObject {
      */
     deinit {
         print("🧹 ViewModel: deinit chamado - removendo listener")
-        stopListening()
+        cleanupListener()      // Faz cleanup
         print("✅ ViewModel: Cleanup completo")
     }
 }
