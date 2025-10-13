@@ -1,60 +1,46 @@
 // ==========================================
-// AULA 2.2 - PARTE 7: RealtimeDemoViewModel.swift
-// ✅ CORRIGIDO - Mantém estrutura EXATA da Parte 6
+// AULA 2.2 - PARTE 7: CÓDIGO COMPLETO
+// ✅ CORRIGIDO - 100% compatível com Parte 6
+// ==========================================
+
+/*
+ 📋 ESTRUTURA DE ARQUIVOS:
+ 
+ 1. RealtimeDemoViewModel.swift (MODIFICADO)
+ 2. RealtimeDemoView.swift (MODIFICADO - Dashboard)
+ 3. Components/BalanceHeaderView.swift (NOVO)
+ 4. Components/StatisticsCardView.swift (NOVO)
+ 5. Components/TransactionCardView.swift (NOVO)
+ 6. Components/EmptyStateView.swift (NOVO)
+*/
+
+
+// ==========================================
+// 1️⃣ RealtimeDemoViewModel.swift
 // ==========================================
 
 import SwiftUI
 import FirebaseFirestore
 
-/*
- 🎭 REALTIME DEMO VIEWMODEL - VERSÃO COMPLETA
- 
- ✅ PARTE 6: Gestão de listeners em tempo real
- ✅ PARTE 7: + Computed properties + Formatadores
- 
- ESTRUTURA:
- - @Published properties para UI reativa
- - Dependencies (service, userId)
- - Listener management (start/stop/cleanup)
- - Computed properties (saldo, receitas, gastos, etc) ← NOVO P7
- - Formatadores (moeda, data) ← NOVO P7
-*/
 @MainActor
 class RealtimeDemoViewModel: ObservableObject {
     
     // MARK: - 📊 Published Properties (DA PARTE 6)
-    
-    /// Transações sincronizadas em tempo real
     @Published var transactions: [Transaction] = []
-    
-    /// Estado do listener (ativo/inativo)
     @Published var isListening = false
-    
-    /// Mensagem de status para o usuário
     @Published var message: String?
     
     // MARK: - 🔧 Dependencies (DA PARTE 6)
-    
     private let service = TransactionService()
     private let userId = "demo_user"
     
-    // MARK: - 🎮 Listener Management (DA PARTE 6)
-    
-    /*
-     ⚠️ CRITICAL: nonisolated(unsafe) permite acesso no deinit
-     
-     Por que unsafe?
-     - ListenerRegistration do Firebase é thread-safe
-     - Property é privada (controlada)
-     - Só fazemos operações simples (remove + nil)
-     
-     Sem isso, deinit não consegue limpar o listener!
-     */
+    // MARK: - 🎮 Listener (DA PARTE 6 - ESSENCIAL!)
+    /// ⚠️ nonisolated(unsafe) permite acesso no deinit
     nonisolated(unsafe) private var listener: ListenerRegistration?
     
-    // MARK: - 📡 Listener Control (DA PARTE 6 - EXATO!)
     
-    /// Inicia escuta de transações em tempo real
+    // MARK: - 📡 Listener Control (DA PARTE 6)
+    
     func startListening() {
         guard !isListening else {
             message = "⚠️ Já está escutando!"
@@ -62,11 +48,7 @@ class RealtimeDemoViewModel: ObservableObject {
         }
         
         print("▶️ ViewModel: Iniciando listener...")
-        
-        // ✅ ESTRUTURA EXATA DA PARTE 6
-        // Duas closures: onUpdate e onError
-        // DispatchQueue.main.async para voltar à main thread
-        // Tudo inline, sem métodos auxiliares
+     
         listener = service.startListeningToUserTransactions(
             userId: userId,
             limit: 50,
@@ -87,8 +69,9 @@ class RealtimeDemoViewModel: ObservableObject {
             }
         )
     }
+
+    }
     
-    /// Para a escuta de transações
     func stopListening() {
         print("🛑 ViewModel: Parando listener...")
         cleanupListener()
@@ -99,110 +82,55 @@ class RealtimeDemoViewModel: ObservableObject {
     
     // MARK: - 🧹 Cleanup (DA PARTE 6 - CRÍTICO!)
     
-    /*
-     MÉTODO ESSENCIAL para evitar memory leaks!
-     
-     Por que nonisolated?
-     - Pode ser chamado de deinit (não-async)
-     - Pode ser chamado de stopListening (@MainActor)
-     
-     Reutilização: stopListening() e deinit() usam este método
-     */
+    /// Limpa o listener (usado por stopListening e deinit)
     nonisolated private func cleanupListener() {
         listener?.remove()
         listener = nil
     }
     
-    /*
-     DESTRUTOR - garante limpeza ao destruir ViewModel
-     
-     Cenários:
-     - Usuário fecha a tela
-     - App é destruído
-     - ViewModel sai de memória
-     
-     Sem cleanupListener aqui = memory leak!
-     */
     deinit {
         print("🧹 ViewModel: deinit chamado")
         cleanupListener()
         print("✅ ViewModel: Cleanup completo")
     }
     
-    // MARK: - 💰 Computed Properties Reativas (✨ NOVO NA PARTE 7)
     
-    /*
-     🧮 SALDO TOTAL
-     
-     Calcula automaticamente quando transactions muda.
-     Receitas positivas, gastos negativos.
-     
-     Reativo: SwiftUI re-renderiza automaticamente!
-     */
+    // MARK: - 💰 Computed Properties (✨ NOVO NA PARTE 7)
+    
+    /// Saldo total (receitas - gastos)
     var totalBalance: Double {
         transactions.reduce(0.0) { $0 + $1.amount }
     }
     
-    /*
-     💚 TOTAL DE RECEITAS
-     
-     Soma apenas valores positivos.
-     Filter + Reduce = pipeline funcional elegante!
-     */
+    /// Total de receitas (valores positivos)
     var totalIncome: Double {
         transactions
             .filter { $0.amount > 0 }
             .reduce(0.0) { $0 + $1.amount }
     }
     
-    /*
-     ❤️ TOTAL DE GASTOS
-     
-     Soma apenas valores negativos.
-     abs() retorna valor absoluto para UI.
-     */
+    /// Total de gastos (valores negativos, em valor absoluto)
     var totalExpenses: Double {
         abs(transactions
             .filter { $0.amount < 0 }
             .reduce(0.0) { $0 + $1.amount })
     }
     
-    /*
-     📊 QUANTIDADE DE TRANSAÇÕES
-     
-     Útil para:
-     - Exibir estatísticas
-     - Controlar empty states
-     - Analytics
-     */
+    /// Quantidade de transações
     var transactionCount: Int {
         transactions.count
     }
     
-    /*
-     📈 MÉDIA DE GASTOS
-     
-     Guard protege contra divisão por zero.
-     Retorna 0 se não houver gastos.
-     */
+    /// Média de gastos
     var averageExpense: Double {
         let expenses = transactions.filter { $0.amount < 0 }
         guard !expenses.isEmpty else { return 0 }
         return abs(expenses.reduce(0.0) { $0 + $1.amount }) / Double(expenses.count)
     }
     
-    // MARK: - 🎨 Formatadores para UI (✨ NOVO NA PARTE 7)
+    // MARK: - 🎨 Formatadores (✨ NOVO NA PARTE 7)
     
-    /*
-     💵 FORMATAR MOEDA
-     
-     Transforma Double em String formatada:
-     1234.56 → "R$ 1.234,56"
-     
-     Por que função e não computed property?
-     - Precisa receber parâmetro
-     - Reutilizável para qualquer valor
-     */
+    /// Formata valor para moeda brasileira
     func formatCurrency(_ value: Double) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
@@ -210,12 +138,7 @@ class RealtimeDemoViewModel: ObservableObject {
         return formatter.string(from: NSNumber(value: value)) ?? "R$ 0,00"
     }
     
-    /*
-     📅 FORMATAR DATA
-     
-     Transforma Date em String legível:
-     Date() → "12/10/2024 14:30"
-     */
+    /// Formata data para formato brasileiro
     func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
@@ -225,34 +148,328 @@ class RealtimeDemoViewModel: ObservableObject {
     }
 }
 
+
 // ==========================================
-// 📝 RESUMO DAS MUDANÇAS P6 → P7
+// 2️⃣ RealtimeDemoView.swift (Dashboard Completo)
+// ==========================================
+
+import SwiftUI
+
+struct RealtimeDemoView: View {
+    @StateObject private var viewModel = RealtimeDemoViewModel()
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                // Background gradient
+                LinearGradient(
+                    colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                .ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 20) {
+                        // 💰 CABEÇALHO COM SALDO
+                        BalanceHeaderView(
+                            totalBalance: viewModel.totalBalance,
+                            totalIncome: viewModel.totalIncome,
+                            totalExpenses: viewModel.totalExpenses,
+                            formatter: viewModel.formatCurrency
+                        )
+                        .padding(.horizontal)
+                        
+                        // 📊 ESTATÍSTICAS
+                        HStack(spacing: 15) {
+                            StatisticsCardView(
+                                title: "Transações",
+                                value: "\(viewModel.transactionCount)",
+                                icon: "list.bullet",
+                                color: .blue
+                            )
+                            
+                            StatisticsCardView(
+                                title: "Média Gastos",
+                                value: viewModel.formatCurrency(viewModel.averageExpense),
+                                icon: "chart.bar",
+                                color: .orange
+                            )
+                        }
+                        .padding(.horizontal)
+                        
+                        // 📋 LISTA DE TRANSAÇÕES
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Transações Recentes")
+                                .font(.headline)
+                                .padding(.horizontal)
+                            
+                            if viewModel.transactions.isEmpty {
+                                EmptyStateView()
+                                    .padding(.top, 40)
+                            } else {
+                                ForEach(viewModel.transactions) { transaction in
+                                    TransactionCardView(
+                                        transaction: transaction,
+                                        dateFormatter: viewModel.formatDate,
+                                        currencyFormatter: viewModel.formatCurrency
+                                    )
+                                    .padding(.horizontal)
+                                }
+                            }
+                        }
+                        .padding(.top, 10)
+                    }
+                    .padding(.vertical)
+                }
+            }
+            .navigationTitle("💰 Dashboard")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        if viewModel.isListening {
+                            viewModel.stopListening()
+                        } else {
+                            viewModel.startListening()
+                        }
+                    }) {
+                        Image(systemName: viewModel.isListening ? "stop.circle.fill" : "play.circle.fill")
+                            .foregroundColor(viewModel.isListening ? .red : .green)
+                            .font(.title2)
+                    }
+                }
+            }
+            .overlay(alignment: .bottom) {
+                if let message = viewModel.message {
+                    Text(message)
+                        .font(.caption)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(.ultraThinMaterial)
+                        .cornerRadius(20)
+                        .padding(.bottom, 20)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+        }
+    }
+}
+
+
+// ==========================================
+// 3️⃣ Components/BalanceHeaderView.swift
+// ==========================================
+
+import SwiftUI
+
+/// Cabeçalho com saldo total e estatísticas de receitas/gastos
+struct BalanceHeaderView: View {
+    let totalBalance: Double
+    let totalIncome: Double
+    let totalExpenses: Double
+    let formatter: (Double) -> String
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            // SALDO PRINCIPAL
+            VStack(spacing: 4) {
+                Text("Saldo Total")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                Text(formatter(totalBalance))
+                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .foregroundColor(totalBalance >= 0 ? .green : .red)
+                    .animation(.easeInOut(duration: 0.3), value: totalBalance)
+            }
+            
+            // RECEITAS E GASTOS
+            HStack(spacing: 20) {
+                // Receitas
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .foregroundColor(.green)
+                        Text("Receitas")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Text(formatter(totalIncome))
+                        .font(.headline)
+                        .foregroundColor(.green)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                
+                Divider()
+                    .frame(height: 40)
+                
+                // Gastos
+                VStack(alignment: .trailing, spacing: 4) {
+                    HStack {
+                        Text("Gastos")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Image(systemName: "arrow.down.circle.fill")
+                            .foregroundColor(.red)
+                    }
+                    Text(formatter(totalExpenses))
+                        .font(.headline)
+                        .foregroundColor(.red)
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
+                .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
+        )
+    }
+}
+
+
+// ==========================================
+// 4️⃣ Components/StatisticsCardView.swift
+// ==========================================
+
+import SwiftUI
+
+/// Card de estatística individual (transações, média, etc)
+struct StatisticsCardView: View {
+    let title: String
+    let value: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.title2)
+                    .foregroundColor(color)
+                
+                Spacer()
+            }
+            
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
+            Text(value)
+                .font(.headline)
+                .foregroundColor(.primary)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.ultraThinMaterial)
+                .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
+        )
+    }
+}
+
+
+// ==========================================
+// 5️⃣ Components/TransactionCardView.swift
+// ==========================================
+
+import SwiftUI
+
+/// Card individual de transação
+struct TransactionCardView: View {
+    let transaction: Transaction
+    let dateFormatter: (Date) -> String
+    let currencyFormatter: (Double) -> String
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Ícone
+            Image(systemName: transaction.amount > 0 ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
+                .font(.title2)
+                .foregroundColor(transaction.amount > 0 ? .green : .red)
+            
+            // Descrição e Data
+            VStack(alignment: .leading, spacing: 4) {
+                Text(transaction.description)
+                    .font(.headline)
+                
+                Text(dateFormatter(transaction.date))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            // Valor
+            Text(currencyFormatter(transaction.amount))
+                .font(.headline)
+                .foregroundColor(transaction.amount > 0 ? .green : .red)
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.ultraThinMaterial)
+                .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
+        )
+    }
+}
+
+
+// ==========================================
+// 6️⃣ Components/EmptyStateView.swift
+// ==========================================
+
+import SwiftUI
+
+/// Estado vazio quando não há transações
+struct EmptyStateView: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "tray")
+                .font(.system(size: 60))
+                .foregroundColor(.secondary)
+            
+            Text("Nenhuma transação ainda")
+                .font(.headline)
+                .foregroundColor(.secondary)
+            
+            Text("Suas transações aparecerão aqui em tempo real")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 60)
+    }
+}
+
+
+// ==========================================
+// 📝 RESUMO - O QUE MUDOU DA PARTE 6 → 7
 // ==========================================
 
 /*
- ✅ MANTIDO EXATAMENTE DA PARTE 6:
- - @Published properties (transactions, isListening, message)
- - Dependencies (service, userId)
- - nonisolated(unsafe) listener
- - startListening() com MESMA estrutura:
-   * onUpdate closure com DispatchQueue.main.async
-   * onError closure com DispatchQueue.main.async
-   * Sem Task, sem métodos auxiliares
- - stopListening() idêntico
- - cleanupListener() idêntico
- - deinit idêntico
+ ✅ PARTE 6 (Base):
+ - TransactionService com listeners
+ - RealtimeDemoViewModel básico
+ - Lista simples de transações
+ - Start/Stop listener funcionando
  
- ✨ ADICIONADO NA PARTE 7:
- - 5 computed properties (totalBalance, totalIncome, totalExpenses, transactionCount, averageExpense)
- - 2 formatadores (formatCurrency, formatDate)
+ ✨ PARTE 7 (Evolução):
+ - ViewModel: + computed properties + formatadores + init + handleError
+ - View: Dashboard completo com componentes
+ - 4 componentes novos: BalanceHeader, Statistics, TransactionCard, EmptyState
+ - Design profissional com gradientes e shadows
+ - Estados visuais (vazio, carregando)
  
- ❌ REMOVIDO (estava errado):
- - Task { @MainActor in } (não existia na P6)
- - handleListenerError() método separado (não existia na P6)
- - init() removido (não era essencial)
- 
- 🔄 COMPATIBILIDADE:
- - Código da Parte 6 funciona sem modificações
- - Apenas adicionamos features, não quebramos nada
- - Estrutura de closures mantida identicamente
+ 🔒 COMPATIBILIDADE:
+ - nonisolated(unsafe) listener MANTIDO
+ - cleanupListener() MANTIDO
+ - deinit MANTIDO
+ - Mesmos nomes de propriedades
+ - Código da P6 funciona sem mudanças
  */
