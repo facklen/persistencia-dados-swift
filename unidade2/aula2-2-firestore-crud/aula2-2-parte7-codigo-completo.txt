@@ -94,8 +94,20 @@ class RealtimeDemoViewModel: ObservableObject {
     
     
     // MARK: - 💰 Computed Properties (✨ NOVO NA PARTE 7)
+    /*
+    ⚠️ IMPORTANTE: Cálculos baseados nas últimas 50 transações
+ 
+    Por questões de performance, o listener carrega apenas as 50 
+    transações mais recentes. Portanto, estes valores são APROXIMADOS
+    e representam apenas a atividade recente, não o histórico completo.
+ 
+    Em um app de produção, você deveria:
+    1. Usar agregação do Firestore para totais reais
+    2. Ter uma collection separada com totais consolidados
+    3. Ou calcular totais no backend
+    */
     
-    /// Saldo total (receitas - gastos)
+    /// Saldo das últimas 50 transações
     var totalBalance: Double {
         transactions.reduce(0.0) { $0 + $1.amount }
     }
@@ -107,19 +119,19 @@ class RealtimeDemoViewModel: ObservableObject {
             .reduce(0.0) { $0 + $1.amount }
     }
     
-    /// Total de gastos (valores negativos, em valor absoluto)
+    /// Total de receitas (últimas 50 transações)
     var totalExpenses: Double {
         abs(transactions
             .filter { $0.amount < 0 }
             .reduce(0.0) { $0 + $1.amount })
     }
     
-    /// Quantidade de transações
+    /// Quantidade de transações (últimas 50 transações)
     var transactionCount: Int {
         transactions.count
     }
     
-    /// Média de gastos
+    /// Média de gastos (últimas 50 transações)
     var averageExpense: Double {
         let expenses = transactions.filter { $0.amount < 0 }
         guard !expenses.isEmpty else { return 0 }
