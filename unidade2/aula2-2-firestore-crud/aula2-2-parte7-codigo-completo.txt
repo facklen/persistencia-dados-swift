@@ -53,21 +53,19 @@ class RealtimeDemoViewModel: ObservableObject {
             userId: userId,
             limit: 50,
             onUpdate: { [weak self] transactions in
-                DispatchQueue.main.async {
-                    print("✅ ViewModel: \(transactions.count) transações recebidas")
-                    self?.transactions = transactions
-                    self?.isListening = true
-                    self?.message = "✅ Sincronizando (\(transactions.count) transações)"
-                }
+                print("✅ ViewModel: \(transactions.count) transações recebidas")
+                self?.transactions = transactions
+                self?.isListening = true
+                self?.message = "✅ Sincronizando (\(transactions.count) transações)"
             },
             onError: { [weak self] error in
-                DispatchQueue.main.async {
-                    print("❌ ViewModel: Erro no listener: \(error.localizedDescription)")
-                    self?.isListening = false
-                    self?.message = "❌ Erro: \(error.localizedDescription)"
-                }
+                print("❌ ViewModel: Erro no listener: \(error.localizedDescription)")
+                self?.isListening = false
+                self?.message = "❌ Erro: \(error.localizedDescription)"
             }
         )
+
+        print("✅ ViewModel: Listener iniciado com sucesso")
     }
 
     }
