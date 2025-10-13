@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parte 7: Integração com SwiftUI - Slides Interativos</title>
+    <title>Parte 7: Dashboard SwiftUI Profissional - Slides Interativos</title>
     <style>
         * {
             margin: 0;
@@ -16,13 +16,12 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             overflow: hidden;
-            cursor: pointer;
         }
 
         .slide {
             display: none;
             height: 100vh;
-            padding: 60px;
+            padding: 50px;
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -69,26 +68,26 @@
         }
 
         h1 {
-            font-size: 4em;
+            font-size: 3.5em;
             margin-bottom: 30px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
             line-height: 1.2;
         }
 
         h2 {
-            font-size: 3em;
+            font-size: 2.5em;
             margin-bottom: 20px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
         .big-text {
-            font-size: 2.5em;
+            font-size: 2em;
             line-height: 1.4;
             max-width: 90%;
         }
         
         .medium-text {
-            font-size: 2em;
+            font-size: 1.6em;
             line-height: 1.5;
             max-width: 90%;
         }
@@ -102,36 +101,32 @@
             backdrop-filter: blur(10px);
         }
         
-        .swiftui-slide {
+        .evolution-slide {
             background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
         }
         
-        .mvvm-slide {
+        .components-slide {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+        
+        .dashboard-slide {
             background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
         }
         
-        .firestore-slide {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-        }
-        
-        .integration-slide {
+        .success-slide {
             background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
-        }
-        
-        .reactive-slide {
-            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
         }
         
         .code-preview {
             background: #2c3e50;
             color: #ecf0f1;
-            padding: 30px;
+            padding: 25px;
             border-radius: 15px;
-            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Courier New', monospace;
-            font-size: 1.3em;
+            font-family: 'SF Mono', 'Monaco', monospace;
+            font-size: 1.1em;
             text-align: left;
             margin: 20px 0;
-            max-width: 90%;
+            max-width: 85%;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
             white-space: pre-wrap;
             line-height: 1.6;
@@ -153,16 +148,12 @@
             font-weight: bold;
         }
 
-        .code-preview .string {
-            color: #f39c12;
-        }
-
         .code-preview .type {
             color: #3498db;
             font-weight: bold;
         }
         
-        .comparison-table {
+        .comparison-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 30px;
@@ -172,7 +163,7 @@
         
         .comparison-item {
             background: rgba(255,255,255,0.1);
-            padding: 30px;
+            padding: 25px;
             border-radius: 15px;
             border: 2px solid rgba(255,255,255,0.3);
             backdrop-filter: blur(10px);
@@ -205,69 +196,25 @@
             transform: translateY(-2px);
         }
 
-        .nav-btn:active {
-            background: rgba(255,255,255,0.7);
-            transform: translateY(0);
-        }
-        
-        .emoji {
-            font-size: 1.2em;
-            margin-right: 10px;
-        }
-        
-        .highlight {
-            background: rgba(255,255,0,0.3);
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-
-        .architecture-flow {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            max-width: 70%;
-        }
-
-        .architecture-item {
-            background: rgba(255,255,255,0.15);
-            padding: 20px;
-            border-radius: 15px;
-            border-left: 5px solid #fff;
-            backdrop-filter: blur(10px);
-        }
-
-        .pulse {
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.05);
-            }
-        }
-
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
+        .feature-list {
+            text-align: left;
+            font-size: 1.4em;
+            line-height: 2;
             max-width: 80%;
         }
 
-        .feature-card {
-            background: rgba(255,255,255,0.15);
-            padding: 25px;
-            border-radius: 15px;
-            border: 2px solid rgba(255,255,255,0.3);
-            backdrop-filter: blur(10px);
-            transition: transform 0.3s ease;
+        .component-showcase {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-width: 85%;
         }
 
-        .feature-card:hover {
-            transform: scale(1.05);
+        .component-card {
+            background: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(255,255,255,0.3);
         }
         
         @media (max-width: 768px) {
@@ -284,25 +231,16 @@
             }
             
             .big-text {
-                font-size: 1.8em;
+                font-size: 1.6em;
             }
             
-            .medium-text {
-                font-size: 1.4em;
-            }
-            
-            .comparison-table {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            
-            .feature-grid {
+            .comparison-grid, .component-showcase {
                 grid-template-columns: 1fr;
             }
 
             .code-preview {
-                font-size: 1em;
-                padding: 20px;
+                font-size: 0.9em;
+                padding: 15px;
             }
         }
     </style>
@@ -313,295 +251,325 @@
     <div class="slide active" id="slide1">
         <div class="slide-number">1/12</div>
         <div class="timing">0:00</div>
-        <h1>📱 SwiftUI + Firestore</h1>
+        <h1>📱 Dashboard SwiftUI<br>Profissional</h1>
         <div class="big-text">
-            A <span class="highlight">Harmonia Perfeita</span> que Você Estava Esperando!
+            Evoluindo da <strong>lista básica</strong> para um<br>
+            <span style="background: rgba(255,255,0,0.3); padding: 5px 15px; border-radius: 10px;">
+                dashboard digno de apps premium
+            </span>
         </div>
         <div class="highlight-box">
             <p class="medium-text">
-                Chegou a hora de unir o poder do <strong>Firestore</strong> 
-                com a elegância do <strong>SwiftUI</strong> ✨
+                Tempo real já funciona (Parte 6) ✅<br>
+                Agora: transformação visual completa! 🎨
             </p>
         </div>
     </div>
 
-    <!-- Slide 2: O Problema -->
+    <!-- Slide 2: O Problema Visual -->
     <div class="slide" id="slide2">
         <div class="slide-number">2/12</div>
-        <div class="timing">0:30</div>
-        <h2>🤔 O Grande Desafio</h2>
-        <div class="big-text">
-            Como fazer a interface <span class="highlight">reagir automaticamente</span> 
-            quando dados mudam no Firestore?
-        </div>
-        <div class="comparison-table">
+        <div class="timing">0:20</div>
+        <h2>🤔 Lista Básica vs Dashboard Premium</h2>
+        <div class="comparison-grid">
             <div class="comparison-item">
-                <h3>❌ Forma Amadora</h3>
-                <p>• Callbacks complexos</p>
-                <p>• Refresh manual</p>
-                <p>• UI desatualizada</p>
-                <p>• Código espaguete</p>
+                <h3 style="color: #e74c3c;">❌ Parte 6 (Básico)</h3>
+                <ul style="text-align: left; margin-top: 15px; line-height: 1.8;">
+                    <li>Lista simples</li>
+                    <li>Sem estatísticas</li>
+                    <li>Sem saldo total</li>
+                    <li>Design minimalista</li>
+                </ul>
             </div>
             <div class="comparison-item">
-                <h3>✅ Forma Profissional</h3>
-                <p>• @Published automático</p>
-                <p>• UI sempre sincronizada</p>
-                <p>• Código limpo</p>
-                <p>• Experiência fluida</p>
+                <h3 style="color: #2ecc71;">✅ Parte 7 (Premium)</h3>
+                <ul style="text-align: left; margin-top: 15px; line-height: 1.8;">
+                    <li>Dashboard completo</li>
+                    <li>Estatísticas reativas</li>
+                    <li>Saldo automatizado</li>
+                    <li>Design profissional</li>
+                </ul>
             </div>
         </div>
     </div>
 
-    <!-- Slide 3: MVVM Pattern -->
-    <div class="slide mvvm-slide" id="slide3">
+    <!-- Slide 3: Promessa da Evolução -->
+    <div class="slide evolution-slide" id="slide3">
         <div class="slide-number">3/12</div>
-        <div class="timing">1:00</div>
-        <h2>🏗️ MVVM Reativo</h2>
-        <div class="big-text">
-            O padrão que <span class="highlight">conecta tudo</span> de forma elegante
-        </div>
-        <div class="architecture-flow">
-            <div class="architecture-item">
-                <strong>📱 SwiftUI Views</strong> - Interface declarativa e reativa
-            </div>
-            <div class="architecture-item pulse">
-                <strong>🎭 ViewModels</strong> - @Published + ObservableObject
-            </div>
-            <div class="architecture-item">
-                <strong>🔧 Services</strong> - Lógica de negócio e Firestore
-            </div>
-            <div class="architecture-item">
-                <strong>🔥 Firestore</strong> - Dados em tempo real
-            </div>
+        <div class="timing">0:40</div>
+        <h2>🚀 Transformação em 15 Minutos</h2>
+        <div class="feature-list">
+            <p>✅ <strong>Saldo total</strong> calculando automaticamente</p>
+            <p>✅ <strong>Receitas e gastos</strong> separados e coloridos</p>
+            <p>✅ <strong>Estatísticas</strong> reativas (quantidade, média)</p>
+            <p>✅ <strong>Cards modernos</strong> e componentes reutilizáveis</p>
+            <p>✅ <strong>Empty states</strong> informativos</p>
+            <p>✅ <strong>Tudo reagindo</strong> ao tempo real da Parte 6!</p>
         </div>
     </div>
 
-    <!-- Slide 4: @Published Magic -->
-    <div class="slide reactive-slide" id="slide4">
+    <!-- Slide 4: Computed Properties -->
+    <div class="slide" id="slide4">
         <div class="slide-number">4/12</div>
-        <div class="timing">1:30</div>
-        <h2>✨ A Mágica do @Published</h2>
+        <div class="timing">1:00</div>
+        <h2>💡 Computed Properties = Calculadoras Automáticas</h2>
         <div class="code-preview">
-<span class="keyword">@Published</span> <span class="keyword">var</span> transactions: [<span class="type">Transaction</span>] = []
-<span class="keyword">@Published</span> <span class="keyword">var</span> isLoading = <span class="keyword">false</span>
-<span class="keyword">@Published</span> <span class="keyword">var</span> errorMessage: <span class="type">String</span>?
+<span class="comment">// 🧮 Transactions mudam → Recalcula automaticamente!</span>
 
-<span class="comment">// ✨ SwiftUI reage automaticamente!</span>
-<span class="keyword">var</span> currentBalance: <span class="type">Double</span> {
-    transactions.reduce(<span class="string">0</span>) { $0 + $1.amount }
+<span class="keyword">var</span> totalBalance: <span class="type">Double</span> {
+    transactions.<span class="success">reduce</span>(0.0) { $0 + $1.amount }
 }
-        </div>
-        <div class="medium-text" style="margin-top: 30px;">
-            Muda o dado → <span class="highlight">UI atualiza sozinha!</span> 🎯
-        </div>
-    </div>
 
-    <!-- Slide 5: ViewModel Complete -->
-    <div class="slide swiftui-slide" id="slide5">
-        <div class="slide-number">5/12</div>
-        <div class="timing">2:00</div>
-        <h2>🎭 ViewModel Profissional</h2>
-        <div class="code-preview">
-<span class="keyword">@MainActor</span>
-<span class="keyword">class</span> <span class="type">FinanceManagerViewModel</span>: <span class="type">ObservableObject</span> {
-    <span class="keyword">@Published</span> <span class="keyword">var</span> transactions: [<span class="type">Transaction</span>] = []
-    <span class="keyword">@Published</span> <span class="keyword">var</span> isLoading = <span class="keyword">false</span>
-    <span class="keyword">@Published</span> <span class="keyword">var</span> errorMessage: <span class="type">String</span>?
-    
-    <span class="keyword">private</span> <span class="keyword">let</span> transactionService = <span class="type">TransactionService</span>()
-    
-    <span class="keyword">func</span> startListening() {
-        transactionService.observeTransactions { [<span class="keyword">weak</span> <span class="keyword">self</span>] result <span class="keyword">in</span>
-            <span class="type">DispatchQueue</span>.main.async {
-                <span class="keyword">self</span>?.transactions = result
-                <span class="comment">// ✅ UI atualiza automaticamente!</span>
-            }
-        }
-    }
+<span class="keyword">var</span> totalIncome: <span class="type">Double</span> {
+    transactions
+        .<span class="success">filter</span> { $0.amount > 0 }
+        .<span class="success">reduce</span>(0.0) { $0 + $1.amount }
 }
-        </div>
-    </div>
 
-    <!-- Slide 6: SwiftUI Interface -->
-    <div class="slide" id="slide6">
-        <div class="slide-number">6/12</div>
-        <div class="timing">3:00</div>
-        <h2>📱 Interface SwiftUI</h2>
-        <div class="feature-grid">
-            <div class="feature-card">
-                <h3>🔄 Estados Visuais</h3>
-                <p>Loading, Error, Empty, Success - todos automáticos</p>
-            </div>
-            <div class="feature-card">
-                <h3>📐 Layout Responsivo</h3>
-                <p>Se adapta ao conteúdo e tamanho da tela</p>
-            </div>
-            <div class="feature-card">
-                <h3>✨ Animações Suaves</h3>
-                <p>Transições automáticas entre estados</p>
-            </div>
-            <div class="feature-card">
-                <h3>👆 Gestures Avançados</h3>
-                <p>Long press, pull-to-refresh, swipe actions</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Slide 7: Real-time Integration -->
-    <div class="slide firestore-slide" id="slide7">
-        <div class="slide-number">7/12</div>
-        <div class="timing">4:00</div>
-        <h2>🔥 Tempo Real Integrado</h2>
-        <div class="big-text">
-            Firestore muda → <span class="highlight">UI atualiza instantaneamente</span>
+<span class="keyword">var</span> totalExpenses: <span class="type">Double</span> {
+    <span class="success">abs</span>(transactions
+        .<span class="success">filter</span> { $0.amount < 0 }
+        .<span class="success">reduce</span>(0.0) { $0 + $1.amount })
+}
         </div>
         <div class="highlight-box">
             <p class="medium-text">
-                🌐 Cross-device sync automática<br>
-                ⚡ Updates em &lt; 1 segundo<br>
-                🔄 Reconnect automático<br>
-                💪 Offline-first ready
+                <strong>Zero</strong> código manual de atualização!<br>
+                É <span style="color: #2ecc71;">REATIVO</span>! ✨
             </p>
         </div>
     </div>
 
-    <!-- Slide 8: Data Flow -->
-    <div class="slide integration-slide" id="slide8">
-        <div class="slide-number">8/12</div>
-        <div class="timing">4:30</div>
-        <h2>🌊 Fluxo de Dados</h2>
-        <div class="architecture-flow">
-            <div class="architecture-item">
-                <strong>1.</strong> User taps button → View calls ViewModel
-            </div>
-            <div class="architecture-item">
-                <strong>2.</strong> ViewModel calls Service → Service calls Firestore
-            </div>
-            <div class="architecture-item">
-                <strong>3.</strong> Firestore updates data → Listener detects change
-            </div>
-            <div class="architecture-item">
-                <strong>4.</strong> Service processes → ViewModel updates @Published
-            </div>
-            <div class="architecture-item pulse">
-                <strong>5.</strong> SwiftUI recomposes → UI updates automatically!
-            </div>
+    <!-- Slide 5: Formatadores -->
+    <div class="slide" id="slide5">
+        <div class="slide-number">5/12</div>
+        <div class="timing">3:30</div>
+        <h2>🎨 Formatadores para UI Bonita</h2>
+        <div class="code-preview">
+<span class="comment">// 💵 Double → String formatada bonita</span>
+<span class="keyword">func</span> <span class="success">formatCurrency</span>(<span class="keyword">_</span> value: <span class="type">Double</span>) -> <span class="type">String</span> {
+    <span class="keyword">let</span> formatter = <span class="type">NumberFormatter</span>()
+    formatter.numberStyle = .currency
+    formatter.locale = <span class="type">Locale</span>(identifier: <span class="type">"pt_BR"</span>)
+    <span class="keyword">return</span> formatter.string(from: value) ?? <span class="type">"R$ 0,00"</span>
+}
+
+<span class="comment">// 📅 Date → String legível</span>
+<span class="keyword">func</span> <span class="success">formatDate</span>(<span class="keyword">_</span> date: <span class="type">Date</span>) -> <span class="type">String</span> {
+    <span class="keyword">let</span> formatter = <span class="type">DateFormatter</span>()
+    formatter.dateStyle = .short
+    formatter.timeStyle = .short
+    <span class="keyword">return</span> formatter.string(from: date)
+}
         </div>
     </div>
 
-    <!-- Slide 9: Complete Implementation -->
-    <div class="slide" id="slide9">
-        <div class="slide-number">9/12</div>
-        <div class="timing">5:00</div>
-        <h2>🏗️ Implementação Completa</h2>
+    <!-- Slide 6: Componentes Reutilizáveis -->
+    <div class="slide components-slide" id="slide6">
+        <div class="slide-number">6/12</div>
+        <div class="timing">4:00</div>
+        <h2>🧩 4 Componentes Profissionais</h2>
+        <div class="component-showcase">
+            <div class="component-card">
+                <h3>💰 BalanceHeaderView</h3>
+                <p>Saldo + Receitas + Gastos<br>com animações suaves</p>
+            </div>
+            <div class="component-card">
+                <h3>📊 StatisticsCardView</h3>
+                <p>Cards genéricos<br>para qualquer métrica</p>
+            </div>
+            <div class="component-card">
+                <h3>💳 TransactionCardView</h3>
+                <p>Card individual de<br>transação moderna</p>
+            </div>
+            <div class="component-card">
+                <h3>📭 EmptyStateView</h3>
+                <p>Estado vazio<br>informativo e bonito</p>
+            </div>
+        </div>
+        <div class="highlight-box" style="margin-top: 20px;">
+            <p class="medium-text">
+                <strong>Reutilizáveis</strong> • <strong>Testáveis</strong> • <strong>Escaláveis</strong>
+            </p>
+        </div>
+    </div>
+
+    <!-- Slide 7: BalanceHeaderView -->
+    <div class="slide" id="slide7">
+        <div class="slide-number">7/12</div>
+        <div class="timing">4:30</div>
+        <h2>💰 BalanceHeaderView</h2>
         <div class="code-preview">
-<span class="keyword">struct</span> <span class="type">FinanceDashboard</span>: <span class="type">View</span> {
-    <span class="keyword">@StateObject</span> <span class="keyword">private</span> <span class="keyword">var</span> viewModel = <span class="type">FinanceManagerViewModel</span>()
+<span class="keyword">struct</span> <span class="type">BalanceHeaderView</span>: <span class="type">View</span> {
+    <span class="keyword">let</span> totalBalance: <span class="type">Double</span>
+    <span class="keyword">let</span> totalIncome: <span class="type">Double</span>
+    <span class="keyword">let</span> totalExpenses: <span class="type">Double</span>
+    <span class="keyword">let</span> formatter: (<span class="type">Double</span>) -> <span class="type">String</span>
     
     <span class="keyword">var</span> body: <span class="keyword">some</span> <span class="type">View</span> {
-        <span class="type">NavigationView</span> {
-            <span class="type">Group</span> {
-                <span class="keyword">if</span> viewModel.isLoading {
-                    <span class="type">LoadingView</span>()
-                } <span class="keyword">else</span> <span class="keyword">if</span> <span class="keyword">let</span> error = viewModel.errorMessage {
-                    <span class="type">ErrorView</span>(message: error)
-                } <span class="keyword">else</span> <span class="keyword">if</span> viewModel.transactions.isEmpty {
-                    <span class="type">EmptyStateView</span>()
-                } <span class="keyword">else</span> {
-                    <span class="type">TransactionList</span>(transactions: viewModel.transactions)
-                }
+        <span class="type">VStack</span> {
+            <span class="comment">// 💰 Saldo principal com cor semântica</span>
+            <span class="type">Text</span>(formatter(totalBalance))
+                .foregroundColor(totalBalance >= 0 ? .green : .red)
+                .<span class="success">animation</span>(.easeInOut, value: totalBalance)
+            
+            <span class="comment">// 📊 Receitas e gastos lado a lado</span>
+            <span class="type">HStack</span> {
+                <span class="comment">// 💚 Receitas  •  ❤️ Gastos</span>
             }
         }
-        .onAppear { viewModel.startListening() }
     }
 }
         </div>
     </div>
 
-    <!-- Slide 10: Visual States -->
-    <div class="slide reactive-slide" id="slide10">
-        <div class="slide-number">10/12</div>
-        <div class="timing">5:30</div>
-        <h2>🎨 Estados Visuais</h2>
-        <div class="feature-grid">
-            <div class="feature-card">
-                <h3>⏳ Loading</h3>
-                <p>Skeleton screens elegantes</p>
-            </div>
-            <div class="feature-card">
-                <h3>❌ Error</h3>
-                <p>Mensagens claras e acionáveis</p>
-            </div>
-            <div class="feature-card">
-                <h3>📭 Empty</h3>
-                <p>Estados vazios informativos</p>
-            </div>
-            <div class="feature-card">
-                <h3>✅ Success</h3>
-                <p>Dados organizados e interativos</p>
-            </div>
-        </div>
-        <div class="medium-text" style="margin-top: 30px;">
-            Experiência profissional em <span class="highlight">todos os cenários</span>!
-        </div>
-    </div>
-
-    <!-- Slide 11: Testing & Validation -->
-    <div class="slide mvvm-slide" id="slide11">
-        <div class="slide-number">11/12</div>
-        <div class="timing">6:00</div>
-        <h2>🧪 Testando a Integração</h2>
-        <div class="comparison-table">
-            <div class="comparison-item">
-                <h3>📱 Multi-device</h3>
-                <p>• iPhone + iPad sync</p>
-                <p>• Mudanças instantâneas</p>
-                <p>• Consistência garantida</p>
-            </div>
-            <div class="comparison-item">
-                <h3>⚡ Performance</h3>
-                <p>• Memory leaks zero</p>
-                <p>• UI thread safe</p>
-                <p>• Smooth animations</p>
-            </div>
+    <!-- Slide 8: StatisticsCardView -->
+    <div class="slide" id="slide8">
+        <div class="slide-number">8/12</div>
+        <div class="timing">6:30</div>
+        <h2>📊 StatisticsCardView - Genérico</h2>
+        <div class="code-preview">
+<span class="keyword">struct</span> <span class="type">StatisticsCardView</span>: <span class="type">View</span> {
+    <span class="keyword">let</span> icon: <span class="type">String</span>      <span class="comment">// SF Symbol</span>
+    <span class="keyword">let</span> title: <span class="type">String</span>     <span class="comment">// "Transações"</span>
+    <span class="keyword">let</span> value: <span class="type">String</span>     <span class="comment">// "24"</span>
+    <span class="keyword">let</span> color: <span class="type">Color</span>      <span class="comment">// .blue</span>
+    
+    <span class="keyword">var</span> body: <span class="keyword">some</span> <span class="type">View</span> {
+        <span class="type">HStack</span> {
+            <span class="comment">// 🎨 Ícone circular colorido</span>
+            <span class="type">Image</span>(systemName: icon)
+                .foregroundColor(color)
+                .background(color.opacity(0.2))
+            
+            <span class="comment">// 📝 Título + Valor</span>
+            <span class="type">VStack</span>(alignment: .leading) {
+                <span class="type">Text</span>(title)
+                <span class="type">Text</span>(value).<span class="success">bold</span>()
+            }
+        }
+    }
+}
         </div>
         <div class="highlight-box">
             <p class="medium-text">
-                🎯 <span class="highlight">Resultado:</span> App funcionando como grandes empresas!
+                <strong>Reutilizável</strong> para qualquer estatística! 🎯
             </p>
         </div>
     </div>
 
-    <!-- Slide 12: Success! -->
-    <div class="slide" id="slide12">
-        <div class="slide-number">12/12</div>
-        <div class="timing">6:30</div>
-        <h1>🎉 Missão Cumprida!</h1>
-        <div class="big-text">
-            Você agora domina <span class="highlight">SwiftUI + Firestore</span> 
-            no nível profissional!
+    <!-- Slide 9: TransactionCardView -->
+    <div class="slide" id="slide9">
+        <div class="slide-number">9/12</div>
+        <div class="timing">8:00</div>
+        <h2>💳 TransactionCardView - Moderna</h2>
+        <div class="code-preview">
+<span class="keyword">struct</span> <span class="type">TransactionCardView</span>: <span class="type">View</span> {
+    <span class="keyword">let</span> transaction: <span class="type">Transaction</span>
+    <span class="keyword">let</span> formatter: (<span class="type">Double</span>) -> <span class="type">String</span>
+    <span class="keyword">let</span> dateFormatter: (<span class="type">Date</span>) -> <span class="type">String</span>
+    
+    <span class="comment">// 🧮 Computed property</span>
+    <span class="keyword">private</span> <span class="keyword">var</span> isIncome: <span class="type">Bool</span> {
+        transaction.amount > 0
+    }
+    
+    <span class="keyword">var</span> body: <span class="keyword">some</span> <span class="type">View</span> {
+        <span class="type">HStack</span> {
+            <span class="comment">// 🎯 Indicador visual (verde/vermelho)</span>
+            <span class="type">Circle</span>().<span class="success">fill</span>(isIncome ? .green : .red)
+            
+            <span class="comment">// 📝 Descrição + Data</span>
+            <span class="comment">// 💰 Valor com cor semântica</span>
+        }
+    }
+}
         </div>
-        <div class="feature-grid">
-            <div class="feature-card pulse">
-                <h3>✅ MVVM Reativo</h3>
-                <p>@Published + ObservableObject dominados</p>
-            </div>
-            <div class="feature-card pulse">
-                <h3>✅ Interface Completa</h3>
-                <p>Estados visuais e layout responsivo</p>
-            </div>
-            <div class="feature-card pulse">
-                <h3>✅ Tempo Real</h3>
-                <p>Sincronização automática funcionando</p>
-            </div>
-            <div class="feature-card pulse">
-                <h3>✅ Qualidade Pro</h3>
-                <p>Pronto para produção real!</p>
-            </div>
+    </div>
+
+    <!-- Slide 10: Dashboard Completo -->
+    <div class="slide dashboard-slide" id="slide10">
+        <div class="slide-number">10/12</div>
+        <div class="timing">11:00</div>
+        <h2>🏗️ Montando o Dashboard</h2>
+        <div class="code-preview">
+<span class="keyword">var</span> body: <span class="keyword">some</span> <span class="type">View</span> {
+    <span class="type">NavigationView</span> {
+        <span class="type">ScrollView</span> {
+            <span class="type">VStack</span>(spacing: 20) {
+                <span class="comment">// 🔌 Status conexão</span>
+                <span class="type">ConnectionStatusView</span>()
+                
+                <span class="comment">// 💰 Header com balanço</span>
+                <span class="type">BalanceHeaderView</span>(
+                    totalBalance: viewModel.<span class="success">totalBalance</span>,
+                    totalIncome: viewModel.<span class="success">totalIncome</span>,
+                    totalExpenses: viewModel.<span class="success">totalExpenses</span>
+                )
+                
+                <span class="comment">// 📊 Estatísticas</span>
+                <span class="type">StatisticsCards</span>()
+                
+                <span class="comment">// 📋 Lista de transações</span>
+                <span class="type">TransactionsList</span>()
+            }
+        }
+    }
+}
+        </div>
+    </div>
+
+    <!-- Slide 11: Teste ao Vivo -->
+    <div class="slide success-slide" id="slide11">
+        <div class="slide-number">11/12</div>
+        <div class="timing">14:00</div>
+        <h2>🧪 Testando a Transformação</h2>
+        <div class="feature-list">
+            <p>1️⃣ <strong>Abrir app</strong> → Dashboard carrega</p>
+            <p>2️⃣ <strong>Observar</strong> → Saldo, receitas, gastos calculados</p>
+            <p>3️⃣ <strong>Firebase Console</strong> → Adicionar transação</p>
+            <p>4️⃣ <strong>Mágica</strong> → Dashboard atualiza em tempo real!</p>
+            <p>5️⃣ <strong>Valores recalculam</strong> → Estatísticas mudam</p>
+            <p>6️⃣ <strong>Novo card aparece</strong> → Animação suave</p>
         </div>
         <div class="highlight-box">
-            <p class="medium-text">
-                🚀 Próximo: <strong>Parte 8 - Testes e Otimizações!</strong>
+            <p class="big-text">
+                Isso é qualidade <span style="color: #f39c12;">PREMIUM</span>! 🏆
+            </p>
+        </div>
+    </div>
+
+    <!-- Slide 12: Conquistas -->
+    <div class="slide" id="slide12">
+        <div class="slide-number">12/12</div>
+        <div class="timing">14:40</div>
+        <h1>🎉 Missão Cumprida!</h1>
+        <div class="comparison-grid">
+            <div class="comparison-item">
+                <h3>📱 O que construímos:</h3>
+                <ul style="text-align: left; margin-top: 15px; line-height: 1.8;">
+                    <li>Dashboard profissional</li>
+                    <li>Computed properties</li>
+                    <li>4 componentes reutilizáveis</li>
+                    <li>Formatadores inteligentes</li>
+                    <li>Estados visuais completos</li>
+                </ul>
+            </div>
+            <div class="comparison-item">
+                <h3>🎯 O que dominamos:</h3>
+                <ul style="text-align: left; margin-top: 15px; line-height: 1.8;">
+                    <li>Reatividade automática</li>
+                    <li>Componentização SwiftUI</li>
+                    <li>Design profissional</li>
+                    <li>Integração tempo real</li>
+                    <li>Arquitetura escalável</li>
+                </ul>
+            </div>
+        </div>
+        <div class="highlight-box" style="margin-top: 30px;">
+            <p class="big-text">
+                De lista básica para <strong>app empresarial</strong>! 🚀<br>
+                <span style="font-size: 0.8em;">Próximo: Parte 8 - Testes e Otimizações</span>
             </p>
         </div>
     </div>
@@ -622,40 +590,30 @@
         const totalSlides = 12;
 
         function goToSlide(slideNumber) {
-            // Validar número do slide
             if (slideNumber < 1) slideNumber = 1;
             if (slideNumber > totalSlides) slideNumber = totalSlides;
             
             try {
-                // Esconder todos os slides primeiro
                 const allSlides = document.querySelectorAll('.slide');
-                allSlides.forEach(slide => {
-                    slide.classList.remove('active');
-                });
+                allSlides.forEach(slide => slide.classList.remove('active'));
                 
-                // Mostrar o slide desejado
                 const targetSlide = document.getElementById(`slide${slideNumber}`);
                 if (targetSlide) {
                     targetSlide.classList.add('active');
                     currentSlide = slideNumber;
                     
-                    // Atualizar contador
                     const counter = document.getElementById('slideCounter');
                     if (counter) {
                         counter.textContent = `${currentSlide} / ${totalSlides}`;
                     }
-                } else {
-                    console.error('Slide não encontrado:', slideNumber);
                 }
             } catch (error) {
-                console.error('Erro ao navegar para slide:', error);
+                console.error('Erro ao navegar:', error);
             }
         }
 
-        // Navegação por teclado
         document.addEventListener('keydown', function(e) {
             e.preventDefault();
-            
             if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
                 goToSlide(currentSlide + 1);
             } else if (e.key === 'ArrowLeft' || e.key === 'Backspace') {
@@ -667,9 +625,7 @@
             }
         });
 
-        // Clique na tela para navegar
         document.addEventListener('click', function(e) {
-            // Se clique foi em botão de navegação ou dentro da área de navegação, ignorar
             if (e.target.classList.contains('nav-btn') || 
                 e.target.closest('.nav-btn') || 
                 e.target.closest('.navigation') ||
@@ -677,18 +633,14 @@
                 return;
             }
             
-            // Se clique no lado direito da tela, avançar
             if (e.clientX > window.innerWidth / 2) {
                 goToSlide(currentSlide + 1);
             } else {
-                // Se clique no lado esquerdo, voltar
                 goToSlide(currentSlide - 1);
             }
         });
 
-        // Configurar botões de navegação
         document.addEventListener('DOMContentLoaded', function() {
-            // Configurar botões usando IDs
             const prevBtn = document.getElementById('prevBtn');
             const nextBtn = document.getElementById('nextBtn');
             const homeBtn = document.getElementById('homeBtn');
@@ -726,11 +678,9 @@
                 });
             }
             
-            // Inicializar primeiro slide
             goToSlide(1);
         });
 
-        // Touch/swipe support para mobile
         let startX = null;
         
         document.addEventListener('touchstart', function(e) {
@@ -742,11 +692,11 @@
                 let endX = e.changedTouches[0].clientX;
                 let diffX = startX - endX;
                 
-                if (Math.abs(diffX) > 50) { // distância mínima do swipe
+                if (Math.abs(diffX) > 50) {
                     if (diffX > 0) {
-                        goToSlide(currentSlide + 1); // swipe left - próximo slide
+                        goToSlide(currentSlide + 1);
                     } else {
-                        goToSlide(currentSlide - 1); // swipe right - slide anterior
+                        goToSlide(currentSlide - 1);
                     }
                 }
                 startX = null;
