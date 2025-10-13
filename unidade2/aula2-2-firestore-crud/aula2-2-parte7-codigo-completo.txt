@@ -221,8 +221,8 @@ struct RealtimeDemoView: View {
                                 ForEach(viewModel.transactions) { transaction in
                                     TransactionCardView(
                                         transaction: transaction,
-                                        dateFormatter: viewModel.formatDate,
-                                        currencyFormatter: viewModel.formatCurrency
+                                        formatter: viewModel.formatCurrency,
+                                        dateFormatter: viewModel.formatDate
                                     )
                                     .padding(.horizontal)
                                 }
