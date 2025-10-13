@@ -69,6 +69,7 @@ class RealtimeDemoViewModel: ObservableObject {
         // Tudo inline, sem métodos auxiliares
         listener = service.startListeningToUserTransactions(
             userId: userId,
+            limit: 50,
             onUpdate: { [weak self] transactions in
                 DispatchQueue.main.async {
                     print("✅ ViewModel: \(transactions.count) transações recebidas")
