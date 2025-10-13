@@ -362,9 +362,9 @@ import SwiftUI
 
 /// Card de estatística individual (transações, média, etc)
 struct StatisticsCardView: View {
+    let icon: String
     let title: String
     let value: String
-    let icon: String
     let color: Color
     
     var body: some View {
