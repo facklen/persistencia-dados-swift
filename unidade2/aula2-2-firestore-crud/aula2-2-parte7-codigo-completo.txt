@@ -337,6 +337,20 @@ struct BalanceHeaderView: View {
                 .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
         )
     }
+
+    #Preview {
+    BalanceHeaderView(
+        totalBalance: 2500.50,
+        totalIncome: 5000,
+        totalExpenses: 2499.50,
+        formatter: { value in
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .currency
+            formatter.locale = Locale(identifier: "pt_BR")
+            return formatter.string(from: NSNumber(value: value)) ?? "R$ 0,00"
+        }
+    )
+    .padding()
 }
 
 
