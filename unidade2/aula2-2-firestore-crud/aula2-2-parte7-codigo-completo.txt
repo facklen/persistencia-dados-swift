@@ -118,7 +118,7 @@ class RealtimeDemoViewModel: ObservableObject {
             .reduce(0.0) { $0 + $1.amount }
     }
     
-    /// Total de receitas (últimas 50 transações)
+    /// Total de despesas (últimas 50 transações)
     var totalExpenses: Double {
         abs(transactions
             .filter { $0.amount < 0 }
