@@ -1,6 +1,5 @@
 // ==========================================
 // AULA 2.2 - PARTE 7: CÓDIGO COMPLETO
-// ✅ CORRIGIDO - 100% compatível com Parte 6
 // ==========================================
 
 /*
@@ -193,16 +192,16 @@ struct RealtimeDemoView: View {
                         // 📊 ESTATÍSTICAS
                         HStack(spacing: 15) {
                             StatisticsCardView(
+                                icon: "list.bullet",
                                 title: "Transações",
                                 value: "\(viewModel.transactionCount)",
-                                icon: "list.bullet",
                                 color: .blue
                             )
                             
                             StatisticsCardView(
+                                icon: "chart.bar",
                                 title: "Média Gastos",
                                 value: viewModel.formatCurrency(viewModel.averageExpense),
-                                icon: "chart.bar",
                                 color: .orange
                             )
                         }
@@ -273,72 +272,82 @@ struct RealtimeDemoView: View {
 
 import SwiftUI
 
-/// Cabeçalho com saldo total e estatísticas de receitas/gastos
+/*
+💰 BALANCE HEADER - Cabeçalho com Saldo e Estatísticas
+
+Mostra visão geral financeira:
+- Saldo total (verde se positivo, vermelho se negativo)
+- Total de receitas
+- Total de gastos
+- Animações suaves nas mudanças
+*/
 struct BalanceHeaderView: View {
     let totalBalance: Double
     let totalIncome: Double
     let totalExpenses: Double
     let formatter: (Double) -> String
-    
+
     var body: some View {
         VStack(spacing: 16) {
-            // SALDO PRINCIPAL
+            // 💰 SALDO PRINCIPAL
             VStack(spacing: 4) {
                 Text("Saldo Total")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
-                
+
                 Text(formatter(totalBalance))
                     .font(.system(size: 36, weight: .bold, design: .rounded))
                     .foregroundColor(totalBalance >= 0 ? .green : .red)
                     .animation(.easeInOut(duration: 0.3), value: totalBalance)
             }
-            
-            // RECEITAS E GASTOS
-            HStack(spacing: 20) {
-                // Receitas
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
+
+            Divider()
+                .padding(.horizontal, 40)
+
+            // 📊 RECEITAS E GASTOS
+            HStack(spacing: 40) {
+                // 💚 RECEITAS
+                VStack(spacing: 4) {
+                    HStack(spacing: 4) {
                         Image(systemName: "arrow.up.circle.fill")
                             .foregroundColor(.green)
                         Text("Receitas")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
+
                     Text(formatter(totalIncome))
-                        .font(.headline)
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
                         .foregroundColor(.green)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
-                Divider()
-                    .frame(height: 40)
-                
-                // Gastos
-                VStack(alignment: .trailing, spacing: 4) {
-                    HStack {
+
+                // ❤️ GASTOS
+                VStack(spacing: 4) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.down.circle.fill")
+                            .foregroundColor(.red)
                         Text("Gastos")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        Image(systemName: "arrow.down.circle.fill")
-                            .foregroundColor(.red)
                     }
+
                     Text(formatter(totalExpenses))
-                        .font(.headline)
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
                         .foregroundColor(.red)
                 }
-                .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
-                .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
+                .fill(Color(UIColor.secondarySystemGroupedBackground))
+                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
         )
+        .padding(.horizontal)
     }
+}
 
-    #Preview {
+#Preview {
     BalanceHeaderView(
         totalBalance: 2500.50,
         totalIncome: 5000,
@@ -353,47 +362,74 @@ struct BalanceHeaderView: View {
     .padding()
 }
 
-
 // ==========================================
 // 4️⃣ Components/StatisticsCardView.swift
 // ==========================================
 
 import SwiftUI
 
-/// Card de estatística individual (transações, média, etc)
+/*
+📊 STATISTICS CARD - Card de Estatística Individual
+
+Exibe uma métrica específica com ícone e valor.
+Reutilizável para diferentes tipos de estatísticas.
+*/
 struct StatisticsCardView: View {
     let icon: String
     let title: String
     let value: String
     let color: Color
-    
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: icon)
-                    .font(.title2)
-                    .foregroundColor(color)
-                
-                Spacer()
+        HStack(spacing: 12) {
+            // ÍCONE
+            Image(systemName: icon)
+                .font(.system(size: 24))
+                .foregroundColor(color)
+                .frame(width: 40, height: 40)
+                .background(color.opacity(0.2))
+                .clipShape(Circle())
+
+            // TEXTO
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Text(value)
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundColor(.primary)
             }
-            
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
-            
-            Text(value)
-                .font(.headline)
-                .foregroundColor(.primary)
+
+            Spacer()
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(.ultraThinMaterial)
-                .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
+                .fill(Color(UIColor.secondarySystemGroupedBackground))
         )
     }
 }
+
+#Preview {
+    VStack(spacing: 12) {
+        StatisticsCardView(
+            icon: "chart.bar.fill",
+            title: "Transações",
+            value: "24",
+            color: .blue
+        )
+
+        StatisticsCardView(
+            icon: "chart.line.uptrend.xyaxis",
+            title: "Média de Gastos",
+            value: "R$ 185,50",
+            color: .orange
+        )
+    }
+    .padding()
+}
+
 
 
 // ==========================================
@@ -402,44 +438,59 @@ struct StatisticsCardView: View {
 
 import SwiftUI
 
-/// Card individual de transação
+/*
+💳 TRANSACTION CARD - Card de Transação Individual
+
+Exibe uma transação com:
+- Indicador visual (cor/ícone)
+- Descrição e data
+- Valor formatado
+- Design moderno e responsivo
+*/
 struct TransactionCardView: View {
     let transaction: Transaction
+    let formatter: (Double) -> String
     let dateFormatter: (Date) -> String
-    let currencyFormatter: (Double) -> String
-    
+
+    private var isIncome: Bool {
+        transaction.amount > 0
+    }
+
     var body: some View {
         HStack(spacing: 12) {
-            // Ícone
-            Image(systemName: transaction.amount > 0 ? "arrow.up.circle.fill" : "arrow.down.circle.fill")
-                .font(.title2)
-                .foregroundColor(transaction.amount > 0 ? .green : .red)
-            
-            // Descrição e Data
+            // INDICADOR VISUAL
+            Circle()
+                .fill(isIncome ? Color.green : Color.red)
+                .frame(width: 8, height: 8)
+
+            // INFORMAÇÕES
             VStack(alignment: .leading, spacing: 4) {
                 Text(transaction.description)
-                    .font(.headline)
-                
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(.primary)
+
                 Text(dateFormatter(transaction.date))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            
+
             Spacer()
-            
-            // Valor
-            Text(currencyFormatter(transaction.amount))
-                .font(.headline)
-                .foregroundColor(transaction.amount > 0 ? .green : .red)
+
+            // VALOR
+            Text(formatter(abs(transaction.amount)))
+                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .foregroundColor(isIncome ? .green : .red)
         }
-        .padding(16)
+        .padding(12)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(.ultraThinMaterial)
-                .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
+                .fill(Color(UIColor.secondarySystemGroupedBackground))
         )
     }
 }
+
+// Preview comentado pois Transaction precisa ser Hashable
+
 
 
 // ==========================================
@@ -448,28 +499,56 @@ struct TransactionCardView: View {
 
 import SwiftUI
 
-/// Estado vazio quando não há transações
+/*
+📭 EMPTY STATE - Estado Vazio Informativo
+
+Exibido quando não há transações.
+Importante para UX - evita tela em branco confusa.
+*/
 struct EmptyStateView: View {
     var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "tray")
+        VStack(spacing: 20) {
+            // ÍCONE GRANDE
+            Image(systemName: "chart.bar.doc.horizontal")
                 .font(.system(size: 60))
-                .foregroundColor(.secondary)
-            
-            Text("Nenhuma transação ainda")
-                .font(.headline)
-                .foregroundColor(.secondary)
-            
-            Text("Suas transações aparecerão aqui em tempo real")
-                .font(.caption)
+                .foregroundColor(.secondary.opacity(0.5))
+
+            // TEXTO PRINCIPAL
+            Text("Nenhuma Transação Ainda")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .foregroundColor(.primary)
+
+            // TEXTO SECUNDÁRIO
+            Text("Adicione sua primeira transação\npara ver estatísticas em tempo real!")
+                .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
+
+            // BOTÃO DE AÇÃO
+            Button(action: {}) {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                    Text("Adicionar Transação")
+                }
+                .font(.headline)
+                .foregroundColor(.white)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(Color.blue)
+                .cornerRadius(12)
+            }
+            .padding(.top, 8)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 60)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
+
+#Preview {
+    EmptyStateView()
+}
+
 
 
 // ==========================================
@@ -484,7 +563,7 @@ struct EmptyStateView: View {
  - Start/Stop listener funcionando
  
  ✨ PARTE 7 (Evolução):
- - ViewModel: + computed properties + formatadores + init + handleError
+ - ViewModel: + computed properties + formatadores
  - View: Dashboard completo com componentes
  - 4 componentes novos: BalanceHeader, Statistics, TransactionCard, EmptyState
  - Design profissional com gradientes e shadows
