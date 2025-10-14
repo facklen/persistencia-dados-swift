@@ -168,101 +168,99 @@ struct RealtimeDemoView: View {
     @StateObject private var viewModel = RealtimeDemoViewModel()
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                // Background gradient
-                LinearGradient(
-                    colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
-                
-                ScrollView {
-                    VStack(spacing: 20) {
-                        // 💰 CABEÇALHO COM SALDO
-                        BalanceHeaderView(
-                            totalBalance: viewModel.totalBalance,
-                            totalIncome: viewModel.totalIncome,
-                            totalExpenses: viewModel.totalExpenses,
-                            formatter: viewModel.formatCurrency
-                        )
-                        .padding(.horizontal)
-                        
-                        // 📊 ESTATÍSTICAS
-                        HStack(spacing: 15) {
-                            StatisticsCardView(
-                                icon: "list.bullet",
-                                title: "Transações",
-                                value: "\(viewModel.transactionCount)",
-                                color: .blue
-                            )
-                            
-                            StatisticsCardView(
-                                icon: "chart.bar",
-                                title: "Média Gastos",
-                                value: viewModel.formatCurrency(viewModel.averageExpense),
-                                color: .orange
-                            )
-                        }
-                        .padding(.horizontal)
-                        
-                        // 📋 LISTA DE TRANSAÇÕES
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Transações Recentes")
-                                .font(.headline)
-                                .padding(.horizontal)
-                            
-                            if viewModel.transactions.isEmpty {
-                                EmptyStateView()
-                                    .padding(.top, 40)
-                            } else {
-                                ForEach(viewModel.transactions) { transaction in
-                                    TransactionCardView(
-                                        transaction: transaction,
-                                        formatter: viewModel.formatCurrency,
-                                        dateFormatter: viewModel.formatDate
-                                    )
-                                    .padding(.horizontal)
-                                }
-                            }
-                        }
-                        .padding(.top, 10)
-                    }
-                    .padding(.vertical)
-                }
-            }
-            .navigationTitle("💰 Dashboard")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        if viewModel.isListening {
-                            viewModel.stopListening()
-                        } else {
-                            viewModel.startListening()
-                        }
-                    }) {
-                        Image(systemName: viewModel.isListening ? "stop.circle.fill" : "play.circle.fill")
-                            .foregroundColor(viewModel.isListening ? .red : .green)
-                            .font(.title2)
-                    }
-                }
-            }
-            .overlay(alignment: .bottom) {
-                if let message = viewModel.message {
-                    Text(message)
+    NavigationView {
+        ScrollView {
+            VStack(spacing: 20) {
+
+                // 🔌 STATUS DE CONEXÃO
+                HStack {
+                    Circle()
+                        .fill(viewModel.isListening ? Color.green : Color.gray)
+                        .frame(width: 8, height: 8)
+
+                    Text(viewModel.isListening ? "Tempo Real Ativo" : "Offline")
                         .font(.caption)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(.ultraThinMaterial)
-                        .cornerRadius(20)
-                        .padding(.bottom, 20)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .foregroundColor(.secondary)
+
+                    Spacer()
+                }
+                .padding(.horizontal)
+
+                // 💰 HEADER COM BALANÇO
+                BalanceHeaderView(
+                    totalBalance: viewModel.totalBalance,
+                    totalIncome: viewModel.totalIncome,
+                    totalExpenses: viewModel.totalExpenses,
+                    formatter: viewModel.formatCurrency
+                )
+
+                // 📊 ESTATÍSTICAS
+                VStack(spacing: 8) {
+                    HStack(spacing: 12) {
+                        StatisticsCardView(
+                            icon: "chart.bar.fill",
+                            title: "Transações",
+                            value: "\(viewModel.transactionCount)",
+                            color: .blue
+                        )
+
+                        StatisticsCardView(
+                            icon: "chart.line.uptrend.xyaxis",
+                            title: "Média de Gastos",
+                            value: viewModel.formatCurrency(viewModel.averageExpense),
+                            color: .orange
+                        )
+                    }
+                }
+                .padding(.horizontal)
+
+                // 📋 LISTA DE TRANSAÇÕES
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Transações Recentes")
+                        .font(.headline)
+                        .padding(.horizontal)
+
+                    if viewModel.transactions.isEmpty {
+                        EmptyStateView()
+                            .frame(height: 300)
+                    } else {
+                        ForEach(viewModel.transactions.prefix(20)) { transaction in
+                            TransactionCardView(
+                                transaction: transaction,
+                                formatter: viewModel.formatCurrency,
+                                dateFormatter: viewModel.formatDate
+                            )
+                            .padding(.horizontal)
+                        }
+                    }
+                }
+
+                Spacer(minLength: 20)
+            }
+            .padding(.vertical)
+        }
+        .navigationTitle("💫 Dashboard")
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: {
+                    viewModel.isListening ? viewModel.stopListening() : viewModel.startListening()
+                }) {
+                    Image(systemName: viewModel.isListening ? "pause.circle.fill" : "play.circle.fill")
+                        .foregroundColor(viewModel.isListening ? .orange : .green)
                 }
             }
         }
     }
+    .onAppear {
+        print("📱 Dashboard apareceu - iniciando listener")
+        viewModel.startListening()
+    }
+    .onDisappear {
+        print("📱 Dashboard desapareceu - parando listener")
+        viewModel.stopListening()
+    }
+  }
 }
 
 
