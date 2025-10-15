@@ -418,7 +418,7 @@
                 group.addTask {
                     <span class="keyword">do</span> {
                         <span class="keyword">let</span> transaction = Transaction(...)
-                        <span class="keyword">try await</span> self.transactionService.createTransaction(transaction)
+                        <span class="keyword">_ = try await</span> self.transactionService.createTransaction(transaction)
                         <span class="keyword">return</span> .success(())
                     } <span class="keyword">catch</span> {
                         <span class="keyword">return</span> .failure(error)
