@@ -67,15 +67,14 @@ class StressTestManager {
                 group.addTask {
                     do {
                         let transaction = Transaction(
-                            userId: self.testUserId,
                             amount: self.randomAmount(index: index),
                             description: "Teste Stress #\(index)",
-                            categoryId: "test_category",
                             type: index % 2 == 0 ? .income : .expense,
-                            date: Date()
+                            userId: self.testUserId
                         )
-                        
-                        try await self.transactionService.createTransaction(transaction)
+                      
+                        // Tentar criar no Firestore
+                        _ = try await self.transactionService.createTransaction(transaction)
                         print("✅ [\(index)/50] Transação criada com sucesso")
                         return .success(())
                     } catch {
