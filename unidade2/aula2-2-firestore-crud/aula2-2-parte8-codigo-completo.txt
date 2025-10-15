@@ -305,28 +305,131 @@ AdvancedCacheManager.shared.invalidateCache(for: userId)
 // 
 // ═══════════════════════════════════════════════════════════════════
 
-// 📝 ADICIONAR ESTE CÓDIGO APÓS O FECHAMENTO DO .toolbar:
+import SwiftUI
 
-#if DEBUG
-.safeAreaInset(edge: .bottom) {
-    Button(action: {
-        Task {
-            let tester = StressTestManager()
-            await tester.performStressTest()
+struct RealtimeDemoView: View {
+    @StateObject private var viewModel = RealtimeDemoViewModel()
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 20) {
+
+                    // 🔌 STATUS DE CONEXÃO
+                    HStack {
+                        Circle()
+                            .fill(viewModel.isListening ? Color.green : Color.gray)
+                            .frame(width: 8, height: 8)
+
+                        Text(viewModel.isListening ? "Tempo Real Ativo" : "Offline")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+
+                        Spacer()
+                    }
+                    .padding(.horizontal)
+
+                    // 💰 HEADER COM BALANÇO
+                    BalanceHeaderView(
+                        totalBalance: viewModel.totalBalance,
+                        totalIncome: viewModel.totalIncome,
+                        totalExpenses: viewModel.totalExpenses,
+                        formatter: viewModel.formatCurrency
+                    )
+
+                    // 📊 ESTATÍSTICAS
+                    VStack(spacing: 8) {
+                        HStack(spacing: 12) {
+                            StatisticsCardView(
+                                icon: "chart.bar.fill",
+                                title: "Transações",
+                                value: "\(viewModel.transactionCount)",
+                                color: .blue
+                            )
+
+                            StatisticsCardView(
+                                icon: "chart.line.uptrend.xyaxis",
+                                title: "Média de Gastos",
+                                value: viewModel.formatCurrency(viewModel.averageExpense),
+                                color: .orange
+                            )
+                        }
+                    }
+                    .padding(.horizontal)
+
+                    // 📋 LISTA DE TRANSAÇÕES
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Transações Recentes")
+                            .font(.headline)
+                            .padding(.horizontal)
+
+                        if viewModel.transactions.isEmpty {
+                            EmptyStateView()
+                                .frame(height: 300)
+                        } else {
+                            ForEach(viewModel.transactions.prefix(20)) { transaction in
+                                TransactionCardView(
+                                    transaction: transaction,
+                                    formatter: viewModel.formatCurrency,
+                                    dateFormatter: viewModel.formatDate
+                                )
+                                .padding(.horizontal)
+                            }
+                        }
+                    }
+
+                    Spacer(minLength: 20)
+                }
+                .padding(.vertical)
+            }
+            .navigationTitle("💫 Dashboard")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        viewModel.isListening ? viewModel.stopListening() : viewModel.startListening()
+                    }) {
+                        Image(systemName: viewModel.isListening ? "pause.circle.fill" : "play.circle.fill")
+                            .foregroundColor(viewModel.isListening ? .orange : .green)
+                    }
+                }
+            }
+            
+            // MARK: - 🎨 Botão de Teste na UI (✨ NOVO NA PARTE 8)
+            // 📝 ADICIONAR ESTE CÓDIGO APÓS O FECHAMENTO DO .toolbar:
+
+            #if DEBUG
+            .safeAreaInset(edge: .bottom) {
+                Button(action: {
+                    Task {
+                        let tester = StressTestManager()
+                        await tester.performStressTest()
+                    }
+                }) {
+                    Label("🧪 Executar Stress Test", systemImage: "bolt.fill")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.orange)
+                        .cornerRadius(12)
+                }
+                .padding()
+                .background(Color(UIColor.systemBackground))
+            }
+            #endif
+            
         }
-    }) {
-        Label("🧪 Executar Stress Test", systemImage: "bolt.fill")
-            .font(.headline)
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.orange)
-            .cornerRadius(12)
+        .onAppear {
+            print("📱 Dashboard apareceu - iniciando listener")
+            viewModel.startListening()
+        }
+        .onDisappear {
+            print("📱 Dashboard desapareceu - parando listener")
+            viewModel.stopListening()
+        }
     }
-    .padding()
-    .background(Color(UIColor.systemBackground))
 }
-#endif
 
 
 // ═══════════════════════════════════════════════════════════════════
