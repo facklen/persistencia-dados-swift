@@ -1777,7 +1777,7 @@ struct ContentView: View {
 
 
 // ════════════════════════════════════════════════════════════════════════════
-// 📄 ARQUIVO 15: ContentView.swift (MANTIDO DE PARTES ANTERIORES)
+// 📄 ARQUIVO 15: BadTransactionView.swift (MANTIDO DE PARTES ANTERIORES)
 // ════════════════════════════════════════════════════════════════════════════
 // ════════════════════════════════════════════════════════════════════════════
 import SwiftUI
@@ -2596,7 +2596,7 @@ struct StatisticsCardView: View {
 
 
 // ════════════════════════════════════════════════════════════════════════════
-// 📄 ARQUIVO 20: StatisticsCardView.swift (MANTIDO DE PARTES ANTERIORES)
+// 📄 ARQUIVO 20: TransactionCardView.swift (MANTIDO DE PARTES ANTERIORES)
 // ════════════════════════════════════════════════════════════════════════════
 // ════════════════════════════════════════════════════════════════════════════
 import SwiftUI
@@ -2657,7 +2657,7 @@ struct TransactionCardView: View {
 
 
 // ════════════════════════════════════════════════════════════════════════════
-// 📄 ARQUIVO 21: StatisticsCardView.swift (MANTIDO DE PARTES ANTERIORES)
+// 📄 ARQUIVO 21: EmptyStateView.swift (MANTIDO DE PARTES ANTERIORES)
 // ════════════════════════════════════════════════════════════════════════════
 // ════════════════════════════════════════════════════════════════════════════
 import SwiftUI
