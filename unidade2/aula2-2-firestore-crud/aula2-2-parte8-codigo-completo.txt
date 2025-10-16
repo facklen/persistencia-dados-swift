@@ -9,8 +9,10 @@
 // 2. Services/AdvancedCacheManager.swift
 // 
 // ARQUIVOS MODIFICADOS:
-// 3. Services/TransactionService.swift (cache + invalidações)
-// 4. Views/RealtimeDemoView.swift (botão de teste)
+// 3. Services/TransactionService.swift (cache + invalidações + autenticação)
+// 4. Views/RealtimeDemoView.swift (botão de teste + autenticação)
+// 16. Views/CRUDDemoView.swift (autenticação)
+// 17. Views/RealtimeDemoViewModel.swift (autenticação)
 // 
 // CONFIGURAÇÕES:
 // 5. Firebase Security Rules (firestore.rules)
@@ -39,6 +41,11 @@ class StressTestManager {
     // 📦 DEPENDÊNCIAS
     private let transactionService = TransactionService()
     private let testUserId = "stress_test_user_\(UUID().uuidString)"
+    
+    /*private var testUserId: String {
+        transactionService.getCurrentUserId()
+    }*/
+    
     
     // MARK: - 🎯 Teste Principal
     /*
@@ -667,6 +674,11 @@ class TransactionService {
          3. Ter deinit que chama stopListening() (rede de segurança)
          */
         return listener
+    }
+
+    // ✅ ADICIONAR método para pegar UID:
+    func getCurrentUserId() -> String {
+        return Auth.auth().currentUser?.uid ?? "anonymous"
     }
 }
 
@@ -2057,6 +2069,9 @@ class CRUDDemoViewModel: ObservableObject {
     
     private let service = TransactionService()
     private let userId = "demo-user"
+    /*private var userId: String {
+        service.getCurrentUserId()
+    }*/
     
     // ➕ CRIAR NOVA TRANSAÇÃO
     func createTransaction() async {
@@ -2211,6 +2226,9 @@ class RealtimeDemoViewModel: ObservableObject {
     
     private let service = TransactionService()
     private let userId = "demo-user"
+    /*private var userId: String {
+        service.getCurrentUserId()
+    }*/
     
     /*
      ⚠️ CRÍTICO: Guardar ListenerRegistration para poder remover depois!
@@ -2685,26 +2703,3 @@ struct EmptyStateView: View {
 }
 
 
-
-// ═══════════════════════════════════════════════════════════════════
-// ✅ CHECKLIST DE IMPLEMENTAÇÃO
-// ═══════════════════════════════════════════════════════════════════
-// 
-// ARQUIVOS CRIADOS:
-// [ ] Services/StressTestManager.swift
-// [ ] Services/AdvancedCacheManager.swift
-// 
-// ARQUIVOS MODIFICADOS:
-// [ ] Services/TransactionService.swift - loadTransactions com cache
-// [ ] Services/TransactionService.swift - invalidações em create/update/delete
-// [ ] Views/RealtimeDemoView.swift - botão de teste
-// 
-// CONFIGURAÇÕES:
-// [ ] Firebase Console - Security Rules publicadas
-// 
-// TESTES:
-// [ ] Stress test executando (50 transações)
-// [ ] Cache funcionando (hit/miss nos logs)
-// [ ] Security rules bloqueando dados inválidos
-// 
-// ═══════════════════════════════════════════════════════════════════
