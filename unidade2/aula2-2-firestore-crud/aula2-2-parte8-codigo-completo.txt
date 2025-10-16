@@ -241,60 +241,434 @@ class AdvancedCacheManager {
 // ═══════════════════════════════════════════════════════════════════
 // 
 // ⚠️ MODIFICAÇÕES NECESSÁRIAS:
-// 1. Alterar função loadTransactions() para usar cache
-// 2. Adicionar invalidateCache() em create, update e delete
+// 1. Corrigir isValidTransaction para aceitar valores negativos
+// 2. Alterar função getUserTransactions() para usar cache
+// 3. Adicionar invalidateCache() em create, update e delete
 // 
 // ═══════════════════════════════════════════════════════════════════
 
-// 📝 SUBSTITUIR A FUNÇÃO loadTransactions POR ESTA:
+import Foundation
+import FirebaseFirestore
 
-func loadTransactions() async throws -> [Transaction] {
-    print("\n📖 === LOAD TRANSACTIONS (COM CACHE) ===")
+// MARK: - 💼 Service Especializado de Transações
+/*
+ 📝 SERVICE COM REGRAS DE NEGÓCIO ESPECÍFICAS
+ 
+ 🎯 Por que criar service especializado:
+ • Encapsula regras de negócio de transações
+ • Usa o FirestoreService genérico como base
+ • Valida dados antes de salvar
+ • Aplica filtros de negócio ao carregar
+ • Facilita testes de lógica de negócio
+ */
+class TransactionService {
+    private let firestoreService = FirestoreService()
     
-    // 1️⃣ TENTAR CACHE PRIMEIRO
-    if let cachedTransactions = AdvancedCacheManager.shared.getCachedTransactions(for: userId) {
-        print("⚡ Retornando do CACHE - economia de 1 read!")
-        return cachedTransactions
+    // Adicionar propriedade de cache na classe - Parte 8:
+    private let cacheManager = AdvancedCacheManager.shared // ✅ Usar singleton
+    
+    // MARK: - ➕ Criar Transação
+    /*
+     📝 CRIAÇÃO COM VALIDAÇÃO DE NEGÓCIO
+     
+     🎯 Processo:
+     1. Valida dados da transação
+     2. Adiciona userId à transação
+     3. Salva no path hierárquico correto
+     4. Retorna ID do documento criado
+     */
+    func createTransaction(_ transaction: Transaction, for userId: String) async throws -> String {
+        print("🏭 TransactionService: Criando transação para user \(userId)")
+        
+        // ✅ VALIDAÇÕES DE NEGÓCIO
+        guard isValidTransaction(transaction) else {
+            print("❌ Transação inválida - não passou nas validações")
+            throw FirestoreError.invalidData
+        }
+        
+        // 📝 Adicionar userId à transação
+        var transactionWithUser = transaction
+        transactionWithUser.userId = userId
+        
+        // 🗂️ Path hierárquico NoSQL
+        let collectionPath = "users/\(userId)/transactions"
+        print("   📂 Path: \(collectionPath)")
+        
+        // 💾 Delegar para service genérico
+        let documentId = try await firestoreService.saveDocument(
+            transactionWithUser,
+            to: collectionPath
+        )
+        
+        print("✅ Transação criada com sucesso: \(documentId)")
+        
+        // Invalidar cache após CREATE:
+        cacheManager.invalidateCache(for: userId)
+        
+        return documentId
     }
     
-    // 2️⃣ CACHE MISS - BUSCAR DO FIRESTORE
-    print("🔥 Cache miss - buscando do Firestore...")
-    
-    let snapshot = try await db.collection("users")
-        .document(userId)
-        .collection("transactions")
-        .order(by: "date", descending: true)
-        .limit(to: 50)
-        .getDocuments()
-    
-    let transactions = snapshot.documents.compactMap { doc in
-        try? doc.data(as: Transaction.self)
+    // MARK: - 📋 Buscar Transações do Usuário - (✅ NOVO - PARTE 8)
+    func getUserTransactions(userId: String, limit: Int = 50) async throws -> [Transaction] {
+        print("📋 TransactionService: Buscando transações do usuário \(userId)")
+        
+        // 1️⃣ Verificar cache primeiro
+        if let cached = cacheManager.getCachedTransactions(for: userId) {
+            return cached
+        }
+        
+
+        // 2️⃣ Se não tem cache, buscar do Firestore
+        let collectionPath = "users/\(userId)/transactions"
+        let transactions = try await firestoreService.getDocuments(
+            from: collectionPath,
+            type: Transaction.self,
+            limit: limit,
+            orderBy: "date",
+            descending: true
+        )
+
+        // ✅ Aplicar filtros de negócio
+        let validTransactions = transactions
+            .filter { isValidTransaction($0) }
+            .filter { !$0.isDeleted }
+
+        // 3️⃣ Salvar no cache
+        cacheManager.cacheTransactions(validTransactions, for: userId)
+
+
+        print("✅ Transações carregadas e cacheadas: \(validTransactions.count)")
+        
+        return validTransactions
     }
     
-    print("🔥 Firestore retornou \(transactions.count) transações")
     
-    // 3️⃣ SALVAR NO CACHE
-    AdvancedCacheManager.shared.cacheTransactions(transactions, for: userId)
-    print("💾 Cache atualizado!")
-    print("================================\n")
+    // MARK: - READ Including Deleted (✅ NOVO - PARTE 5)
+        /*
+         📖 BUSCAR TODAS AS TRANSAÇÕES (INCLUINDO DELETADAS)
+         
+         Útil para:
+         - Administração e auditoria
+         - Relatórios completos
+         - Recuperação de dados
+         - Análise de histórico completo
+         */
+        func getAllTransactionsIncludingDeleted(
+            userId: String,
+            limit: Int = 50
+        ) async throws -> [Transaction] {
+            print("📖 TransactionService: Buscando TODAS transações (incluindo deletadas)")
+            print("  📏 Limite: \(limit)")
+            
+            let collectionPath = "users/\(userId)/transactions"
+            
+            let transactions: [Transaction] = try await firestoreService.getDocuments(
+                from: collectionPath,
+                type: Transaction.self,
+                limit: limit,
+                orderBy: "date",
+                descending: true
+            )
+            
+            // Só valida, mas NÃO filtra deletados
+            let validTransactions = transactions.filter { isValidTransaction($0) }
+            
+            print("✅ \(validTransactions.count) transações totais (incluindo deletadas)")
+            return validTransactions
+        }
     
-    return transactions
+    // MARK: - 🎯 Regras de Negócio
+    /*
+     📝 VALIDAÇÕES ESPECÍFICAS DE TRANSAÇÕES
+     
+     🎯 Regras aplicadas:
+     • Valor deve ser positivo
+     • Descrição não pode estar vazia
+     • Adicione mais regras conforme necessário
+     */
+    private func isValidTransaction(_ transaction: Transaction) -> Bool {
+        // ❌ ANTES: guard transaction.amount > 0// ✅ AGORA:
+        guard transaction.amount != 0 else {
+           print("❌ Valor inválido: \(transaction.amount)")
+           return false
+        }
+            
+        // 2. Description não pode estar vazia
+        guard !transaction.description.isEmpty else {
+            print("❌ Validação falhou: descrição vazia")
+            return false
+        }
+            
+        // 3. Data não pode ser futura (nova validação!)
+        guard transaction.date <= Date() else {
+            print("❌ Data futura: \(transaction.date)")
+            return false
+        }
+            
+        return true
+    }
+    
+    // MARK: - 🗑️ Deletar Transação
+    func deleteTransaction(
+        transactionId: String,
+        userId: String,
+        soft: Bool = true  // 🏷️ Padrão: soft delete
+    ) async throws {
+        let collectionPath = "users/\(userId)/transactions"
+        
+        if soft {
+            // 🏷️ SOFT DELETE: marca isDeleted
+            print("🏷️ TransactionService: Soft delete de \(transactionId)")
+            
+            // Buscar documento atual
+            var transaction = try await firestoreService.getDocument(
+                transactionId,
+                from: collectionPath,
+                as: Transaction.self
+            )
+            
+            // Marcar como deletado
+            transaction.isDeleted = true
+            transaction.deletedAt = Date()
+            
+            // Atualizar com as flags
+            try await firestoreService.updateDocument(
+                transaction,
+                documentId: transactionId,
+                in: collectionPath
+            )
+            
+            print("✅ Soft delete concluído")
+            print("  📅 deletedAt: \(transaction.deletedAt!)")
+            
+        } else {
+            // 🗑️ HARD DELETE: remove permanentemente
+            print("🗑️ TransactionService: Hard delete de \(transactionId)")
+            
+            try await firestoreService.deleteDocument(
+                from: collectionPath,
+                documentId: transactionId
+            )
+            
+            print("✅ Hard delete concluído - documento removido permanentemente")
+        }
+        // Invalidar cache após DELETE:
+        cacheManager.invalidateCache(for: userId)
+    }
+    
+    func updateTransaction(_ transaction: Transaction) async throws {
+        print("✏️ TransactionService: Atualizando transação")
+        
+        // 🔒 VALIDAR ID
+        guard let id = transaction.id else {
+            print("❌ Erro: Transação deve ter ID para atualização")
+            throw FirestoreError.invalidData
+        }
+        
+        // 🛡️ VALIDAR DADOS (preventivo!)
+        guard isValidTransaction(transaction) else {
+            print("❌ Erro: Dados inválidos")
+            throw FirestoreError.invalidData
+        }
+        
+        // ⏰ ATUALIZAR TIMESTAMP
+        var updatedTransaction = transaction
+        updatedTransaction.updatedAt = Date()
+        
+        let collectionPath = "users/\(transaction.userId)/transactions"
+        
+        try await firestoreService.updateDocument(
+            updatedTransaction,
+            documentId: id,
+            in: collectionPath,
+            merge: true  // ⚡ MERGE INTELIGENTE - preserva campos não enviados
+        )
+        
+        print("✅ Transação atualizada com sucesso")
+        print("  📅 updatedAt: \(updatedTransaction.updatedAt)")
+        
+        // Invalidar cache após UPDATE:
+        cacheManager.invalidateCache(for: transaction.userId)
+    }
+    
+    // MARK: - 🔄 Real-time Listeners (✨ PARTE 6 - NOVO!)
+    
+    /*
+     👂 LISTENER PARA TRANSAÇÕES EM TEMPO REAL
+     
+     Escuta mudanças em tempo real e notifica a UI automaticamente.
+     Implementa padrão Observer para sincronização automática.
+     
+     🎯 Como funciona:
+     1. Registra interesse nesta query (addSnapshotListener)
+     2. Firebase detecta writes/deletes que afetam query
+     3. Servidor envia diff (só o que mudou) via WebSocket
+     4. Closure é executada AUTOMATICAMENTE
+     5. UI atualiza sem usuário fazer nada!
+     
+     🎯 Parâmetros:
+     - userId: ID do usuário proprietário das transações
+     - limit: Limite de documentos (padrão 50 para performance)
+     - onUpdate: Closure chamada quando dados mudam (fornece [Transaction])
+     - onError: Closure chamada quando ocorre erro
+     
+     ✅ Retorna: ListenerRegistration para cleanup posterior
+     
+     ⚠️ CRÍTICO:
+     - SEMPRE chamar listener.remove() quando não precisar mais!
+     - Usar [weak self] na closure para evitar retain cycle
+     - Usar DispatchQueue.main.async para atualizar UI
+     */
+    func startListeningToUserTransactions(
+        userId: String,
+        limit: Int = 50,
+        onUpdate: @escaping ([Transaction]) -> Void,
+        onError: @escaping (Error) -> Void
+    ) -> ListenerRegistration {
+        
+        print("👂 === INICIANDO LISTENER TEMPO REAL ===")
+        print("👤 Usuário: \(userId)")
+        print("📏 Limite: \(limit) transações")
+        print("🎯 Objetivo: Sincronização automática em tempo real")
+        
+        // 🗄️ CONSTRUIR QUERY OTIMIZADA
+        let db = Firestore.firestore()
+        let query = db.collection("users")
+            .document(userId)
+            .collection("transactions")
+            .order(by: "date", descending: true)  // Mais recentes primeiro
+            .limit(to: limit)                     // Limitar para performance
+        
+        print("📍 Query construída: users/\(userId)/transactions")
+        print("🔄 Listener ativo - aguardando mudanças...")
+        
+        // 👂 ADICIONAR LISTENER (A MÁGICA ACONTECE AQUI!)
+        /*
+         📝 addSnapshotListener é o coração do tempo real:
+         
+         O que acontece:
+         1. Firestore "marca" esta query como "interessante"
+         2. Toda vez que dados desta query mudam, Firestore avisa
+         3. A closure abaixo é executada AUTOMATICAMENTE
+         4. Recebemos snapshot com dados atualizados
+         
+         É como assinar notificações push, mas para dados!
+         
+         Esta closure executa:
+         - IMEDIATAMENTE (dados iniciais)
+         - TODA VEZ que algo mudar
+         - AUTOMATICAMENTE sem a gente chamar nada!
+         */
+        let listener = query.addSnapshotListener { [weak self] snapshot, error in
+            
+            // 🚨 TRATAMENTO DE ERRO
+            if let error = error {
+                print("❌ Erro no listener: \(error.localizedDescription)")
+                
+                
+                // 🎯 NOTIFICAR ERRO NA THREAD PRINCIPAL
+                /*
+                 ⚠️ CRÍTICO: onError atualiza @Published properties na UI!
+                 Precisa executar na main thread, assim como onUpdate.
+                 
+                 Sem isso: Crash "UIKit must be accessed from main thread"
+                 */
+                DispatchQueue.main.async {
+                    onError(FirestoreError.from(error))
+                }
+                return
+            }
+            
+            // 📄 VERIFICAR SNAPSHOT
+            guard let snapshot = snapshot else {
+                print("⚠️ Snapshot vazio recebido")
+                DispatchQueue.main.async {
+                    onUpdate([])
+                }
+                return
+            }
+            
+            print("📦 Snapshot recebido: \(snapshot.documents.count) documentos")
+            
+            // 🎯 CONVERTER DOCUMENTOS PARA OBJETOS SWIFT
+            do {
+                // Codable faz a mágica: Firebase JSON → Swift Object
+                let allTransactions = try snapshot.documents.map { document in
+                    try document.data(as: Transaction.self)
+                }
+                
+                print("✅ Convertidos: \(allTransactions.count) transações")
+                
+                // 🏷️ FILTRAR DELETADOS (soft delete - Parte 5!)
+                /*
+                 Por padrão, não mostramos transações deletadas.
+                 isDeleted é do modelo atualizado na Parte 5.
+                 */
+                let activeTransactions = allTransactions.filter { !$0.isDeleted }
+                
+                print("🏷️ Filtradas: \(activeTransactions.count) ativas (sem deletadas)")
+                
+                // 🛡️ VALIDAR DADOS (defesa em profundidade)
+                /*
+                 Dupla validação:
+                 1. Antes de salvar (preventiva)
+                 2. Depois de buscar (garantia)
+                 
+                 Protege contra dados corrompidos ou regras mudadas.
+                 */
+                let validTransactions = activeTransactions.filter {
+                    self?.isValidTransaction($0) ?? true
+                }
+                
+                print("✅ Validadas: \(validTransactions.count) transações válidas")
+                
+                // 🎯 NOTIFICAR UI NA THREAD PRINCIPAL
+                /*
+                 ⚠️ CRÍTICO: UI só pode ser atualizada na main thread!
+                 
+                 Listener executa em background thread (Firebase decide).
+                 Temos que voltar pra main thread antes de atualizar UI.
+                 
+                 Sem isso: CRASH garantido!
+                 "UIKit must be accessed from main thread"
+                 */
+                DispatchQueue.main.async {
+                    onUpdate(validTransactions)
+                }
+                
+                print("🎨 UI notificada com \(validTransactions.count) transações")
+                
+            } catch {
+                print("❌ Erro ao converter documentos: \(error)")
+                DispatchQueue.main.async {
+                    onError(FirestoreError.from(error))
+                }
+            }
+        }
+        
+        print("📌 Listener registrado com sucesso")
+        print("⚡ Sincronização automática ATIVA!")
+        
+        // ✅ RETORNAR LISTENER PARA CLEANUP POSTERIOR
+        /*
+         ⚠️ IMPORTANTE: Este listener precisa ser REMOVIDO quando não for mais necessário!
+         
+         Sem remoção = MEMORY LEAK:
+         - Listener continua rodando
+         - Consome recursos
+         - App fica lento
+         - Pode travar
+         
+         Sempre guardar este return e chamar .remove() depois!
+         
+         Pattern recomendado:
+         1. Guardar em var listener: ListenerRegistration?
+         2. Chamar listener?.remove() em stopListening()
+         3. Ter deinit que chama stopListening() (rede de segurança)
+         */
+        return listener
+    }
 }
-
-// 📝 ADICIONAR NO FINAL DA FUNÇÃO createTransaction:
-
-// Invalidar cache após criar
-AdvancedCacheManager.shared.invalidateCache(for: transaction.userId)
-
-// 📝 ADICIONAR NO FINAL DA FUNÇÃO updateTransaction:
-
-// Invalidar cache após atualizar
-AdvancedCacheManager.shared.invalidateCache(for: userId)
-
-// 📝 ADICIONAR NO FINAL DA FUNÇÃO deleteTransaction:
-
-// Invalidar cache após deletar
-AdvancedCacheManager.shared.invalidateCache(for: userId)
 
 
 // ═══════════════════════════════════════════════════════════════════
