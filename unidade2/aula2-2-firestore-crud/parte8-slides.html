@@ -527,7 +527,7 @@
     <div class="timing">13:00</div>
     <h2>🔌 Integração no TransactionService</h2>
     <div class="code-preview">
-<span class="keyword">func</span> <span class="function">loadTransactions</span>() <span class="keyword">async throws</span> -> [Transaction] {
+<span class="keyword">func</span> <span class="function">getUserTransactions</span>(userId: String, limit: Int = 50) <span class="keyword">async throws</span> -> [Transaction] {
     <span class="comment">// 1️⃣ TENTAR CACHE PRIMEIRO</span>
     <span class="keyword">if let</span> cached = AdvancedCacheManager.shared.getCachedTransactions(for: userId) {
         <span class="function">print</span>(<span class="string">"⚡ Cache HIT - instantâneo!"</span>)
