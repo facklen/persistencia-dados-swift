@@ -819,6 +819,7 @@ rules_version = '2';
 
 /*
 🛡️ FIRESTORE SECURITY RULES - PRODUÇÃO
+═══════════════════════════════════════
 
 Estas rules protegem dados com validações server-side.
 NUNCA podem ser burladas pelo cliente.
@@ -827,72 +828,1862 @@ Princípios:
 - Autenticação obrigatória
 - Cada usuário acessa apenas SEUS dados
 - Validações rigorosas em todas operações
-- Negar por padrão
+- Negar por padrão (whitelist, não blacklist)
 */
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     // 🚫 REGRA PADRÃO: NEGAR TUDO
+    /*
+     Por segurança, negamos TUDO por padrão.
+     Somente paths explicitamente permitidos funcionarão.
+     */
     match /{document=**} {
       allow read, write: if false;
     }
-    
+
     // 👤 USUÁRIOS: Somente próprio usuário
     match /users/{userId} {
-      allow read, write: if request.auth != null 
+      /*
+       Requisitos:
+       1. Usuário deve estar autenticado (logged in)
+       2. UID do Firebase Auth deve coincidir com {userId}
+       */
+      allow read, write: if request.auth != null
                          && request.auth.uid == userId;
-      
+
       // 💰 TRANSAÇÕES: Subcollection com validações
       match /transactions/{transactionId} {
-        
+
         // 📖 READ: Apenas próprio usuário
-        allow read: if request.auth != null 
+        allow read: if request.auth != null
                     && request.auth.uid == userId;
-        
+
         // ➕ CREATE: Validação completa
-        allow create: if request.auth != null 
+        allow create: if request.auth != null
                       && request.auth.uid == userId
                       && isValidTransaction(request.resource.data, userId);
-        
+
         // ✏️ UPDATE: Validação + não pode mudar dono
-        allow update: if request.auth != null 
+        allow update: if request.auth != null
                       && request.auth.uid == userId
                       && isValidTransaction(request.resource.data, userId)
                       && resource.data.userId == request.resource.data.userId;
-        
+
         // 🗑️ DELETE: Apenas próprio usuário
-        allow delete: if request.auth != null 
+        allow delete: if request.auth != null
                       && request.auth.uid == userId;
       }
     }
-    
-    // 🏷️ CATEGORIAS: Apenas leitura
-    match /categories/{categoryId} {
-      allow read: if request.auth != null;
-      allow write: if false;
-    }
-    
-    // 🛡️ FUNÇÃO DE VALIDAÇÃO
+
+    // 🛡️ FUNÇÕES DE VALIDAÇÃO
+    /*
+     Validam estrutura e regras de negócio no servidor.
+     Cliente NÃO pode burlar essas validações!
+     */
     function isValidTransaction(data, expectedUserId) {
-      return data.keys().hasAll(['amount', 'description', 'categoryId', 'type', 'userId', 'date'])
+      /*
+       Validações:
+       1. Campos obrigatórios existem
+       2. Tipos corretos
+       3. Valores dentro dos limites
+       4. UserId corresponde ao esperado
+       */
+      return data.keys().hasAll(['amount', 'description', 'type', 'userId', 'date', 'createdAt', 'updatedAt', 'isDeleted'])
              && data.amount is number
-             && data.amount != 0
-             && data.amount > -1000000
-             && data.amount < 1000000
+             && data.amount != 0                    // ❌ Não pode ser zero
+             && data.amount > -1000000              // ❌ Não pode ser < -1 milhão
+             && data.amount < 1000000               // ❌ Não pode ser > 1 milhão
              && data.description is string
-             && data.description.size() > 0
-             && data.description.size() <= 200
-             && data.categoryId is string
-             && data.categoryId.size() > 0
+             && data.description.size() > 0         // ❌ Não pode ser vazia
+             && data.description.size() <= 200      // ❌ Máximo 200 caracteres
              && data.type is string
-             && data.type in ['income', 'expense']
+             && data.type in ['income', 'expense']  // ❌ Apenas income ou expense
              && data.userId is string
-             && data.userId == expectedUserId
-             && data.date is timestamp;
+             && data.userId == expectedUserId       // ❌ UserId deve corresponder
+             && data.date is timestamp             // ❌ Date deve ser timestamp
+             && data.createdAt is timestamp
+             && data.updatedAt is timestamp
+             && data.isDeleted is bool
+             && (!data.keys().hasAny(['deletedAt']) || data.deletedAt is timestamp); // deletedAt opcional
     }
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// 📄 ARQUIVO 6: Transaction.swift (MANTIDO DE PARTES ANTERIORES)
+// ═══════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+import Foundation
+import FirebaseFirestore
+
+// MARK: - 💰 Modelo de Transação
+struct Transaction: Identifiable, Codable {
+    @DocumentID var id: String?
+    var amount: Double
+    var description: String
+    var type: TransactionType
+    var date: Date
+    var userId: String
+    // ✨ NOVOS CAMPOS - PARTE 5: Timestamps de Auditoria
+    var createdAt: Date = Date()        // Quando foi criado
+    var updatedAt: Date = Date()        // Última atualização
+    var isDeleted: Bool = false         // Soft delete
+    var deletedAt: Date?                // Quando foi deletado
+    
+    // 💡 OPCIONAL: Campos adicionais que podem ser adicionados depois
+    // var tags: [String] = []
+    // var notes: String?
+    
+    enum TransactionType: String, Codable, CaseIterable {
+        case income = "income"
+        case expense = "expense"
+        
+        var displayName: String {
+            switch self {
+            case .income: return "Receita"
+            case .expense: return "Despesa"
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .income: return "arrow.down.circle.fill"
+            case .expense: return "arrow.up.circle.fill"
+            }
+        }
+    }
+    
+    // Inicializador para criar novas transações
+    init(amount: Double, description: String, type: TransactionType, userId: String) {
+        self.amount = amount
+        self.description = description
+        self.type = type
+        self.date = Date()
+        self.userId = userId
+    }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// 📄 ARQUIVO 7: FirebaseTestManager.swift (MANTIDO DE PARTES ANTERIORES)
+// ══════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════
+import Foundation
+import FirebaseFirestore
+
+class FirebaseTestManager {
+    private let db = Firestore.firestore()
+    
+    // 🎯 TESTE PRINCIPAL: Create → Read → Delete
+    func executeCompleteTest() {
+        print("🚀 Iniciando teste completo Firebase...")
+        testCreateDocument()
+    }
+    
+    // ✅ TESTE 1: Criação de documento
+    private func testCreateDocument() {
+        let testData = [
+            "message": "Firebase conectado com sucesso!",
+            "timestamp": FieldValue.serverTimestamp(),
+            "testId": UUID().uuidString
+        ] as [String : Any]
+        
+        db.collection("connection_tests").addDocument(data: testData)
+    }
+
+    private func handleConnectionError(_ error: Error) {
+        let nsError = error as NSError
+
+        switch nsError.code {
+        case 7: // PERMISSION_DENIED
+            print("🚫 Erro de permissão - Verificar Security Rules")
+        case 14: // UNAVAILABLE
+            print("🌐 Sem conexão com internet")
+        case 16: // UNAUTHENTICATED
+            print("🔐 Usuário não autenticado")
+        default:
+            print("❌ Erro desconhecido: \(error.localizedDescription)")
+        }
+    }
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// 📄 ARQUIVO 8: FirestoreConfiguration.swift (MANTIDO DE PARTES ANTERIORES)
+// ═════════════════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════════════════
+import Foundation
+import FirebaseCore
+import FirebaseFirestore
+
+// MARK: - ⚙️ Configuração Centralizada do Firestore
+/*
+ 📝 CLASSE DE CONFIGURAÇÃO AVANÇADA
+ 
+ 🎯 Expande a configuração básica da Aula 2.1 com:
+ • Cache offline otimizado por ambiente
+ • Logging inteligente
+ • Validação de settings aplicados
+ */
+class FirestoreConfiguration {
+    
+    // 🎯 CONFIGURAÇÃO AVANÇADA (CHAMADA APÓS FirebaseApp.configure())
+    static func configureAdvanced() {
+        let db = Firestore.firestore()
+        
+        print("⚙️ Aplicando configurações avançadas Firestore...")
+        print("📊 Ambiente: \(EnvironmentConfig.environmentName)")
+        
+        // 📊 APLICAR SETTINGS DO AMBIENTE
+        db.settings = EnvironmentConfig.firestoreSettings
+        
+        // 🎯 CONFIGURAR LOGGING
+        configureLogging()
+        
+        // ✅ CONFIRMAR CONFIGURAÇÃO
+        logConfigurationStatus(db: db)
+    }
+    
+    // 📝 CONFIGURAÇÃO DE LOGGING
+    private static func configureLogging() {
+        if EnvironmentConfig.debugLogging {
+            print("   📝 Debug logging: HABILITADO")
+            
+            // 🔍 Firebase internal logging (só desenvolvimento)
+            if Environment.current == .development {
+                FirebaseConfiguration.shared.setLoggerLevel(.debug)
+            }
+        } else {
+            print("   🔇 Debug logging: DESABILITADO (Produção)")
+            FirebaseConfiguration.shared.setLoggerLevel(.error)
+        }
+    }
+    
+    // 📊 LOG DO STATUS DA CONFIGURAÇÃO
+    private static func logConfigurationStatus(db: Firestore) {
+        let settings = db.settings
+        
+        print("✅ Configuração avançada aplicada:")
+        
+        // Verificar tipo de cache configurado
+        if settings.cacheSettings is MemoryCacheSettings {
+            print("   • Cache: Memory (apenas em memória)")
+        } else if settings.cacheSettings is PersistentCacheSettings {
+            print("   • Cache: Persistent (disco + memória)")
+        } else {
+            print("   • Cache: Padrão")
+        }
+        
+        print("   • SSL: \(settings.isSSLEnabled ? "ATIVO" : "INATIVO")")
+        print("   • Ambiente: \(EnvironmentConfig.environmentName)")
+    }
+}
+
+// ═════════════════════════════════════════════════════════════════════════
+// 📄 ARQUIVO 9: EnvironmentConfig.swift (MANTIDO DE PARTES ANTERIORES)
+// ═════════════════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════════════════
+import Foundation
+import FirebaseFirestore
+
+// 🗝️ CONFIGURAÇÃO PROFISSIONAL DE AMBIENTES
+enum Environment {
+    case development, staging, production
+
+    static var current: Environment {
+        #if DEBUG
+        return .development
+        #elseif STAGING
+        return .staging
+        #else
+        return .production
+        #endif
+    }
+}
+
+
+struct EnvironmentConfig {
+    static var projectId: String {
+        switch Environment.current {
+        case .development: return "financas-app-dev"
+        case .staging: return "financas-app-staging"
+        case .production: return "financas-app-prod"
+        }
+    }
+    
+    // ⚙️ CONFIGURAÇÕES ESPECÍFICAS DO FIRESTORE
+    static var firestoreSettings: FirestoreSettings {
+        let settings = FirestoreSettings()
+        
+        switch Environment.current {
+        case .development:
+            // 💾 DESENVOLVIMENTO: Cache agressivo para velocidade
+            settings.cacheSettings = MemoryCacheSettings()
+            print("   📝 Cache: Memory (Development)")
+            
+        case .staging:
+            // 🧪 STAGING: Configuração híbrida
+            settings.cacheSettings = PersistentCacheSettings(
+                sizeBytes: 75_000_000  // ✅ 75MB em bytes
+            )
+            print("   📝 Cache: Persistent (Staging)")
+            
+        case .production:
+            // 🚀 PRODUÇÃO: Otimizado para bateria e armazenamento
+            settings.cacheSettings = PersistentCacheSettings(
+                sizeBytes: 50_000_000  // ✅ 50MB em bytes
+            )
+            print("   📝 Cache: Persistent (Production)")
+        }
+        
+        // 🛡️ SEGURANÇA: SSL sempre ativo
+        settings.isSSLEnabled = true
+        
+        return settings
+    }
+    
+    // 📊 DEBUG LOGGING POR AMBIENTE
+    static var debugLogging: Bool {
+        switch Environment.current {
+        case .development, .staging:
+            return true
+        case .production:
+            return false
+        }
+    }
+    
+    // 📱 NOME DO AMBIENTE PARA EXIBIÇÃO
+    static var environmentName: String {
+        switch Environment.current {
+        case .development:
+            return "🔧 Development"
+        case .staging:
+            return "🧪 Staging"
+        case .production:
+            return "🚀 Production"
+        }
+    }
+    
+}
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// 📄 ARQUIVO 10: ConfigurationValidator.swift (MANTIDO DE PARTES ANTERIORES)
+// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+import Foundation
+import FirebaseFirestore
+
+// MARK: - 🧪 Validador Automático de Configuração
+/*
+ 📝 VALIDA A CONFIGURAÇÃO DO FIREBASE
+ 
+ 🎯 Testa automaticamente:
+ • Conexão com Firestore
+ • Settings aplicados corretamente
+ • Operação básica funcionando
+ */
+class ConfigurationValidator {
+    
+    // 🧪 RESULTADO DA VALIDAÇÃO
+    struct ValidationResult {
+        let isValid: Bool
+        let message: String
+    }
+    
+    // 🔍 VALIDAÇÃO COMPLETA
+    static func validateSetup() async -> ValidationResult {
+        print("\n🧪 Validando configuração avançada...")
+        
+        // ✅ 1. TESTAR CONEXÃO
+        let connectionOK = await testConnection()
+        if !connectionOK {
+            return ValidationResult(
+                isValid: false,
+                message: "❌ Falha na conexão com Firestore"
+            )
+        }
+        
+        // ✅ 2. VALIDAR SETTINGS
+        let settingsOK = validateSettings()
+        if !settingsOK {
+            return ValidationResult(
+                isValid: false,
+                message: "⚠️ Configurações não aplicadas corretamente"
+            )
+        }
+        
+        // ✅ 3. TESTAR OPERAÇÃO
+        let operationOK = await testOperation()
+        if !operationOK {
+            return ValidationResult(
+                isValid: false,
+                message: "❌ Falha no teste de operação"
+            )
+        }
+        
+        print("✅ Validação completa: SUCESSO!\n")
+        return ValidationResult(
+            isValid: true,
+            message: "🎉 Configuração avançada validada!"
+        )
+    }
+    
+    // 🔗 TESTE DE CONEXÃO
+    private static func testConnection() async -> Bool {
+        do {
+            let db = Firestore.firestore()
+            print("   🔗 Testando conexão...")
+            
+            // Operação mínima para validar conectividade
+            _ = try await db.collection("config_validation")
+                .document("test")
+                .getDocument()
+            
+            print("   ✅ Conexão OK")
+            return true
+        } catch {
+            print("   ❌ Erro de conexão: \(error.localizedDescription)")
+            return false
+        }
+    }
+    
+    // ⚙️ VALIDAÇÃO DE SETTINGS
+    private static func validateSettings() -> Bool {
+        let db = Firestore.firestore()
+        let settings = db.settings
+        
+        print("   ⚙️ Validando settings aplicados...")
+        
+        // Verificar configurações críticas
+        guard settings.isSSLEnabled else {
+            print("   ❌ SSL não está habilitado")
+            return false
+        }
+        
+        // Verificar se cache está configurado corretamente
+        // (cacheSettings sempre existe, não precisa verificar nil)
+        print("   ✅ Cache configurado: \(type(of: settings.cacheSettings))")
+        
+        print("   ✅ Settings validados")
+        return true
+    }
+    
+    // 💾 TESTE DE OPERAÇÃO
+    private static func testOperation() async -> Bool {
+        do {
+            let db = Firestore.firestore()
+            print("   💾 Testando operação de escrita...")
+            
+            let testData: [String: Any] = [
+                "validated": true,
+                "timestamp": Timestamp(),
+                "environment": EnvironmentConfig.environmentName
+            ]
+            
+            try await db.collection("config_validation")
+                .document("test")
+                .setData(testData)
+            
+            print("   ✅ Operação OK")
+            return true
+        } catch {
+            print("   ❌ Erro na operação: \(error.localizedDescription)")
+            return false
+        }
+    }
+}
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// 📄 ARQUIVO 11: FirestoreService.swift (MANTIDO DE PARTES ANTERIORES)
+// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+import Foundation
+import FirebaseFirestore
+
+// MARK: - 🔧 Service Genérico do Firestore
+/*
+ 📝 SERVICE LAYER BASE - REUTILIZÁVEL
+ 
+ 🎯 Este service é genérico e funciona com QUALQUER modelo Codable:
+ • Transaction, User, Product, Category, etc.
+ • Uma base sólida para todos os outros services
+ • Centraliza comunicação com Firestore
+ • Facilita manutenção e testes
+ */
+class FirestoreService {
+    private let db = Firestore.firestore()
+    
+    // MARK: - 📥 Buscar Documentos (Generic GET)
+    /*
+     📝 MÉTODO GENÉRICO DE LEITURA
+     
+     🎯 Funcionalidades:
+     • Funciona com qualquer tipo Codable
+     • Suporta ordenação e limite
+     • Logs educativos para debugging
+     • Error handling robusto
+     
+     💡 Exemplo de uso:
+     let transactions = try await getDocuments(
+         from: "transactions",
+         type: Transaction.self,
+         limit: 10,
+         orderBy: "date",
+         descending: true
+     )
+     */
+    func getDocuments<T: Codable>(
+        from collection: String,
+        type: T.Type,
+        limit: Int? = nil,
+        orderBy field: String? = nil,
+        descending: Bool = false
+    ) async throws -> [T] {
+        print("🔍 FirestoreService: Buscando documentos de \(collection)")
+        
+        do {
+            var query: Query = db.collection(collection)
+            
+            // 📊 Aplicar ordenação se especificada
+            if let orderField = field {
+                query = query.order(by: orderField, descending: descending)
+                print("   📊 Ordenando por: \(orderField) (desc: \(descending))")
+            }
+            
+            // 🔢 Aplicar limite se especificado
+            if let limitCount = limit {
+                query = query.limit(to: limitCount)
+                print("   🔢 Limite: \(limitCount) documentos")
+            }
+            
+            // 🌐 Executar query
+            let snapshot = try await query.getDocuments()
+            
+            // 🔄 Decodificar documentos
+            let documents = snapshot.documents.compactMap { document -> T? in
+                do {
+                    let decoded = try document.data(as: type)
+                    print("   ✅ Documento decodificado: \(document.documentID)")
+                    return decoded
+                } catch {
+                    print("   ❌ Erro ao decodificar documento \(document.documentID): \(error)")
+                    return nil
+                }
+            }
+            
+            print("📊 Total de documentos carregados: \(documents.count)")
+            return documents
+            
+        } catch {
+            print("💥 Erro no FirestoreService: \(error)")
+            throw mapFirebaseError(error)
+        }
+    }
+    
+    
+    func getDocument<T: Codable>(
+            _ documentId: String,
+            from collection: String,
+            as type: T.Type
+        ) async throws -> T {
+            print("📖 FirestoreService: Buscando documento \(documentId)")
+            
+            do {
+                let docRef = db.collection(collection).document(documentId)
+                let document = try await docRef.getDocument(as: type)
+                
+                print("✅ Documento encontrado")
+                return document
+                
+            } catch {
+                print("❌ Erro ao buscar documento: \(error)")
+                throw FirestoreError.from(error)
+            }
+    }
+    
+    // MARK: - 💾 Salvar Documento (Generic CREATE/UPDATE)
+    /*
+     📝 MÉTODO GENÉRICO DE ESCRITA
+     
+     🎯 Funcionalidades:
+     • Cria ou atualiza documentos
+     • Auto-gera ID se não fornecido
+     • Retorna o ID do documento salvo
+     • Logs para tracking
+     */
+    func saveDocument<T: Codable>(
+        _ document: T,
+        to collection: String,
+        documentId: String? = nil
+    ) async throws -> String {
+        print("💾 FirestoreService: Salvando documento em \(collection)")
+        
+        do {
+            let ref: DocumentReference
+            
+            if let id = documentId {
+                ref = db.collection(collection).document(id)
+                print("   📝 Atualizando documento existente: \(id)")
+            } else {
+                ref = db.collection(collection).document()
+                print("   ✨ Criando novo documento com ID: \(ref.documentID)")
+            }
+            
+            try ref.setData(from: document)
+            
+            print("✅ Documento salvo com sucesso: \(ref.documentID)")
+            return ref.documentID
+            
+        } catch {
+            print("💥 Erro ao salvar documento: \(error)")
+            throw mapFirebaseError(error)
+        }
+    }
+    
+    // MARK: - 🗑️ Deletar Documento (Generic DELETE)
+    func deleteDocument(from collection: String, documentId: String) async throws {
+        print("🗑️ FirestoreService: Deletando documento \(documentId)")
+        
+        do {
+            try await db.collection(collection).document(documentId).delete()
+            print("✅ Documento deletado com sucesso")
+        } catch {
+            print("💥 Erro ao deletar: \(error)")
+            throw mapFirebaseError(error)
+        }
+    }
+    
+    func updateDocument<T: Codable>(
+            _ document: T,
+            documentId: String,
+            in collection: String,  // ⚡ Mantém padrão com saveDocument
+            merge: Bool = true
+        ) async throws {
+            print("✏️ FirestoreService: Atualizando \(documentId) em \(collection)")
+            print("  ⚡ Modo merge: \(merge)")
+            
+            do {
+                if merge {
+                    try db.collection(collection)
+                        .document(documentId)
+                        .setData(from: document, merge: true)
+                } else {
+                    try db.collection(collection)
+                        .document(documentId)
+                        .setData(from: document)
+                }
+                print("✅ Documento atualizado com sucesso")
+                
+            } catch {
+                print("❌ Erro ao atualizar: \(error)")
+                throw FirestoreError.from(error)
+            }
+        }
+    
+    // MARK: - 🔄 Mapeamento de Erros
+    /*
+     📝 TRADUÇÃO DE ERROS DO FIREBASE
+     
+     🎯 Converte erros genéricos do Firebase em erros específicos
+     do nosso app, com mensagens amigáveis.
+     */
+    private func mapFirebaseError(_ error: Error) -> FirestoreError {
+        if let firestoreError = error as? FirestoreErrorCode {
+            switch firestoreError.code {
+            case .notFound:
+                return .documentNotFound
+            case .permissionDenied:
+                return .permissionDenied
+            case .resourceExhausted:
+                return .quotaExceeded
+            default:
+                return .networkError(error)
+            }
+        }
+        return .unknown(error)
+    }
+}
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// 📄 ARQUIVO 12: FirestoreError.swift (MANTIDO DE PARTES ANTERIORES)
+// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+import Foundation
+
+// MARK: - 🛡️ Sistema de Erros Profissional
+/*
+ 📝 ERROS CUSTOMIZADOS DO FIRESTORE
+ 
+ 🎯 Por que criar erros customizados:
+ • Mensagens específicas e amigáveis ao usuário
+ • Diferentes tipos de tratamento por tipo de erro
+ • Logs detalhados para debugging
+ • Facilita identificação de problemas em produção
+ */
+enum FirestoreError: LocalizedError {
+    case documentNotFound
+    case invalidData
+    case networkError(Error)
+    case permissionDenied
+    case quotaExceeded
+    case unknown(Error)
+    
+    // 📱 MENSAGENS AMIGÁVEIS PARA O USUÁRIO
+    var errorDescription: String? {
+        switch self {
+        case .documentNotFound:
+            return "Documento não encontrado. Verifique se os dados existem."
+        case .invalidData:
+            return "Dados inválidos. Formato não suportado."
+        case .networkError(let error):
+            return "Erro de conexão: \(error.localizedDescription)"
+        case .permissionDenied:
+            return "Acesso negado. Verifique suas permissões."
+        case .quotaExceeded:
+            return "Limite de uso excedido. Tente novamente mais tarde."
+        case .unknown(let error):
+            return "Erro desconhecido: \(error.localizedDescription)"
+        }
+    }
+    
+    static func from(_ error: Error) -> FirestoreError {
+            // Converte Error genérico para NSError para acessar código
+            let nsError = error as NSError
+            
+            switch nsError.code {
+            case 7:  // FirestoreErrorCode.permissionDenied
+                return .permissionDenied
+            case 5:  // FirestoreErrorCode.notFound
+                return .documentNotFound
+            case 14: // FirestoreErrorCode.unavailable
+                return .networkError(error)
+            case 8:  // FirestoreErrorCode.resourceExhausted
+                return .quotaExceeded
+            default:
+                return .unknown(error)
+            }
+        }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 📄 ARQUIVO 13: FinancasAppApp.swift (MANTIDO DE PARTES ANTERIORES)
+// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+import SwiftUI
+import Firebase
+
+@main
+struct FinancasAppApp: App {
+    
+    init() {
+           // 🔥 CONFIGURAÇÃO DO FIREBASE
+           configureFirebase()
+       }
+    
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+    
+
+    private func configureFirebase() {
+          print("🔥 Iniciando configuração do Firebase...")
+          print("📊 Ambiente detectado: \(EnvironmentConfig.environmentName)")
+          
+          // 📋 Verificar arquivo de configuração
+          guard let path = Bundle.main.path(
+              forResource: "GoogleService-Info",
+              ofType: "plist"
+          ) else {
+              print("❌ GoogleService-Info.plist não encontrado!")
+              fatalError("Firebase config missing")
+          }
+          
+          print("✅ Arquivo encontrado em: \(path)")
+          
+          // 🚀 1. CONFIGURAÇÃO BASE (Aula 2.1)
+          FirebaseApp.configure()
+          print("✅ Firebase App inicializado")
+          
+          // ⚙️ 2. CONFIGURAÇÃO AVANÇADA (Aula 2.2 - NOVO!)
+          FirestoreConfiguration.configureAdvanced()
+          print("✅ Firestore otimizado para \(EnvironmentConfig.environmentName)")
+          
+          print("🎉 Configuração completa finalizada!\n")
+      }  
+}
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// 📄 ARQUIVO 14: ContentView.swift (MANTIDO DE PARTES ANTERIORES)
+// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+import SwiftUI
+
+/*
+ 🏠 CONTENTVIEW - TELA PRINCIPAL DO APP
+ 
+ Menu principal com navegação para diferentes demos:
+ - CRUD Completo (Parte 5)
+ - Tempo Real (Parte 6)
+ 
+ Estrutura:
+ - NavigationView (para NavigationLinks funcionarem)
+ - Cabeçalho visual
+ - Botões de demonstração
+ - Validação automática no .task
+ */
+struct ContentView: View {
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 30) {
+                
+                // 📱 CABEÇALHO
+                VStack(spacing: 10) {
+                    Image(systemName: "building.columns.fill")
+                        .font(.system(size: 80))
+                        .foregroundColor(.blue)
+                    
+                    Text("🛡️ Service Layer Demo")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                    
+                    Text("Arquitetura Profissional")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                }
+                .padding(.top, 50)
+                
+                // 🎯 DEMONSTRAÇÕES
+                VStack(spacing: 15) {
+                    Text("Demonstrações")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    
+                    // ============================================================
+                    // ✅ CRUD COMPLETO (PARTE 5)
+                    // ============================================================
+                    NavigationLink(destination: CRUDDemoView()) {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                                .font(.title2)
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Testar CRUD Completo")
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.primary)
+                                
+                                Text("CREATE + READ + UPDATE + DELETE + Auditoria")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.gray)
+                        }
+                        .padding()
+                        .background(Color.green.opacity(0.1))
+                        .cornerRadius(10)
+                    }
+                    
+                    // ============================================================
+                    // ✨ TEMPO REAL (PARTE 6 - NOVO!)
+                    // ============================================================
+                    NavigationLink(destination: RealtimeDemoView()) {
+                        HStack {
+                            Image(systemName: "bolt.circle.fill")
+                                .foregroundColor(.blue)
+                                .font(.title2)
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Testar Tempo Real")
+                                    .fontWeight(.semibold)
+                                    .foregroundColor(.primary)
+                                
+                                Text("Sincronização Automática + Timestamps")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.gray)
+                        }
+                        .padding()
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(10)
+                    }
+                }
+                .padding(.horizontal)
+                
+                Spacer()
+                
+                // ℹ️ INFORMAÇÃO DE AMBIENTE
+                Text(EnvironmentConfig.environmentName)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.bottom)
+            }
+            .navigationBarHidden(true)
+        }
+        .task {
+            // 🧪 Validação automática da configuração
+            print("🧪 Executando validação automática...")
+            let result = await ConfigurationValidator.validateSetup()
+            
+            if result.isValid {
+                print("🎉 App pronto para uso!")
+            } else {
+                print("⚠️ \(result.message)")
+            }
+        }
+    }
+}
+
+#Preview {
+    ContentView()
+}
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// 📄 ARQUIVO 15: ContentView.swift (MANTIDO DE PARTES ANTERIORES)
+// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+import SwiftUI
+import FirebaseFirestore
+
+// ❌ EXEMPLO DE CÓDIGO RUIM - NÃO USAR EM PRODUÇÃO
+// Este código serve apenas para demonstração do problema
+
+struct BadTransactionView: View {
+    @State private var transactions: [Transaction] = []
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                if isLoading {
+                    ProgressView("Carregando...")
+                } else if let error = errorMessage {
+                    VStack(spacing: 20) {
+                        Image(systemName: "exclamationmark.triangle")
+                            .font(.system(size: 60))
+                            .foregroundColor(.red)
+                        Text("Erro ao carregar")
+                            .font(.headline)
+                        Text(error)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding()
+                } else if transactions.isEmpty {
+                    VStack(spacing: 20) {
+                        Image(systemName: "doc.text")
+                            .font(.system(size: 60))
+                            .foregroundColor(.gray)
+                        Text("Nenhuma transação")
+                            .font(.headline)
+                        Text("Adicione transações no Firebase Console")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding()
+                } else {
+                    List(transactions) { transaction in
+                        HStack {
+                            // Ícone
+                            Image(systemName: transaction.type.icon)
+                                .foregroundColor(transaction.type == .income ? .green : .red)
+                                .font(.title2)
+                            
+                            // Descrição
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(transaction.description)
+                                    .font(.headline)
+                                Text(transaction.date, style: .date)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            // Valor
+                            Text("R$ \(transaction.amount, specifier: "%.2f")")
+                                .font(.headline)
+                                .foregroundColor(transaction.type == .income ? .green : .red)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+            }
+            .navigationTitle("Código Espaguete 🍝")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: loadTransactions) {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                }
+            }
+            .onAppear {
+                loadTransactions()
+            }
+        }
+    }
+    
+    // ❌ PROBLEMA: View fazendo TUDO
+    // - Conecta diretamente no Firestore
+    // - Faz parsing manual
+    // - Trata erros de forma básica
+    // - Lógica de negócio misturada com UI
+    // - Impossível de testar isoladamente
+    // - Código duplicado em outras telas
+    private func loadTransactions() {
+        isLoading = true
+        errorMessage = nil
+        
+        let db = Firestore.firestore()
+        
+        // 😱 Conexão direta sem abstração
+        db.collection("transactions").getDocuments { snapshot, error in
+            DispatchQueue.main.async {
+                self.isLoading = false
+                
+                if let error = error {
+                    // ❌ Error handling básico
+                    self.errorMessage = "Erro: \(error.localizedDescription)"
+                    print("❌ Erro ao carregar: \(error)")
+                    return
+                }
+                
+                guard let documents = snapshot?.documents else {
+                    self.errorMessage = "Nenhum documento encontrado"
+                    return
+                }
+                
+                // 😱 Parsing manual propenso a erros
+                var loadedTransactions: [Transaction] = []
+                for document in documents {
+                    do {
+                        let transaction = try document.data(as: Transaction.self)
+                        loadedTransactions.append(transaction)
+                    } catch {
+                        print("❌ Erro ao decodificar: \(error)")
+                    }
+                }
+                
+                self.transactions = loadedTransactions
+                print("📊 Transações carregadas: \(loadedTransactions.count)")
+            }
+        }
+    }
+}
+
+#Preview {
+    BadTransactionView()
+}
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// 📄 ARQUIVO 16: CrudDemoView.swift (MANTIDO DE PARTES ANTERIORES)
+// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+import SwiftUI
+
+// MARK: - CRUDDemoView
+struct CRUDDemoView: View {
+    @StateObject private var viewModel = CRUDDemoViewModel()
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            // 🔝 Cabeçalho
+            Text("Teste CRUD Completo")
+                .font(.title2)
+                .fontWeight(.bold)
+                .padding(.top)
+            
+            // ➕ Botão Criar
+            Button(action: {
+                Task { await viewModel.createTransaction() }
+            }) {
+                Label("Criar Nova Transação", systemImage: "plus.circle.fill")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+            
+            // 📋 Botão Carregar + Toggle Deletados
+            HStack(spacing: 15) {
+                Button(action: {
+                    Task { await viewModel.loadTransactions() }
+                }) {
+                    Label("Carregar Lista", systemImage: "list.bullet")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.green.opacity(0.8))
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+                
+                // ✨ TOGGLE MOSTRAR DELETADOS
+                Button(action: {
+                    Task { await viewModel.toggleShowDeleted() }
+                }) {
+                    Image(systemName: viewModel.showDeleted ? "eye.fill" : "eye.slash.fill")
+                        .font(.title2)
+                        .foregroundColor(viewModel.showDeleted ? .orange : .gray)
+                        .padding()
+                        .background(Color.gray.opacity(0.1))
+                        .cornerRadius(10)
+                }
+            }
+            
+            // ✏️ Botão Atualizar
+            Button(action: {
+                Task { await viewModel.updateFirstTransaction() }
+            }) {
+                Label("Atualizar Primeira", systemImage: "pencil.circle.fill")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.orange.opacity(0.8))
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+            .disabled(viewModel.transactions.isEmpty)
+            
+            // 🏷️🗑️ Botões Delete
+            HStack(spacing: 15) {
+                Button(action: {
+                    Task { await viewModel.softDeleteFirst() }
+                }) {
+                    Label("Soft Delete", systemImage: "tag.fill")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.yellow.opacity(0.8))
+                        .foregroundColor(.black)
+                        .cornerRadius(10)
+                }
+                
+                Button(action: {
+                    Task { await viewModel.hardDeleteFirst() }
+                }) {
+                    Label("Hard Delete", systemImage: "trash.fill")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.red.opacity(0.8))
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                }
+            }
+            .disabled(viewModel.transactions.isEmpty)
+            
+            // 📊 Lista de Transações
+            List(viewModel.transactions) { transaction in
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("R$ \(transaction.amount, specifier: "%.2f")")
+                            .font(.headline)
+                        Spacer()
+                        if transaction.isDeleted {
+                            Text("🏷️ DELETED")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                                .padding(4)
+                                .background(Color.red.opacity(0.1))
+                                .cornerRadius(4)
+                        }
+                    }
+                    
+                    Text(transaction.description)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text("Created: \(transaction.createdAt, style: .time)")
+                                .font(.caption2)
+                            Text("Updated: \(transaction.updatedAt, style: .time)")
+                                .font(.caption2)
+                        }
+                        
+                        Spacer()
+                        
+                        if let deletedAt = transaction.deletedAt {
+                            Text("Deleted: \(deletedAt, style: .time)")
+                                .font(.caption2)
+                                .foregroundColor(.red)
+                        }
+                    }
+                    .foregroundColor(.gray)
+                }
+                .padding(.vertical, 4)
+            }
+            
+            // 💬 Mensagem de Feedback
+            if let message = viewModel.message {
+                Text(message)
+                    .font(.caption)
+                    .foregroundColor(.green)
+                    .padding()
+                    .background(Color.green.opacity(0.1))
+                    .cornerRadius(8)
+            }
+        }
+        .navigationTitle("CRUD Demo")
+        .padding()
+    }
+}
+
+// MARK: - CRUDDemoViewModel
+@MainActor
+class CRUDDemoViewModel: ObservableObject {
+    @Published var transactions: [Transaction] = []
+    @Published var message: String?
+    @Published var showDeleted: Bool = false  // ✨ Toggle para mostrar deletados
+    
+    private let service = TransactionService()
+    private let userId = "demo-user"
+    
+    // ➕ CRIAR NOVA TRANSAÇÃO
+    func createTransaction() async {
+        let transaction = Transaction(
+            amount: Double.random(in: 10...200),
+            description: "Demo Transaction \(Int.random(in: 1...999))",
+            type: .expense,
+            userId: userId
+        )
+        
+        do {
+            let id = try await service.createTransaction(transaction, for: userId)
+            message = "✅ Criado: \(id)"
+            await loadTransactions()
+        } catch {
+            message = "❌ Erro: \(error.localizedDescription)"
+        }
+    }
+    
+    // 📋 CARREGAR LISTA (com ou sem deletados)
+    func loadTransactions() async {
+        do {
+            if showDeleted {
+                // Mostra TODOS incluindo deletados
+                transactions = try await service.getAllTransactionsIncludingDeleted(
+                    userId: userId,
+                    limit: 50
+                )
+                message = "✅ Carregado: \(transactions.count) transações (incluindo deletadas)"
+            } else {
+                // Mostra só ativas (padrão)
+                transactions = try await service.getUserTransactions(
+                    userId: userId,
+                    limit: 50
+                )
+                message = "✅ Carregado: \(transactions.count) transações ativas"
+            }
+        } catch {
+            message = "❌ Erro: \(error.localizedDescription)"
+        }
+    }
+    
+    // 🔄 TOGGLE MOSTRAR DELETADOS
+    func toggleShowDeleted() async {
+        showDeleted.toggle()
+        await loadTransactions()
+    }
+    
+    // ✏️ ATUALIZAR PRIMEIRA
+    func updateFirstTransaction() async {
+        guard var first = transactions.first else {
+            message = "❌ Nenhuma transação para atualizar"
+            return
+        }
+        
+        first.amount = Double.random(in: 10...200)
+        
+        do {
+            try await service.updateTransaction(first)
+            message = "✅ Atualizado com sucesso"
+            await loadTransactions()
+        } catch {
+            message = "❌ Erro: \(error.localizedDescription)"
+        }
+    }
+    
+    // 🏷️ SOFT DELETE
+    func softDeleteFirst() async {
+        guard let first = transactions.first, let id = first.id else {
+            message = "❌ Nenhuma transação para deletar"
+            return
+        }
+        
+        do {
+            try await service.deleteTransaction(
+                transactionId: id,
+                userId: userId,
+                soft: true
+            )
+            message = "✅ Soft delete realizado"
+            await loadTransactions()
+        } catch {
+            message = "❌ Erro: \(error.localizedDescription)"
+        }
+    }
+    
+    // 🗑️ HARD DELETE
+    func hardDeleteFirst() async {
+        guard let first = transactions.first, let id = first.id else {
+            message = "❌ Nenhuma transação para deletar"
+            return
+        }
+        
+        do {
+            try await service.deleteTransaction(
+                transactionId: id,
+                userId: userId,
+                soft: false
+            )
+            message = "✅ Hard delete realizado"
+            await loadTransactions()
+        } catch {
+            message = "❌ Erro: \(error.localizedDescription)"
+        }
+    }
+}
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// 📄 ARQUIVO 17: RealtimeDemoViewModel.swift (MANTIDO DE PARTES ANTERIORES)
+// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+import SwiftUI
+import FirebaseFirestore
+
+/*
+ 🎭 VIEWMODEL PARA DEMONSTRAÇÃO DE TEMPO REAL
+ 
+ Gerencia estado e lógica da tela de demonstração.
+ Implementa padrão MVVM (Model-View-ViewModel).
+ 
+ Responsabilidades:
+ - Iniciar/parar listeners
+ - Gerenciar estado da UI (@Published)
+ - Cleanup adequado (deinit)
+ - Conversão de erros para mensagens
+ 
+ NÃO faz:
+ - Renderização (responsabilidade da View)
+ - Lógica de negócio (responsabilidade do Service)
+ */
+@MainActor
+class RealtimeDemoViewModel: ObservableObject {
+    
+    // MARK: - Published Properties
+    
+    /*
+     @Published: Quando estes valores mudam, SwiftUI re-renderiza a View automaticamente.
+     
+     É o "contrato" entre ViewModel e View:
+     - ViewModel atualiza @Published
+     - View observa mudanças
+     - SwiftUI re-desenha automaticamente
+     
+     @MainActor garante que TUDO desta classe executa na main thread (UI-safe).
+     */
+    @Published var transactions: [Transaction] = []
+    @Published var isListening = false
+    @Published var message: String?
+    
+    // MARK: - Private Properties
+    
+    private let service = TransactionService()
+    private let userId = "demo-user"
+    
+    /*
+     ⚠️ CRÍTICO: Guardar ListenerRegistration para poder remover depois!
+     
+     Sem guardar = Não consegue parar listener = Memory leak!
+     
+     `nonisolated(unsafe)` significa:
+     - **nonisolated**: "pode ser acessado de qualquer thread"
+     - **unsafe**: "eu garanto que é seguro fazer isso"
+     
+     Ao usarmos o **nonisolated(unsafe)** dizemos que esta property NÃO está isolada ao MainActor. Pode ser acessada de qualquer contexto (incluindo deinit) sem passar pelo mecanismo de sincronização do actor. EU garanto que isso é seguro porque:
+
+     1. Firebase SDK é thread-safe
+     2. Operações são simples (atribuir/remover)
+     3. Property é privada e controlada
+     */
+    nonisolated(unsafe) private var listener: ListenerRegistration?
+    
+    // MARK: - Public Methods
+    
+    /*
+     ▶️ INICIAR LISTENER
+     
+     Começa a observar mudanças em tempo real.
+     */
+    func startListening() {
+        // 🛡️ Validar: não iniciar se já está escutando
+        guard !isListening else {
+            message = "⚠️ Já está escutando!"
+            print("⚠️ Tentativa de iniciar listener duplicado - ignorado")
+            return
+        }
+        
+        print("🎧 ViewModel: Iniciando listener...")
+        message = "🔄 Iniciando listener..."
+        
+        // 👂 Iniciar listener do service
+        /*
+         [weak self]: Evita retain cycle (referência circular).
+         
+         Sem [weak self]:
+         - Listener → retém closure
+         - Closure → retém self (ViewModel)
+         - ViewModel → retém listener
+         - Círculo vicioso = Memory leak!
+         
+         Com [weak self]:
+         - Closure não retém ViewModel fortemente
+         - Quando View desaparece, ViewModel pode ser destruído
+         - deinit executa e remove listener
+         
+         É como ter airbag E cinto:
+         - Ideal é usar cinto (stopListening manual)
+         - Mas airbag (deinit) salva se esquecer!
+         */
+        listener = service.startListeningToUserTransactions(
+            userId: userId,
+            limit: 50,
+            onUpdate: { [weak self] transactions in
+                // 🎯 Dados atualizados!
+                print("🎯 ViewModel: Recebeu \(transactions.count) transações")
+                self?.transactions = transactions
+                self?.isListening = true
+                self?.message = "✅ \(transactions.count) transações em tempo real"
+            },
+            onError: { [weak self] error in
+                // 🚨 Erro ocorreu!
+                print("❌ ViewModel: Erro recebido - \(error.localizedDescription)")
+                self?.isListening = false
+                self?.message = "❌ Erro: \(error.localizedDescription)"
+            }
+        )
+        
+        print("✅ ViewModel: Listener iniciado com sucesso")
+    }
+    
+    /*
+     ⏸️ PARAR LISTENER
+     
+     Para de observar mudanças e libera recursos.
+     */
+    func stopListening() {
+        print("🛑 ViewModel: Parando listener...")
+        
+        cleanupListener()      // Faz cleanup
+        
+        isListening = false // Atualiza a UI
+        message = "🛑 Listener parado"  // Feedback
+        
+        print("✅ ViewModel: Listener parado com sucesso")
+    }
+    
+    // ✅ MÉTODO PRIVADO: Cleanup puro (usado pelo deinit)
+    nonisolated private func cleanupListener() {
+        listener?.remove()
+        listener = nil
+    }
+    
+    // MARK: - Lifecycle
+    
+    /*
+     🧹 DESTRUTOR (CRÍTICO PARA CLEANUP!)
+     
+     Executado automaticamente quando ViewModel é destruído.
+     
+     Por que é crítico:
+     - View pode desaparecer sem chamar stopListening()
+     - ViewModel seria destruído mas listener continuaria rodando
+     - deinit é nossa REDE DE SEGURANÇA
+     - Garante que listener sempre será removido
+     
+     É como ter um finally {} automático!
+     
+     Cenários onde deinit salva:
+     1. Usuário fecha app bruscamente
+     2. Navegação rápida entre telas
+     3. Erro/crash na view
+     4. Memory warning (iOS libera VMs não visíveis)
+     
+     Sem deinit adequado:
+     - Listener continua rodando para sempre
+     - Consome CPU e rede constantemente
+     - Memória nunca é liberada
+     - App fica progressivamente mais lento
+     - iOS pode matar app por excesso de memória
+     */
+    deinit {
+        print("🧹 ViewModel: deinit chamado - removendo listener")
+        cleanupListener()
+        print("✅ ViewModel: Cleanup completo")
+    }
+    
+
+    // MARK: - 💰 Computed Properties (✨ NOVO NA PARTE 7)
+    /*
+    ⚠️ IMPORTANTE: Cálculos baseados nas últimas 50 transações
+ 
+    Por questões de performance, o listener carrega apenas as 50
+    transações mais recentes. Portanto, estes valores são APROXIMADOS
+    e representam apenas a atividade recente, não o histórico completo.
+ 
+    Em um app de produção, você deveria:
+    1. Usar agregação do Firestore para totais reais
+    2. Ter uma collection separada com totais consolidados
+    3. Ou calcular totais no backend
+    */
+    
+    /// Saldo das últimas 50 transações
+    var totalBalance: Double {
+        transactions.reduce(0.0) { $0 + $1.amount }
+    }
+    
+    /// Total de receitas (valores positivos)
+    var totalIncome: Double {
+        transactions
+            .filter { $0.amount > 0 }
+            .reduce(0.0) { $0 + $1.amount }
+    }
+    
+    /// Total de despesas (últimas 50 transações)
+    var totalExpenses: Double {
+        abs(transactions
+            .filter { $0.amount < 0 }
+            .reduce(0.0) { $0 + $1.amount })
+    }
+    
+    /// Quantidade de transações (últimas 50 transações)
+    var transactionCount: Int {
+        transactions.count
+    }
+    
+    /// Média de gastos (últimas 50 transações)
+    var averageExpense: Double {
+        let expenses = transactions.filter { $0.amount < 0 }
+        guard !expenses.isEmpty else { return 0 }
+        return abs(expenses.reduce(0.0) { $0 + $1.amount }) / Double(expenses.count)
+    }
+    
+    // MARK: - 🎨 Formatadores (✨ NOVO NA PARTE 7)
+    
+    /// Formata valor para moeda brasileira
+    func formatCurrency(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.locale = Locale(identifier: "pt_BR")
+        return formatter.string(from: NSNumber(value: value)) ?? "R$ 0,00"
+    }
+    
+    /// Formata data para formato brasileiro
+    func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .short
+        formatter.locale = Locale(identifier: "pt_BR")
+        return formatter.string(from: date)
+    }
+    
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 📄 ARQUIVO 18: BalanceHeaderView.swift (MANTIDO DE PARTES ANTERIORES)
+// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+import SwiftUI
+
+/// Cabeçalho com saldo total e estatísticas de receitas/gastos
+struct BalanceHeaderView: View {
+    let totalBalance: Double
+    let totalIncome: Double
+    let totalExpenses: Double
+    let formatter: (Double) -> String
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            // SALDO PRINCIPAL
+            VStack(spacing: 4) {
+                Text("Saldo Total")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                Text(formatter(totalBalance))
+                    .font(.system(size: 36, weight: .bold, design: .rounded))
+                    .foregroundColor(totalBalance >= 0 ? .green : .red)
+                    .animation(.easeInOut(duration: 0.3), value: totalBalance)
+            }
+            
+            // RECEITAS E GASTOS
+            HStack(spacing: 20) {
+                // Receitas
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .foregroundColor(.green)
+                        Text("Receitas")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Text(formatter(totalIncome))
+                        .font(.headline)
+                        .foregroundColor(.green)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                
+                Divider()
+                    .frame(height: 40)
+                
+                // Gastos
+                VStack(alignment: .trailing, spacing: 4) {
+                    HStack {
+                        Text("Gastos")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Image(systemName: "arrow.down.circle.fill")
+                            .foregroundColor(.red)
+                    }
+                    Text(formatter(totalExpenses))
+                        .font(.headline)
+                        .foregroundColor(.red)
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+        }
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
+                .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
+        )
+    }
+}
+
+#Preview {
+    BalanceHeaderView(
+        totalBalance: 2500.50,
+        totalIncome: 5000,
+        totalExpenses: 2499.50,
+        formatter: { value in
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .currency
+            formatter.locale = Locale(identifier: "pt_BR")
+            return formatter.string(from: NSNumber(value: value)) ?? "R$ 0,00"
+        }
+    )
+    .padding()
+}
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// 📄 ARQUIVO 19: StatisticsCardView.swift (MANTIDO DE PARTES ANTERIORES)
+// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+import SwiftUI
+
+/*
+📊 STATISTICS CARD - Card de Estatística Individual
+
+Exibe uma métrica específica com ícone e valor.
+Reutilizável para diferentes tipos de estatísticas.
+*/
+struct StatisticsCardView: View {
+    let icon: String
+    let title: String
+    let value: String
+    let color: Color
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // ÍCONE
+            Image(systemName: icon)
+                .font(.system(size: 24))
+                .foregroundColor(color)
+                .frame(width: 40, height: 40)
+                .background(color.opacity(0.2))
+                .clipShape(Circle())
+
+            // TEXTO
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Text(value)
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundColor(.primary)
+            }
+
+            Spacer()
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(UIColor.secondarySystemGroupedBackground))
+        )
+    }
+}
+
+#Preview {
+    VStack(spacing: 12) {
+        StatisticsCardView(
+            icon: "chart.bar.fill",
+            title: "Transações",
+            value: "24",
+            color: .blue
+        )
+
+        StatisticsCardView(
+            icon: "chart.line.uptrend.xyaxis",
+            title: "Média de Gastos",
+            value: "R$ 185,50",
+            color: .orange
+        )
+    }
+    .padding()
+}
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// 📄 ARQUIVO 20: StatisticsCardView.swift (MANTIDO DE PARTES ANTERIORES)
+// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+import SwiftUI
+
+/*
+💳 TRANSACTION CARD - Card de Transação Individual
+
+Exibe uma transação com:
+- Indicador visual (cor/ícone)
+- Descrição e data
+- Valor formatado
+- Design moderno e responsivo
+*/
+struct TransactionCardView: View {
+    let transaction: Transaction
+    let formatter: (Double) -> String
+    let dateFormatter: (Date) -> String
+
+    private var isIncome: Bool {
+        transaction.amount > 0
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            // INDICADOR VISUAL
+            Circle()
+                .fill(isIncome ? Color.green : Color.red)
+                .frame(width: 8, height: 8)
+
+            // INFORMAÇÕES
+            VStack(alignment: .leading, spacing: 4) {
+                Text(transaction.description)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(.primary)
+
+                Text(dateFormatter(transaction.date))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            // VALOR
+            Text(formatter(abs(transaction.amount)))
+                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .foregroundColor(isIncome ? .green : .red)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(UIColor.secondarySystemGroupedBackground))
+        )
+    }
+}
+
+// Preview comentado pois Transaction precisa ser Hashable
+
+
+
+// ════════════════════════════════════════════════════════════════════════════
+// 📄 ARQUIVO 21: StatisticsCardView.swift (MANTIDO DE PARTES ANTERIORES)
+// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+import SwiftUI
+
+/*
+📭 EMPTY STATE - Estado Vazio Informativo
+
+Exibido quando não há transações.
+Importante para UX - evita tela em branco confusa.
+*/
+struct EmptyStateView: View {
+    var body: some View {
+        VStack(spacing: 20) {
+            // ÍCONE GRANDE
+            Image(systemName: "chart.bar.doc.horizontal")
+                .font(.system(size: 60))
+                .foregroundColor(.secondary.opacity(0.5))
+
+            // TEXTO PRINCIPAL
+            Text("Nenhuma Transação Ainda")
+                .font(.title2)
+                .fontWeight(.semibold)
+                .foregroundColor(.primary)
+
+            // TEXTO SECUNDÁRIO
+            Text("Adicione sua primeira transação\npara ver estatísticas em tempo real!")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+
+            // BOTÃO DE AÇÃO
+            Button(action: {}) {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                    Text("Adicionar Transação")
+                }
+                .font(.headline)
+                .foregroundColor(.white)
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(Color.blue)
+                .cornerRadius(12)
+            }
+            .padding(.top, 8)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+#Preview {
+    EmptyStateView()
+}
+
 
 
 // ═══════════════════════════════════════════════════════════════════
