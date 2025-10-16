@@ -527,27 +527,32 @@
     <div class="timing">13:00</div>
     <h2>🔌 Integração no TransactionService</h2>
     <div class="code-preview">
-        <span class="keyword">private let</span> cacheManager = AdvancedCacheManager.shared
+<span class="keyword">private let</span> cacheManager = AdvancedCacheManager.shared
+        
 <span class="keyword">func</span> <span class="function">getUserTransactions</span>(userId: String, limit: Int = 50) <span class="keyword">async throws</span> -> [Transaction] {
     <span class="comment">// 1️⃣ TENTAR CACHE PRIMEIRO</span>
-    <span class="keyword">if let</span> cached = cacheManager.getCachedTransactions(for: userId) {
+    <span class="keyword">if let</span> cached = <span class="function">cacheManager.getCachedTransactions</span>(for: userId) {
         <span class="function">print</span>(<span class="string">"⚡ Cache HIT - instantâneo!"</span>)
         <span class="keyword">return</span> cached
     }
     
     <span class="comment">// 2️⃣ CACHE MISS - buscar Firestore</span>
     <span class="function">print</span>(<span class="string">"🔥 Cache miss - buscando Firestore..."</span>)
-    <span class="keyword">let</span> snapshot = <span class="keyword">try await</span> db.collection(<span class="string">"users"</span>)
-        .document(userId)
-        .collection(<span class="string">"transactions"</span>)
-        .getDocuments()
+    <span class="keyword">let</span> transactions = <span class="keyword">try await</span> firestoreService.getDocuments(
+        <span class="keyword">from:</span> collectionPath,
+        <span class="keyword">type:</span> Transaction.self,
+        <span class="keyword">limit:</span> limit,
+        <span class="keyword">orderBy:</span> "date",
+        <span class="keyword">descending:</span> true)
     
-    <span class="keyword">let</span> transactions = snapshot.documents.compactMap { ... }
+    <span class="keyword">let</span> validTransactions = transactions
+        <span class="keyword">.filter</span> { isValidTransaction($0) }
+        <span class="keyword">.filter</span> { !$0.isDeleted }
     
     <span class="comment">// 3️⃣ SALVAR NO CACHE</span>
-    AdvancedCacheManager.shared.cacheTransactions(transactions, for: userId)
+    <span class="function">cacheManager.cacheTransactions</span>(transactions, for: userId)
     
-    <span class="keyword">return</span> transactions
+    <span class="keyword">return</span> validTransactions
 }</div>
     <div class="warning-box">
         <strong>⚠️ Importante:</strong> Invalidar cache após create/update/delete!
