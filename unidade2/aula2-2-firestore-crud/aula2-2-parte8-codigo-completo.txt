@@ -1620,6 +1620,16 @@ struct FinancasAppApp: App {
           // 🚀 1. CONFIGURAÇÃO BASE (Aula 2.1)
           FirebaseApp.configure()
           print("✅ Firebase App inicializado")
+
+          // Autenticação anônima
+          Task {
+              do {
+                  let result = try await Auth.auth().signInAnonymously()
+                  print("✅ Autenticado: \(result.user.uid)")
+              } catch {
+                  print("❌ Erro auth: \(error)")
+              }
+          }
           
           // ⚙️ 2. CONFIGURAÇÃO AVANÇADA (Aula 2.2 - NOVO!)
           FirestoreConfiguration.configureAdvanced()
